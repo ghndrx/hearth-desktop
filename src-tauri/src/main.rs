@@ -2,12 +2,11 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
+mod deeplink;
+mod menu;
 mod tray;
 
-use tauri::{
-    Manager,
-    GlobalShortcutBuilder
-};
+use tauri::{GlobalShortcutBuilder, Manager};
 
 fn main() {
     tauri::Builder::default()
@@ -18,14 +17,18 @@ fn main() {
         ))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_deep_link::init())
         .setup(|app| {
             // Set up system tray
             tray::setup_tray(app)?;
 
+            // Set up native menu
+            let menu = menu::create_menu(app.handle())?;
+            app.set_menu(menu)?;
+
             // Get main window
             let window = app.get_webview_window("main").unwrap();
 
-            // Show window on tray icon click
             #[cfg(target_os = "macos")]
             window.set_decorations(true)?;
 
@@ -62,7 +65,23 @@ fn main() {
                 })
                 .ok();
 
+            // Register deep link handler
+            let handle = app.handle().clone();
+            app.listen("deep-link://new-url", move |event| {
+                if let Some(urls) = event.payload().as_str() {
+                    // Parse as JSON array of URLs
+                    if let Ok(urls) = serde_json::from_str::<Vec<String>>(urls) {
+                        for url in urls {
+                            deeplink::handle_deep_link(&handle, &url);
+                        }
+                    }
+                }
+            });
+
             Ok(())
+        })
+        .on_menu_event(|app, event| {
+            menu::handle_menu_event(app, event.id().as_ref());
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_app_version,
