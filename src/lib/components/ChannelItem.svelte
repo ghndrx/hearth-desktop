@@ -29,7 +29,6 @@
 		onOpenSettings
 	}: Props = $props();
 
-	let isText = $derived(channel.type === 'text');
 	let isVoice = $derived(channel.type === 'voice');
 
 	let showSettings = $state(false);
@@ -45,7 +44,6 @@
 </script>
 
 <div class="channel-item-wrapper">
-	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 	<div
 		class="channel-item"
 		class:active

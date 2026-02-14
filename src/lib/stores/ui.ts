@@ -34,7 +34,7 @@ function createUIStore() {
 		}
 	}
 
-	const { subscribe, set, update } = writable<UIState>(persistedState);
+	const { subscribe, update } = writable<UIState>(persistedState);
 
 	// Persist UI state on change
 	if (browser) {

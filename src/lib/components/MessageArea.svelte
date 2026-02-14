@@ -30,7 +30,7 @@
 	function formatDate(dateStr: string): string {
 		const date = new Date(dateStr);
 		const today = new Date();
-		const yesterday = new Date(today);
+		const yesterday = new Date(today); // eslint-disable-line svelte/prefer-svelte-reactivity -- local variable
 		yesterday.setDate(yesterday.getDate() - 1);
 
 		if (date.toDateString() === today.toDateString()) {
