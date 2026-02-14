@@ -1,0 +1,152 @@
+/* Hearth Desktop Theme Variables */
+
+:root {
+	/* Brand */
+	--brand-primary: #e87620;
+	--brand-hover: #d95e16;
+
+	/* Backgrounds */
+	--bg-primary: #313338;
+	--bg-secondary: #2b2d31;
+	--bg-tertiary: #1e1f22;
+	--bg-modifier-hover: rgba(79, 84, 92, 0.16);
+	--bg-modifier-active: rgba(79, 84, 92, 0.24);
+	--bg-modifier-selected: rgba(79, 84, 92, 0.32);
+	--bg-modifier-accent: rgba(79, 84, 92, 0.48);
+
+	/* Text */
+	--text-primary: #f2f3f5;
+	--text-secondary: #b5bac1;
+	--text-muted: #949ba4;
+	--text-link: #00a8fc;
+	--text-positive: #23a559;
+	--text-warning: #f0b232;
+	--text-danger: #f23f43;
+
+	/* Status */
+	--status-online: #23a559;
+	--status-idle: #f0b232;
+	--status-dnd: #f23f43;
+	--status-offline: #80848e;
+	--status-danger: #f23f43;
+
+	/* Borders */
+	--border-subtle: rgba(79, 84, 92, 0.24);
+
+	/* Scrollbar */
+	--scrollbar-track: transparent;
+	--scrollbar-thumb: #1a1b1e;
+	--scrollbar-thumb-hover: #202225;
+
+	/* Shadows */
+	--shadow-elevation-low: 0 1px 0 rgba(0, 0, 0, 0.2);
+	--shadow-elevation-medium: 0 4px 8px rgba(0, 0, 0, 0.24);
+	--shadow-elevation-high: 0 8px 16px rgba(0, 0, 0, 0.24);
+}
+
+/* Light theme */
+[data-theme='light'] {
+	--brand-primary: #e87620;
+	--brand-hover: #d95e16;
+
+	--bg-primary: #ffffff;
+	--bg-secondary: #f2f3f5;
+	--bg-tertiary: #e3e5e8;
+	--bg-modifier-hover: rgba(116, 127, 141, 0.08);
+	--bg-modifier-active: rgba(116, 127, 141, 0.16);
+	--bg-modifier-selected: rgba(116, 127, 141, 0.24);
+	--bg-modifier-accent: rgba(116, 127, 141, 0.24);
+
+	--text-primary: #060607;
+	--text-secondary: #4e5058;
+	--text-muted: #6d6f78;
+	--text-link: #006ce7;
+
+	--scrollbar-thumb: #c4c9ce;
+	--scrollbar-thumb-hover: #b5bac1;
+}
+
+/* OLED / Midnight theme */
+[data-theme='midnight'] {
+	--bg-primary: #000000;
+	--bg-secondary: #0a0a0a;
+	--bg-tertiary: #0f0f0f;
+	--bg-modifier-hover: rgba(255, 255, 255, 0.04);
+	--bg-modifier-active: rgba(255, 255, 255, 0.08);
+	--bg-modifier-selected: rgba(255, 255, 255, 0.12);
+}
+
+/* Global Styles */
+* {
+	box-sizing: border-box;
+	margin: 0;
+	padding: 0;
+}
+
+html,
+body {
+	height: 100%;
+	font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+	font-size: 16px;
+	line-height: 1.5;
+	background: var(--bg-tertiary);
+	color: var(--text-primary);
+	-webkit-font-smoothing: antialiased;
+}
+
+a {
+	color: var(--text-link);
+	text-decoration: none;
+}
+
+a:hover {
+	text-decoration: underline;
+}
+
+button {
+	font-family: inherit;
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: var(--scrollbar-track);
+}
+
+::-webkit-scrollbar-thumb {
+	background: var(--scrollbar-thumb);
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: var(--scrollbar-thumb-hover);
+}
+
+/* Selection */
+::selection {
+	background: var(--brand-primary);
+	color: white;
+}
+
+/* Focus */
+:focus-visible {
+	outline: 2px solid var(--brand-primary);
+	outline-offset: 2px;
+}
+
+/* Utility Classes */
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	white-space: nowrap;
+	border: 0;
+}
