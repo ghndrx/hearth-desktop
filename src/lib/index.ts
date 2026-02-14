@@ -1,5 +1,10 @@
 // Re-export stores
 export * from './stores/app';
+export * from './stores/ui';
+
+// Handlers (import but don't re-export - they're components to be mounted)
+export { default as MenuHandler } from './handlers/MenuHandler.svelte';
+export { default as DeepLinkHandler } from './handlers/DeepLinkHandler.svelte';
 
 // Re-export components
 export { default as Sidebar } from './components/Sidebar.svelte';

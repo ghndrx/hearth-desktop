@@ -57,6 +57,11 @@
     "updater": {
       "pubkey": "",
       "endpoints": []
+    },
+    "deep-link": {
+      "desktop": {
+        "schemes": ["hearth"]
+      }
     }
   }
 }

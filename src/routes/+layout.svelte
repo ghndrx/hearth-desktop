@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { app, isLoading } from '$lib/stores/app';
+	import { MenuHandler, DeepLinkHandler } from '$lib';
 	import '$lib/styles/theme.css';
 	import '../app.css';
 
@@ -10,6 +11,10 @@
 		app.init();
 	});
 </script>
+
+<!-- Desktop event handlers (invisible) -->
+<MenuHandler />
+<DeepLinkHandler />
 
 <svelte:head>
 	<title>Hearth</title>
