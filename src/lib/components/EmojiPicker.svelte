@@ -119,7 +119,7 @@
 		</div>
 
 		<div class="categories">
-			{#each categories as category, i}
+			{#each categories as category, i (category.name)}
 				<button
 					class="category-btn"
 					class:active={selectedCategory === i && !searchQuery}
@@ -135,7 +135,7 @@
 		</div>
 
 		<div class="emojis">
-			{#each filteredEmojis as emoji}
+			{#each filteredEmojis as emoji (emoji)}
 				<button class="emoji-btn" onclick={() => selectEmoji(emoji)}>
 					{emoji}
 				</button>

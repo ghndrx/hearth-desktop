@@ -47,7 +47,7 @@
 			isOffline?: boolean;
 		}[] = [];
 
-		const usedMembers = new Set<string>();
+		const usedMembers: string[] = [];
 
 		const hoistedRoles = rolesList
 			.filter((r) => r.hoist && r.name !== '@everyone')
@@ -55,7 +55,7 @@
 
 		for (const role of hoistedRoles) {
 			const roleMembers = membersList.filter((m) => {
-				if (usedMembers.has(m.id)) return false;
+				if (usedMembers.includes(m.id)) return false;
 				if (!m.roles.includes(role.id)) return false;
 				return m.status !== 'offline';
 			});
@@ -72,12 +72,12 @@
 					members: roleMembers,
 					label: role.name.toUpperCase()
 				});
-				roleMembers.forEach((m) => usedMembers.add(m.id));
+				roleMembers.forEach((m) => usedMembers.push(m.id));
 			}
 		}
 
 		const onlineMembers = membersList.filter((m) => {
-			if (usedMembers.has(m.id)) return false;
+			if (usedMembers.includes(m.id)) return false;
 			return m.status !== 'offline';
 		});
 
@@ -93,11 +93,11 @@
 				members: onlineMembers,
 				label: 'ONLINE'
 			});
-			onlineMembers.forEach((m) => usedMembers.add(m.id));
+			onlineMembers.forEach((m) => usedMembers.push(m.id));
 		}
 
 		const offlineMembers = membersList.filter((m) => {
-			if (usedMembers.has(m.id)) return false;
+			if (usedMembers.includes(m.id)) return false;
 			return m.status === 'offline';
 		});
 
@@ -122,11 +122,11 @@
 
 {#if $currentServer}
 	<aside class="member-list">
-		{#each groupedMembers as group}
+		{#each groupedMembers as group (group.label)}
 			<div class="member-group">
 				<h3 class="group-header">{group.label} — {group.members.length}</h3>
 
-				{#each group.members as member}
+				{#each group.members as member (member.id)}
 					<button class="member-item" class:offline={group.isOffline}>
 						<Avatar
 							src={member.user.avatar}

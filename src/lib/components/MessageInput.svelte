@@ -105,7 +105,7 @@
 	<!-- Attachments Preview -->
 	{#if files?.length}
 		<div class="attachments-preview">
-			{#each Array.from(files) as file, i}
+			{#each Array.from(files) as file, i (`${file.name}-${i}`)}
 				<div class="attachment-preview">
 					{#if file.type.startsWith('image/')}
 						<img src={URL.createObjectURL(file)} alt={file.name} />
