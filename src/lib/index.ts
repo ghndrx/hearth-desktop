@@ -1,20 +1,5 @@
-// Re-export stores
-export * from './stores/app';
-export * from './stores/ui';
-
-// Handlers (import but don't re-export - they're components to be mounted)
-export { default as MenuHandler } from './handlers/MenuHandler.svelte';
-export { default as DeepLinkHandler } from './handlers/DeepLinkHandler.svelte';
-
-// Re-export components
-export { default as Sidebar } from './components/Sidebar.svelte';
-export { default as Avatar } from './components/Avatar.svelte';
-export { default as ChannelCategory } from './components/ChannelCategory.svelte';
-export { default as ChannelItem } from './components/ChannelItem.svelte';
-export { default as ChannelList } from './components/ChannelList.svelte';
-export { default as EmojiPicker } from './components/EmojiPicker.svelte';
-export { default as MemberList } from './components/MemberList.svelte';
-export { default as MessageArea } from './components/MessageArea.svelte';
-export { default as MessageInput } from './components/MessageInput.svelte';
-export { default as ServerHeader } from './components/ServerHeader.svelte';
-export { default as UserPanel } from './components/UserPanel.svelte';
+// Svelte 4 doesn't auto-export from $lib, but this helps with organization
+export * from "./types";
+export * from "./stores";
+export * from "./utils";
+export * as tauri from "./tauri";
