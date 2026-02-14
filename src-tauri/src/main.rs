@@ -87,6 +87,17 @@ fn main() {
             commands::get_app_version,
             commands::show_notification,
             commands::set_badge_count,
+            commands::minimize_window,
+            commands::toggle_maximize,
+            commands::close_window,
+            commands::hide_window,
+            commands::show_window,
+            commands::is_window_visible,
+            commands::set_always_on_top,
+            commands::toggle_fullscreen,
+            commands::is_auto_start_enabled,
+            commands::enable_auto_start,
+            commands::disable_auto_start,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

@@ -1,3 +1,4 @@
+use tauri::{Manager, Window, AppHandle};
 use tauri_plugin_notification::NotificationExt;
 
 /// Get the application version
@@ -6,10 +7,64 @@ pub fn get_app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 
+/// Minimize the window
+#[tauri::command]
+pub async fn minimize_window(window: Window) -> Result<(), String> {
+    window.minimize().map_err(|e| e.to_string())
+}
+
+/// Maximize/restore the window
+#[tauri::command]
+pub async fn toggle_maximize(window: Window) -> Result<(), String> {
+    if window.is_maximized().map_err(|e| e.to_string())? {
+        window.unmaximize().map_err(|e| e.to_string())
+    } else {
+        window.maximize().map_err(|e| e.to_string())
+    }
+}
+
+/// Close the window
+#[tauri::command]
+pub async fn close_window(window: Window) -> Result<(), String> {
+    window.close().map_err(|e| e.to_string())
+}
+
+/// Hide the window
+#[tauri::command]
+pub async fn hide_window(window: Window) -> Result<(), String> {
+    window.hide().map_err(|e| e.to_string())
+}
+
+/// Show and focus the window
+#[tauri::command]
+pub async fn show_window(window: Window) -> Result<(), String> {
+    window.show().map_err(|e| e.to_string())?;
+    window.set_focus().map_err(|e| e.to_string())
+}
+
+/// Check if window is visible
+#[tauri::command]
+pub async fn is_window_visible(window: Window) -> Result<bool, String> {
+    window.is_visible().map_err(|e| e.to_string())
+}
+
+/// Set window always on top
+#[tauri::command]
+pub async fn set_always_on_top(window: Window, always_on_top: bool) -> Result<(), String> {
+    window.set_always_on_top(always_on_top).map_err(|e| e.to_string())
+}
+
+/// Toggle fullscreen
+#[tauri::command]
+pub async fn toggle_fullscreen(window: Window) -> Result<(), String> {
+    let is_fullscreen = window.is_fullscreen().map_err(|e| e.to_string())?;
+    window.set_fullscreen(!is_fullscreen).map_err(|e| e.to_string())
+}
+
 /// Show a system notification
 #[tauri::command]
 pub async fn show_notification(
-    app: tauri::AppHandle,
+    app: AppHandle,
     title: String,
     body: String,
 ) -> Result<(), String> {
@@ -24,7 +79,7 @@ pub async fn show_notification(
 
 /// Set the dock/taskbar badge count (unread messages)
 #[tauri::command]
-pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), String> {
+pub async fn set_badge_count(app: AppHandle, count: u32) -> Result<(), String> {
     #[cfg(target_os = "macos")]
     {
         use tauri::Manager;
@@ -37,4 +92,25 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
         }
     }
     Ok(())
+}
+
+/// Get auto-start status
+#[tauri::command]
+pub fn is_auto_start_enabled(app: AppHandle) -> bool {
+    use tauri_plugin_autostart::ManagerExt;
+    app.autolaunch().is_enabled().unwrap_or(false)
+}
+
+/// Enable auto-start
+#[tauri::command]
+pub fn enable_auto_start(app: AppHandle) -> Result<(), String> {
+    use tauri_plugin_autostart::ManagerExt;
+    app.autolaunch().enable().map_err(|e| e.to_string())
+}
+
+/// Disable auto-start
+#[tauri::command]
+pub fn disable_auto_start(app: AppHandle) -> Result<(), String> {
+    use tauri_plugin_autostart::ManagerExt;
+    app.autolaunch().disable().map_err(|e| e.to_string())
 }
