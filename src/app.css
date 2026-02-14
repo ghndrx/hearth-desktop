@@ -1,0 +1,65 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom scrollbar for dark theme */
+::-webkit-scrollbar {
+	width: 8px;
+	height: 8px;
+}
+
+::-webkit-scrollbar-track {
+	background: #2f3136;
+}
+
+::-webkit-scrollbar-thumb {
+	background: #4b4e59;
+	border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: #5f6370;
+}
+
+/* Base typography */
+@layer base {
+	body {
+		@apply font-sans antialiased;
+	}
+
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		@apply font-semibold;
+	}
+}
+
+/* Component utilities */
+@layer components {
+	.btn {
+		@apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+	}
+
+	.btn-primary {
+		@apply bg-hearth-500 hover:bg-hearth-600 text-white;
+	}
+
+	.btn-secondary {
+		@apply bg-dark-700 hover:bg-dark-600 text-gray-100;
+	}
+
+	.input {
+		@apply w-full px-3 py-2 bg-dark-900 border border-dark-700 rounded-md text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-hearth-500 focus:border-transparent;
+	}
+
+	.sidebar-item {
+		@apply flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer hover:bg-dark-700 transition-colors duration-150;
+	}
+
+	.sidebar-item-active {
+		@apply bg-dark-600 text-white;
+	}
+}
