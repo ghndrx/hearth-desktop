@@ -6,7 +6,7 @@ mod deeplink;
 mod menu;
 mod tray;
 
-use tauri::{GlobalShortcutBuilder, Manager};
+use tauri::{GlobalShortcutBuilder, Manager, WindowEvent};
 
 fn main() {
     tauri::Builder::default()
@@ -19,6 +19,15 @@ fn main() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .on_window_event(|window, event| {
+            // Minimize to tray on close instead of quitting
+            if let WindowEvent::CloseRequested { api, .. } = event {
+                // Hide the window instead of closing
+                let _ = window.hide();
+                // Prevent the window from being destroyed
+                api.prevent_close();
+            }
+        })
         .setup(|app| {
             // Set up system tray
             tray::setup_tray(app)?;
