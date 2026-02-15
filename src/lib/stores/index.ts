@@ -14,7 +14,7 @@ export {
 	voiceParticipants, 
 	isMuted, 
 	isDeafened, 
-	isScreenSharing,
+	isScreenSharing as isVoiceScreenSharing,
 	formatDuration,
 	type VoiceParticipant,
 	type VoiceCallState 
@@ -40,3 +40,15 @@ export {
 	type PresenceStatus,
 	type Activity
 } from './presence';
+export {
+	screenShare,
+	isScreenShareModalOpen,
+	isScreenSharing,
+	isPreviewing,
+	screenShareStream,
+	screenShareError,
+	selectedScreenSource,
+	type ScreenShareSource,
+	type ScreenShareSourceType,
+	type ScreenShareState
+} from './screenShare';
