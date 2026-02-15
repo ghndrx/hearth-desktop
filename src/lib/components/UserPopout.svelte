@@ -124,6 +124,14 @@
 			<!-- Divider -->
 			<div class="divider"></div>
 
+			<!-- Activity -->
+			{#if primaryUserActivity}
+				<div class="section">
+					<h4 class="section-title">Current Activity</h4>
+					<UserActivity remoteActivity={primaryUserActivity} showTime={true} />
+				</div>
+			{/if}
+
 			<!-- About Me -->
 			{#if user.bio}
 				<div class="section">
