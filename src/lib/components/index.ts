@@ -17,6 +17,8 @@ export { default as EmojiPicker } from './EmojiPicker.svelte';
 
 // User components
 export { default as UserPopout } from './UserPopout.svelte';
+export { default as UserActivity } from './UserActivity.svelte';
+export { default as PresenceIndicator } from './PresenceIndicator.svelte';
 
 // Settings components
 export { default as SettingsLayout } from './SettingsLayout.svelte';

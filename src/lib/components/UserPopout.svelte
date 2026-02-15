@@ -2,6 +2,8 @@
 	import { createEventDispatcher } from 'svelte';
 	import Avatar from './Avatar.svelte';
 	import PresenceIndicator from './PresenceIndicator.svelte';
+	import UserActivity from './UserActivity.svelte';
+	import { presenceStore, type Activity } from '$lib/stores/presence';
 
 	export let user: {
 		id: string;
@@ -72,6 +74,11 @@
 	$: bannerUrl = user.banner;
 	$: memberSince = member?.joined_at ? formatDate(member.joined_at) : null;
 	$: accountCreated = formatDate(user.created_at);
+	
+	// Get user's activities from presence
+	$: userPresence = presenceStore.getPresence(user.id);
+	$: userActivities = userPresence?.activities || [];
+	$: primaryUserActivity = userActivities.length > 0 ? userActivities[0] : null;
 </script>
 
 <!-- svelte-ignore a11y-click-events-have-key-events -->
