@@ -1,5 +1,6 @@
 use tauri::{Manager, Window, AppHandle};
 use tauri_plugin_notification::NotificationExt;
+use tauri_plugin_clipboard_manager::ClipboardExt;
 
 /// Get the application version
 #[tauri::command]
@@ -113,4 +114,41 @@ pub fn enable_auto_start(app: AppHandle) -> Result<(), String> {
 pub fn disable_auto_start(app: AppHandle) -> Result<(), String> {
     use tauri_plugin_autostart::ManagerExt;
     app.autolaunch().disable().map_err(|e| e.to_string())
+}
+
+// ============================================================================
+// Clipboard Commands
+// ============================================================================
+
+/// Copy text to the system clipboard
+#[tauri::command]
+pub async fn clipboard_write_text(app: AppHandle, text: String) -> Result<(), String> {
+    app.clipboard()
+        .write_text(&text)
+        .map_err(|e| e.to_string())
+}
+
+/// Read text from the system clipboard
+#[tauri::command]
+pub async fn clipboard_read_text(app: AppHandle) -> Result<String, String> {
+    app.clipboard()
+        .read_text()
+        .map_err(|e| e.to_string())
+}
+
+/// Check if clipboard has text content
+#[tauri::command]
+pub async fn clipboard_has_text(app: AppHandle) -> Result<bool, String> {
+    match app.clipboard().read_text() {
+        Ok(text) => Ok(!text.is_empty()),
+        Err(_) => Ok(false),
+    }
+}
+
+/// Clear the clipboard
+#[tauri::command]
+pub async fn clipboard_clear(app: AppHandle) -> Result<(), String> {
+    app.clipboard()
+        .write_text("")
+        .map_err(|e| e.to_string())
 }

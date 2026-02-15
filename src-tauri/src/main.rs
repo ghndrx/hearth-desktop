@@ -18,6 +18,7 @@ fn main() {
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_clipboard_manager::init())
         .setup(|app| {
             // Set up system tray
             tray::setup_tray(app)?;
@@ -98,6 +99,10 @@ fn main() {
             commands::is_auto_start_enabled,
             commands::enable_auto_start,
             commands::disable_auto_start,
+            commands::clipboard_write_text,
+            commands::clipboard_read_text,
+            commands::clipboard_has_text,
+            commands::clipboard_clear,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
