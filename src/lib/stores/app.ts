@@ -1,5 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
+import { preloadSounds } from '$lib/utils/sounds';
 
 export interface User {
 	id: string;
@@ -56,6 +57,9 @@ function createAppStore() {
 
 		async init() {
 			if (!browser) return;
+
+			// Preload notification sounds for faster playback
+			preloadSounds();
 
 			// Load theme preference
 			const savedTheme = localStorage.getItem('hearth_theme') as AppState['theme'] | null;
