@@ -27,6 +27,8 @@ export { default as ServerSettings } from './ServerSettings.svelte';
 export { default as Modal } from './Modal.svelte';
 export { default as ConfirmDialog } from './ConfirmDialog.svelte';
 export { default as CreateServerModal } from './CreateServerModal.svelte';
+export { default as SearchModal } from './SearchModal.svelte';
+export { default as HelpModal } from './HelpModal.svelte';
 
 // UI components
 export { default as Button } from './Button.svelte';

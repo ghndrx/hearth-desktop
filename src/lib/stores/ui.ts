@@ -6,6 +6,7 @@ export interface UIState {
 	sidebarWidth: number;
 	memberListOpen: boolean;
 	searchOpen: boolean;
+	helpOpen: boolean;
 	connectionStatus: 'connecting' | 'connected' | 'disconnected' | 'reconnecting';
 	windowFocused: boolean;
 }
@@ -15,6 +16,7 @@ const initialState: UIState = {
 	sidebarWidth: 240,
 	memberListOpen: true,
 	searchOpen: false,
+	helpOpen: false,
 	connectionStatus: 'disconnected',
 	windowFocused: true
 };
@@ -79,6 +81,18 @@ function createUIStore() {
 			update((s) => ({ ...s, searchOpen: open }));
 		},
 
+		toggleHelp() {
+			update((s) => ({ ...s, helpOpen: !s.helpOpen }));
+		},
+
+		setHelpOpen(open: boolean) {
+			update((s) => ({ ...s, helpOpen: open }));
+		},
+
+		closeAllModals() {
+			update((s) => ({ ...s, searchOpen: false, helpOpen: false }));
+		},
+
 		setConnectionStatus(status: UIState['connectionStatus']) {
 			update((s) => ({ ...s, connectionStatus: status }));
 		},
@@ -94,5 +108,7 @@ export const ui = createUIStore();
 // Derived stores
 export const sidebarOpen = derived(ui, ($ui) => $ui.sidebarOpen);
 export const memberListOpen = derived(ui, ($ui) => $ui.memberListOpen);
+export const searchOpen = derived(ui, ($ui) => $ui.searchOpen);
+export const helpOpen = derived(ui, ($ui) => $ui.helpOpen);
 export const connectionStatus = derived(ui, ($ui) => $ui.connectionStatus);
 export const isConnected = derived(ui, ($ui) => $ui.connectionStatus === 'connected');

@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { app, isLoading } from '$lib/stores/app';
-	import { MenuHandler, DeepLinkHandler } from '$lib';
-	import { ToastContainer } from '$lib/components';
+	import { MenuHandler, DeepLinkHandler, KeyboardHandler } from '$lib';
+	import { ToastContainer, SearchModal, HelpModal } from '$lib/components';
 	import '$lib/styles/theme.css';
 	import '../app.css';
 
@@ -16,6 +16,11 @@
 <!-- Desktop event handlers (invisible) -->
 <MenuHandler />
 <DeepLinkHandler />
+<KeyboardHandler />
+
+<!-- Global modals -->
+<SearchModal />
+<HelpModal />
 
 <!-- Toast notifications -->
 <ToastContainer position="bottom-right" />
