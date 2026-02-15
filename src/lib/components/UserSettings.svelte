@@ -2,7 +2,8 @@
   import { fade, fly } from 'svelte/transition';
   import { createEventDispatcher } from 'svelte';
   import { user, auth } from '$lib/stores/auth';
-  import { settings, type Theme, type MessageDisplay } from '$lib/stores/settings';
+  import { settings, type Theme, type MessageDisplay, type VoiceInputMode } from '$lib/stores/settings';
+  import { pushToTalk, isCapturingPTTKey, formatKeyDisplay, getKeyCode } from '$lib/stores/pushToTalk';
   import Avatar from './Avatar.svelte';
   
   export let open = false;
@@ -26,6 +27,7 @@
     { id: 'privacy', label: 'Privacy & Safety', icon: 'shield' },
     { id: 'divider-app', label: 'App Settings', divider: true },
     { id: 'appearance', label: 'Appearance', icon: 'palette' },
+    { id: 'voice', label: 'Voice & Video', icon: 'microphone' },
     { id: 'notifications', label: 'Notifications', icon: 'bell' },
     { id: 'keybinds', label: 'Keybinds', icon: 'keyboard' },
     { id: 'divider-other', label: '', divider: true },
@@ -50,6 +52,11 @@
   }
   
   function handleKeydown(e: KeyboardEvent) {
+    // Handle PTT key capture
+    if ($isCapturingPTTKey) {
+      handlePTTKeyCapture(e);
+      return;
+    }
     if (e.key === 'Escape') close();
   }
   
@@ -157,6 +164,33 @@
       case 'light': return 'bg-[#e3e5e8]';
       case 'midnight': return 'bg-[#1a1a1a]';
     }
+  }
+
+  // Voice settings
+  $: voiceSettings = appSettings.voice;
+
+  function setInputMode(mode: VoiceInputMode) {
+    settings.updateVoice({ inputMode: mode });
+  }
+
+  function toggleVoiceSetting(key: keyof typeof voiceSettings) {
+    const value = voiceSettings[key];
+    if (typeof value === 'boolean') {
+      settings.updateVoice({ [key]: !value } as any);
+    }
+  }
+
+  function handlePTTKeyCapture(e: KeyboardEvent) {
+    if (!$isCapturingPTTKey) return;
+    pushToTalk.captureKey(e);
+  }
+
+  function startPTTKeyCapture() {
+    pushToTalk.startCapture();
+  }
+
+  function cancelPTTKeyCapture() {
+    pushToTalk.cancelCapture();
   }
 </script>
 
@@ -598,6 +632,223 @@
               </div>
             </section>
           
+          {:else if activeSection === 'voice'}
+            <section>
+              <h1 class="text-xl font-semibold text-[var(--text-primary)] mb-5">Voice & Video</h1>
+              
+              <!-- Input Mode Selection -->
+              <div class="mb-10 pb-10 border-b border-[var(--bg-modifier-accent)]">
+                <h2 class="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] mb-2">Input Mode</h2>
+                
+                <div class="flex gap-4">
+                  <button 
+                    class="flex-1 bg-transparent border-2 {voiceSettings.inputMode === 'voice_activity' ? 'border-[var(--brand-primary)]' : 'border-[var(--bg-modifier-accent)]'} rounded-lg p-4 cursor-pointer text-left hover:border-[var(--brand-primary)] transition-colors"
+                    on:click={() => setInputMode('voice_activity')}
+                  >
+                    <div class="flex items-center gap-3 mb-2">
+                      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" class="text-[var(--text-primary)]">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                      </svg>
+                      <span class="text-base font-semibold text-[var(--text-primary)]">Voice Activity</span>
+                    </div>
+                    <p class="text-sm text-[var(--text-muted)]">Automatically transmit when you speak. Best for most users.</p>
+                  </button>
+                  
+                  <button 
+                    class="flex-1 bg-transparent border-2 {voiceSettings.inputMode === 'push_to_talk' ? 'border-[var(--brand-primary)]' : 'border-[var(--bg-modifier-accent)]'} rounded-lg p-4 cursor-pointer text-left hover:border-[var(--brand-primary)] transition-colors"
+                    on:click={() => setInputMode('push_to_talk')}
+                  >
+                    <div class="flex items-center gap-3 mb-2">
+                      <svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" class="text-[var(--text-primary)]">
+                        <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                      </svg>
+                      <span class="text-base font-semibold text-[var(--text-primary)]">Push to Talk</span>
+                    </div>
+                    <p class="text-sm text-[var(--text-muted)]">Hold a key to transmit. Reduces background noise.</p>
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Push to Talk Settings (visible when PTT is selected) -->
+              {#if voiceSettings.inputMode === 'push_to_talk'}
+                <div class="mb-10 pb-10 border-b border-[var(--bg-modifier-accent)]">
+                  <h2 class="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] mb-4">Push to Talk Settings</h2>
+                  
+                  <div class="bg-[var(--bg-secondary)] rounded-lg p-4">
+                    <div class="flex justify-between items-center">
+                      <div>
+                        <span class="block text-base text-[var(--text-primary)] mb-1">Shortcut</span>
+                        <span class="text-sm text-[var(--text-muted)]">Press this key to transmit audio</span>
+                      </div>
+                      <div class="flex items-center gap-3">
+                        {#if $isCapturingPTTKey}
+                          <div class="flex items-center gap-2">
+                            <span class="px-4 py-2 bg-[var(--brand-primary)] text-white rounded text-sm animate-pulse">
+                              Press a key...
+                            </span>
+                            <button 
+                              class="px-3 py-2 bg-[var(--bg-modifier-accent)] text-[var(--text-primary)] rounded text-sm hover:bg-[var(--bg-modifier-selected)] transition-colors"
+                              on:click={cancelPTTKeyCapture}
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        {:else}
+                          <button 
+                            class="px-4 py-2 bg-[var(--bg-tertiary)] text-[var(--text-primary)] rounded text-sm font-medium hover:bg-[var(--bg-modifier-selected)] transition-colors flex items-center gap-2"
+                            on:click={startPTTKeyCapture}
+                          >
+                            <kbd class="px-2 py-1 bg-[var(--bg-modifier-accent)] rounded text-xs">{voiceSettings.pushToTalkKeyDisplay}</kbd>
+                            <span>Edit Keybind</span>
+                          </button>
+                        {/if}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p class="text-xs text-[var(--text-muted)] mt-3">
+                    <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" class="inline-block mr-1 align-text-bottom">
+                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z"/>
+                    </svg>
+                    The push-to-talk hotkey works when Hearth is focused. Press Escape to cancel keybind capture.
+                  </p>
+                </div>
+              {/if}
+              
+              <!-- Voice Activity Sensitivity (visible when Voice Activity is selected) -->
+              {#if voiceSettings.inputMode === 'voice_activity'}
+                <div class="mb-10 pb-10 border-b border-[var(--bg-modifier-accent)]">
+                  <h2 class="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] mb-4">Input Sensitivity</h2>
+                  
+                  <div class="flex justify-between items-center py-4 border-b border-[var(--bg-modifier-accent)]">
+                    <div>
+                      <span class="block text-base text-[var(--text-primary)] mb-1">Automatically determine input sensitivity</span>
+                      <span class="text-sm text-[var(--text-muted)]">Let Hearth decide when you're speaking.</span>
+                    </div>
+                    <label class="relative inline-block w-10 h-6 flex-shrink-0">
+                      <input 
+                        type="checkbox" 
+                        checked={voiceSettings.automaticallyDetermineInputSensitivity}
+                        on:change={() => toggleVoiceSetting('automaticallyDetermineInputSensitivity')}
+                        class="opacity-0 w-0 h-0"
+                      />
+                      <span class="absolute cursor-pointer inset-0 bg-[var(--bg-modifier-accent)] rounded-full transition-colors before:content-[''] before:absolute before:h-[18px] before:w-[18px] before:left-[3px] before:bottom-[3px] before:bg-white before:rounded-full before:transition-transform [&:has(input:checked)]:bg-[var(--brand-primary)] [&:has(input:checked)]:before:translate-x-4"></span>
+                    </label>
+                  </div>
+                  
+                  {#if !voiceSettings.automaticallyDetermineInputSensitivity}
+                    <div class="py-4">
+                      <label class="block text-sm text-[var(--text-secondary)] mb-2">Manual Sensitivity ({voiceSettings.voiceActivitySensitivity}%)</label>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="100" 
+                        step="1"
+                        value={voiceSettings.voiceActivitySensitivity}
+                        on:input={(e) => settings.updateVoice({ voiceActivitySensitivity: parseInt(e.currentTarget.value) })}
+                        class="w-full h-2 bg-[var(--bg-modifier-accent)] rounded outline-none appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--brand-primary)] [&::-webkit-slider-thumb]:cursor-pointer"
+                      />
+                      <div class="flex justify-between text-xs text-[var(--text-muted)] mt-1">
+                        <span>More sensitive</span>
+                        <span>Less sensitive</span>
+                      </div>
+                    </div>
+                  {/if}
+                </div>
+              {/if}
+              
+              <!-- Voice Processing -->
+              <div class="mb-10 pb-10 border-b border-[var(--bg-modifier-accent)]">
+                <h2 class="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] mb-2">Voice Processing</h2>
+                
+                <div class="flex justify-between items-center py-4 border-b border-[var(--bg-modifier-accent)]">
+                  <div>
+                    <span class="block text-base text-[var(--text-primary)] mb-1">Echo Cancellation</span>
+                    <span class="text-sm text-[var(--text-muted)]">Reduces echo from speakers being picked up by your microphone.</span>
+                  </div>
+                  <label class="relative inline-block w-10 h-6 flex-shrink-0">
+                    <input 
+                      type="checkbox" 
+                      checked={voiceSettings.echoCancellation}
+                      on:change={() => toggleVoiceSetting('echoCancellation')}
+                      class="opacity-0 w-0 h-0"
+                    />
+                    <span class="absolute cursor-pointer inset-0 bg-[var(--bg-modifier-accent)] rounded-full transition-colors before:content-[''] before:absolute before:h-[18px] before:w-[18px] before:left-[3px] before:bottom-[3px] before:bg-white before:rounded-full before:transition-transform [&:has(input:checked)]:bg-[var(--brand-primary)] [&:has(input:checked)]:before:translate-x-4"></span>
+                  </label>
+                </div>
+                
+                <div class="flex justify-between items-center py-4 border-b border-[var(--bg-modifier-accent)]">
+                  <div>
+                    <span class="block text-base text-[var(--text-primary)] mb-1">Noise Suppression</span>
+                    <span class="text-sm text-[var(--text-muted)]">Reduces background noise like keyboard clicks and fans.</span>
+                  </div>
+                  <label class="relative inline-block w-10 h-6 flex-shrink-0">
+                    <input 
+                      type="checkbox" 
+                      checked={voiceSettings.noiseSuppression}
+                      on:change={() => toggleVoiceSetting('noiseSuppression')}
+                      class="opacity-0 w-0 h-0"
+                    />
+                    <span class="absolute cursor-pointer inset-0 bg-[var(--bg-modifier-accent)] rounded-full transition-colors before:content-[''] before:absolute before:h-[18px] before:w-[18px] before:left-[3px] before:bottom-[3px] before:bg-white before:rounded-full before:transition-transform [&:has(input:checked)]:bg-[var(--brand-primary)] [&:has(input:checked)]:before:translate-x-4"></span>
+                  </label>
+                </div>
+                
+                <div class="flex justify-between items-center py-4">
+                  <div>
+                    <span class="block text-base text-[var(--text-primary)] mb-1">Automatic Gain Control</span>
+                    <span class="text-sm text-[var(--text-muted)]">Automatically adjusts your microphone volume.</span>
+                  </div>
+                  <label class="relative inline-block w-10 h-6 flex-shrink-0">
+                    <input 
+                      type="checkbox" 
+                      checked={voiceSettings.automaticGainControl}
+                      on:change={() => toggleVoiceSetting('automaticGainControl')}
+                      class="opacity-0 w-0 h-0"
+                    />
+                    <span class="absolute cursor-pointer inset-0 bg-[var(--bg-modifier-accent)] rounded-full transition-colors before:content-[''] before:absolute before:h-[18px] before:w-[18px] before:left-[3px] before:bottom-[3px] before:bg-white before:rounded-full before:transition-transform [&:has(input:checked)]:bg-[var(--brand-primary)] [&:has(input:checked)]:before:translate-x-4"></span>
+                  </label>
+                </div>
+              </div>
+              
+              <!-- Volume Settings -->
+              <div class="mb-10 pb-10 border-b border-[var(--bg-modifier-accent)]">
+                <h2 class="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] mb-4">Volume</h2>
+                
+                <div class="mb-6">
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="text-sm text-[var(--text-primary)]">Input Volume</label>
+                    <span class="text-sm text-[var(--text-muted)]">{voiceSettings.inputVolume}%</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="200" 
+                    step="1"
+                    value={voiceSettings.inputVolume}
+                    on:input={(e) => settings.updateVoice({ inputVolume: parseInt(e.currentTarget.value) })}
+                    class="w-full h-2 bg-[var(--bg-modifier-accent)] rounded outline-none appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--brand-primary)] [&::-webkit-slider-thumb]:cursor-pointer"
+                  />
+                </div>
+                
+                <div>
+                  <div class="flex items-center justify-between mb-2">
+                    <label class="text-sm text-[var(--text-primary)]">Output Volume</label>
+                    <span class="text-sm text-[var(--text-muted)]">{voiceSettings.outputVolume}%</span>
+                  </div>
+                  <input 
+                    type="range" 
+                    min="0" 
+                    max="200" 
+                    step="1"
+                    value={voiceSettings.outputVolume}
+                    on:input={(e) => settings.updateVoice({ outputVolume: parseInt(e.currentTarget.value) })}
+                    class="w-full h-2 bg-[var(--bg-modifier-accent)] rounded outline-none appearance-none [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-[var(--brand-primary)] [&::-webkit-slider-thumb]:cursor-pointer"
+                  />
+                </div>
+              </div>
+            </section>
+          
           {:else if activeSection === 'keybinds'}
             <section>
               <h1 class="text-xl font-semibold text-[var(--text-primary)] mb-5">Keybinds</h1>
@@ -635,12 +886,24 @@
                   <span class="text-[var(--text-primary)]">Mark as Read</span>
                   <kbd class="inline-block px-2 py-1 bg-[var(--bg-tertiary)] rounded text-xs text-[var(--text-primary)] font-inherit">Escape</kbd>
                 </div>
-                <div class="flex justify-between items-center py-3">
+                <div class="flex justify-between items-center py-3 border-b border-[var(--bg-modifier-accent)]">
                   <span class="text-[var(--text-primary)]">Upload File</span>
                   <div class="flex items-center gap-1 text-[var(--text-muted)]">
                     <kbd class="inline-block px-2 py-1 bg-[var(--bg-tertiary)] rounded text-xs text-[var(--text-primary)] font-inherit">Ctrl</kbd>
                     <span>+</span>
                     <kbd class="inline-block px-2 py-1 bg-[var(--bg-tertiary)] rounded text-xs text-[var(--text-primary)] font-inherit">U</kbd>
+                  </div>
+                </div>
+                <div class="flex justify-between items-center py-3">
+                  <span class="text-[var(--text-primary)]">Push to Talk</span>
+                  <div class="flex items-center gap-2">
+                    <kbd class="inline-block px-2 py-1 bg-[var(--bg-tertiary)] rounded text-xs text-[var(--text-primary)] font-inherit">{voiceSettings.pushToTalkKeyDisplay}</kbd>
+                    <button 
+                      class="text-xs text-[var(--text-link)] hover:underline"
+                      on:click={() => { activeSection = 'voice'; }}
+                    >
+                      Edit
+                    </button>
                   </div>
                 </div>
               </div>

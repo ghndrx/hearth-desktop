@@ -1,9 +1,12 @@
 <script lang="ts">
 	import { voiceCall, formatDuration } from '$lib/stores/voiceCall';
+	import { voiceSettings, isPTTPressed } from '$lib/stores';
 	import Avatar from './Avatar.svelte';
 	import Tooltip from './Tooltip.svelte';
 
 	$: channelName = $voiceCall.channel?.name || 'Voice Connected';
+	$: isPushToTalk = $voiceSettings.inputMode === 'push_to_talk';
+	$: pttKeyDisplay = $voiceSettings.pushToTalkKeyDisplay;
 	$: participantCount = $voiceCall.participants.length;
 	$: formattedDuration = formatDuration($voiceCall.callDuration);
 	$: qualityColor = {
@@ -95,6 +98,23 @@
 				{#if participantCount > 4}
 					<div class="more-participants">+{participantCount - 4}</div>
 				{/if}
+			</div>
+		{/if}
+
+		<!-- Push to Talk Indicator -->
+		{#if isPushToTalk && !$voiceCall.connecting}
+			<div class="ptt-indicator" class:active={$isPTTPressed}>
+				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
+					<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+					<path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+				</svg>
+				<span class="ptt-text">
+					{#if $isPTTPressed}
+						Transmitting...
+					{:else}
+						Press <kbd>{pttKeyDisplay}</kbd> to talk
+					{/if}
+				</span>
 			</div>
 		{/if}
 
@@ -373,5 +393,56 @@
 
 	.control-btn.disconnect:hover {
 		background: #da373c;
+	}
+
+	.ptt-indicator {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		padding: 6px 8px;
+		margin-bottom: 8px;
+		background: #2b2d31;
+		border-radius: 4px;
+		font-size: 11px;
+		color: #949ba4;
+		transition: all 0.15s ease;
+	}
+
+	.ptt-indicator.active {
+		background: rgba(35, 165, 89, 0.15);
+		color: #23a559;
+	}
+
+	.ptt-indicator svg {
+		flex-shrink: 0;
+	}
+
+	.ptt-indicator.active svg {
+		animation: pulse 1s ease infinite;
+	}
+
+	@keyframes pulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.5; }
+	}
+
+	.ptt-text {
+		flex: 1;
+	}
+
+	.ptt-indicator kbd {
+		display: inline-block;
+		padding: 1px 4px;
+		background: #404249;
+		border-radius: 3px;
+		font-family: inherit;
+		font-size: 10px;
+		font-weight: 600;
+		color: #dbdee1;
+	}
+
+	.ptt-indicator.active kbd {
+		background: rgba(35, 165, 89, 0.3);
+		color: #23a559;
 	}
 </style>

@@ -3,6 +3,22 @@ import { browser } from '$app/environment';
 
 export type Theme = 'dark' | 'light' | 'midnight';
 export type MessageDisplay = 'cozy' | 'compact';
+export type VoiceInputMode = 'voice_activity' | 'push_to_talk';
+
+export interface VoiceSettings {
+	inputMode: VoiceInputMode;
+	pushToTalkKey: string;
+	pushToTalkKeyDisplay: string;
+	voiceActivitySensitivity: number; // 0-100
+	automaticallyDetermineInputSensitivity: boolean;
+	inputDevice: string;
+	outputDevice: string;
+	inputVolume: number; // 0-200
+	outputVolume: number; // 0-200
+	echoCancellation: boolean;
+	noiseSuppression: boolean;
+	automaticGainControl: boolean;
+}
 
 export interface AppSettings {
 	theme: Theme;
@@ -14,6 +30,7 @@ export interface AppSettings {
 	notificationsEnabled: boolean;
 	fontSize: number;
 	developerMode: boolean;
+	voice: VoiceSettings;
 }
 
 export interface SettingsState {
@@ -22,6 +39,21 @@ export interface SettingsState {
 	activeSection: string;
 	app: AppSettings;
 }
+
+const defaultVoiceSettings: VoiceSettings = {
+	inputMode: 'voice_activity',
+	pushToTalkKey: 'KeyV',
+	pushToTalkKeyDisplay: 'V',
+	voiceActivitySensitivity: 50,
+	automaticallyDetermineInputSensitivity: true,
+	inputDevice: 'default',
+	outputDevice: 'default',
+	inputVolume: 100,
+	outputVolume: 100,
+	echoCancellation: true,
+	noiseSuppression: true,
+	automaticGainControl: true
+};
 
 const defaultSettings: AppSettings = {
 	theme: 'dark',
@@ -32,7 +64,8 @@ const defaultSettings: AppSettings = {
 	enableSounds: true,
 	notificationsEnabled: true,
 	fontSize: 16,
-	developerMode: false
+	developerMode: false,
+	voice: defaultVoiceSettings
 };
 
 function loadSettings(): AppSettings {
@@ -122,6 +155,23 @@ function createSettingsStore() {
 				applyTheme(defaultSettings.theme);
 				return { ...s, app: defaultSettings };
 			});
+		},
+		
+		updateVoice(updates: Partial<VoiceSettings>) {
+			update(s => {
+				const newVoice = { ...s.app.voice, ...updates };
+				const newApp = { ...s.app, voice: newVoice };
+				saveSettings(newApp);
+				return { ...s, app: newApp };
+			});
+		},
+		
+		resetVoice() {
+			update(s => {
+				const newApp = { ...s.app, voice: defaultVoiceSettings };
+				saveSettings(newApp);
+				return { ...s, app: newApp };
+			});
 		}
 	};
 }
@@ -134,3 +184,4 @@ export const isServerSettingsOpen = derived(settings, $s => $s.isServerSettingsO
 export const activeSection = derived(settings, $s => $s.activeSection);
 export const appSettings = derived(settings, $s => $s.app);
 export const currentTheme = derived(settings, $s => $s.app.theme);
+export const voiceSettings = derived(settings, $s => $s.app.voice);
