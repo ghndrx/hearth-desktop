@@ -11,7 +11,8 @@
 	ScreenShareModal,
 	ScreenSharePreview,
 	ErrorBoundary,
-	TitleBar } from '$lib/components';
+	TitleBar,
+	DownloadManager } from '$lib/components';
 	import '$lib/styles/theme.css';
 	import '../app.css';
 
@@ -54,6 +55,9 @@
 
 <!-- Toast notifications -->
 <ToastContainer position="bottom-right" />
+
+<!-- Download Manager -->
+<DownloadManager />
 
 <svelte:head>
 	<title>Hearth</title>

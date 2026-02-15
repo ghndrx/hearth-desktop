@@ -3,6 +3,7 @@
 	import { gatewayState } from '$lib/gateway';
 	import { settings } from '$lib/stores/settings';
 	import { primaryActivity, isIdle } from '$lib/stores/activity';
+	import { downloadsIsOpen, downloadsActions, hasActiveDownloads, downloadStats } from '$lib/stores/downloads';
 	import ConnectionStatus from './ConnectionStatus.svelte';
 	import UserActivity from './UserActivity.svelte';
 
@@ -111,6 +112,20 @@
 					<rect x="6" y="12" width="4" height="8" rx="1"/>
 					<rect x="14" y="12" width="4" height="8" rx="1"/>
 				</svg>
+			{/if}
+		</button>
+
+		<button 
+			class="control-btn" 
+			class:active={$hasActiveDownloads}
+			on:click={() => downloadsActions.toggleOpen()} 
+			title="Downloads{$downloadStats.active > 0 ? ` (${$downloadStats.active} active)` : ''}"
+		>
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+				<path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
+			</svg>
+			{#if $hasActiveDownloads}
+				<span class="download-badge">{$downloadStats.active}</span>
 			{/if}
 		</button>
 
@@ -227,6 +242,7 @@
 		border-radius: 4px;
 		color: #b5bac1;
 		cursor: pointer;
+		position: relative;
 	}
 
 	.control-btn:hover {
@@ -236,5 +252,25 @@
 
 	.control-btn.active {
 		color: #dbdee1;
+	}
+
+	.download-badge {
+		position: absolute;
+		top: 2px;
+		right: 2px;
+		background: #5865f2;
+		color: white;
+		font-size: 9px;
+		font-weight: 700;
+		padding: 1px 4px;
+		border-radius: 8px;
+		min-width: 14px;
+		text-align: center;
+		animation: pulse 2s ease-in-out infinite;
+	}
+
+	@keyframes pulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.7; }
 	}
 </style>

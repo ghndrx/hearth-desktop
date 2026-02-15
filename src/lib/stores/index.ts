@@ -89,3 +89,15 @@ export {
 } from "./notifications";
 export { muteStore, type MuteState } from "./mute";
 export { focusModeStore, type FocusModeState } from "./focusMode";
+export {
+  downloadsStore,
+  downloadsIsOpen,
+  downloadsActions,
+  downloadStats,
+  hasActiveDownloads,
+  formatFileSize,
+  formatSpeed,
+  formatDuration as formatDownloadDuration,
+  type DownloadItem,
+  type DownloadStats,
+} from "./downloads";

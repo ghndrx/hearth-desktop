@@ -226,3 +226,130 @@ pub fn set_focus_mode(active: bool) -> Result<bool, String> {
     FOCUS_MODE_ACTIVE.store(active, Ordering::Relaxed);
     Ok(active)
 }
+
+// ============================================================================
+// File Commands
+// ============================================================================
+
+use std::path::PathBuf;
+
+/// Open a file with the default application
+#[tauri::command]
+pub async fn open_file(filepath: String) -> Result<(), String> {
+    let path = PathBuf::from(&filepath);
+    
+    if !path.exists() {
+        return Err(format!("File not found: {}", filepath));
+    }
+    
+    // Use the opener crate for cross-platform file opening
+    opener::open(&path).map_err(|e| format!("Failed to open file: {}", e))?;
+    
+    Ok(())
+}
+
+/// Reveal a file in the system file manager
+#[tauri::command]
+pub async fn reveal_in_folder(filepath: String) -> Result<(), String> {
+    let path = PathBuf::from(&filepath);
+    
+    if !path.exists() {
+        return Err(format!("File not found: {}", filepath));
+    }
+    
+    // Get the parent directory
+    let parent = path.parent()
+        .ok_or_else(|| "Could not get parent directory".to_string())?;
+    
+    #[cfg(target_os = "macos")]
+    {
+        // On macOS, use `open` with the -R flag to reveal the file
+        std::process::Command::new("open")
+            .args(&["-R", &filepath])
+            .spawn()
+            .map_err(|e| format!("Failed to reveal file: {}", e))?;
+    }
+    
+    #[cfg(target_os = "windows")]
+    {
+        // On Windows, use explorer with /select flag
+        std::process::Command::new("explorer")
+            .args(&["/select,", &filepath])
+            .spawn()
+            .map_err(|e| format!("Failed to reveal file: {}", e))?;
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        // On Linux, open the parent folder (selecting specific files varies by file manager)
+        opener::open(parent)
+            .map_err(|e| format!("Failed to open folder: {}", e))?;
+    }
+    
+    Ok(())
+}
+
+/// Check if a file exists
+#[tauri::command]
+pub async fn file_exists(filepath: String) -> Result<bool, String> {
+    let path = PathBuf::from(&filepath);
+    Ok(path.exists())
+}
+
+/// Get file metadata
+#[tauri::command]
+pub async fn get_file_info(filepath: String) -> Result<FileInfo, String> {
+    use std::time::UNIX_EPOCH;
+    
+    let path = PathBuf::from(&filepath);
+    
+    if !path.exists() {
+        return Err(format!("File not found: {}", filepath));
+    }
+    
+    let metadata = std::fs::metadata(&path)
+        .map_err(|e| format!("Failed to read file metadata: {}", e))?;
+    
+    let name = path.file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("unknown")
+        .to_string();
+    
+    let extension = path.extension()
+        .and_then(|e| e.to_str())
+        .map(|s| s.to_lowercase());
+    
+    let created = metadata.created()
+        .ok()
+        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+        .map(|d| d.as_secs());
+    
+    let modified = metadata.modified()
+        .ok()
+        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
+        .map(|d| d.as_secs());
+    
+    Ok(FileInfo {
+        name,
+        path: filepath,
+        size: metadata.len(),
+        extension,
+        is_file: metadata.is_file(),
+        is_dir: metadata.is_dir(),
+        created,
+        modified,
+    })
+}
+
+/// File info struct
+#[derive(serde::Serialize)]
+pub struct FileInfo {
+    name: String,
+    path: String,
+    size: u64,
+    extension: Option<String>,
+    is_file: bool,
+    is_dir: bool,
+    created: Option<u64>,
+    modified: Option<u64>,
+}
