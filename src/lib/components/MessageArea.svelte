@@ -5,6 +5,7 @@
 	import type { Message } from '$lib/stores/messages';
 	import TypingIndicator from './TypingIndicator.svelte';
 	import EmojiPicker from './EmojiPicker.svelte';
+	import MuteIndicator from './MuteIndicator.svelte';
 
 	let messageInput = '';
 	let messagesContainer: HTMLDivElement;
@@ -209,6 +210,8 @@
 				<div class="mx-4 w-px h-6 bg-dark-500"></div>
 				<p class="text-sm text-gray-400 truncate">{$activeChannel.topic}</p>
 			{/if}
+			<div class="flex-1"></div>
+			<MuteIndicator />
 		</header>
 
 		<!-- Messages -->
