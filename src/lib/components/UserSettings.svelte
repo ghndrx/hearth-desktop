@@ -395,6 +395,7 @@
                       placeholder="Tell us about yourself"
                       maxlength={190}
                       rows={4}
+                      spellcheck="true"
                       class="w-full px-2.5 py-2.5 bg-[var(--bg-tertiary)] border-none rounded text-base text-[var(--text-primary)] font-inherit focus:outline-2 focus:outline-[var(--brand-primary)] resize-y min-h-[100px]"
                     ></textarea>
                     <span class="block text-right text-xs text-[var(--text-muted)] mt-1">{profileForm.bio.length}/190</span>

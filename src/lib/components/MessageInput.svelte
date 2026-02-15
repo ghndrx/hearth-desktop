@@ -241,6 +241,7 @@
 			placeholder={actualPlaceholder}
 			rows="1"
 			disabled={!$currentChannel}
+			spellcheck="true"
 		></textarea>
 
 		<!-- Right Buttons -->
