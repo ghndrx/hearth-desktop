@@ -5,7 +5,13 @@
 	import { pushToTalk } from '$lib/stores/pushToTalk';
 	import { screenShare } from '$lib/stores/screenShare';
 	import { MenuHandler, DeepLinkHandler, KeyboardHandler } from '$lib';
-	import { ToastContainer, SearchModal, HelpModal, ScreenShareModal, ScreenSharePreview, ErrorBoundary } from '$lib/components';
+	import { 	ToastContainer,
+	SearchModal,
+	HelpModal,
+	ScreenShareModal,
+	ScreenSharePreview,
+	ErrorBoundary,
+	TitleBar } from '$lib/components';
 	import '$lib/styles/theme.css';
 	import '../app.css';
 
@@ -60,15 +66,33 @@
 		<p>Loading...</p>
 	</div>
 {:else}
-	<ErrorBoundary>
-		{@render children()}
-	</ErrorBoundary>
+	<div class="app-container">
+		<TitleBar />
+		<main class="main-content">
+			<ErrorBoundary>
+				{@render children()}
+			</ErrorBoundary>
+		</main>
+	</div>
 {/if}
 
 <style>
 	:global(body) {
 		margin: 0;
 		padding: 0;
+	}
+
+	.app-container {
+		display: flex;
+		flex-direction: column;
+		height: 100vh;
+		overflow: hidden;
+	}
+
+	.main-content {
+		flex: 1;
+		overflow: hidden;
+		display: flex;
 	}
 
 	.loading {

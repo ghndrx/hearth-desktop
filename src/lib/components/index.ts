@@ -40,6 +40,7 @@ export { default as ConnectionStatus } from "./ConnectionStatus.svelte";
 export { default as MuteIndicator } from "./MuteIndicator.svelte";
 export { default as FocusModeIndicator } from "./FocusModeIndicator.svelte";
 export { default as ErrorBoundary } from "./ErrorBoundary.svelte";
+export { default as TitleBar } from "./TitleBar.svelte";
 
 // Voice components
 export { default as VoiceCallPanel } from "./VoiceCallPanel.svelte";
