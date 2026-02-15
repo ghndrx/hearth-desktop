@@ -32,3 +32,4 @@ export { default as CreateServerModal } from './CreateServerModal.svelte';
 export { default as Button } from './Button.svelte';
 export { default as Toast } from './Toast.svelte';
 export { default as ToastContainer } from './ToastContainer.svelte';
+export { default as ConnectionStatus } from './ConnectionStatus.svelte';

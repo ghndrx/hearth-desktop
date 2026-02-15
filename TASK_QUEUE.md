@@ -7,7 +7,7 @@ This file tracks pending tasks and improvements for the Hearth Desktop applicati
 - [ ] **Implement system tray functionality** - Add minimize-to-tray and tray context menu
 - [ ] **Add global keyboard shortcuts** - Quick toggle window visibility (e.g., Cmd/Ctrl+Shift+H)
 - [ ] **Implement native OS notifications** - Show notifications for new messages
-- [ ] **Create connection status indicator** - Show online/offline status in UI
+- [x] **Create connection status indicator** - Show online/offline status in UI
 
 ## Medium Priority
 
