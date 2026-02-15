@@ -5,6 +5,7 @@ mod commands;
 mod deeplink;
 mod menu;
 mod tray;
+mod updater;
 
 use tauri::{GlobalShortcutBuilder, Manager, WindowEvent};
 
@@ -88,6 +89,12 @@ fn main() {
                 }
             });
 
+            // Check for updates on startup (async, non-blocking)
+            let update_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                updater::check_updates_on_startup(update_handle).await;
+            });
+
             Ok(())
         })
         .on_menu_event(|app, event| {
@@ -112,6 +119,8 @@ fn main() {
             commands::clipboard_read_text,
             commands::clipboard_has_text,
             commands::clipboard_clear,
+            updater::check_for_updates,
+            updater::download_and_install_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

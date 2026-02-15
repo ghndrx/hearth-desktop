@@ -1,7 +1,21 @@
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { listen, type UnlistenFn } from "@tauri-apps/api/event";
 import { sendNotification } from "@tauri-apps/plugin-notification";
 import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
+
+// Update Types
+export interface UpdateInfo {
+  version: string;
+  current_version: string;
+  body: string | null;
+  date: string | null;
+}
+
+export interface UpdateProgress {
+  downloaded: number;
+  total: number | null;
+  percent: number | null;
+}
 
 // Window Control Functions
 export async function minimizeWindow(): Promise<void> {
@@ -109,6 +123,57 @@ export function onDeepLink(callback: (url: string) => void) {
   });
 }
 
+// ============================================================================
+// Auto-Update Functions
+// ============================================================================
+
+/**
+ * Check for available updates
+ * @returns UpdateInfo if an update is available, null otherwise
+ */
+export async function checkForUpdates(): Promise<UpdateInfo | null> {
+  return invoke("check_for_updates");
+}
+
+/**
+ * Download and install the available update
+ * This will restart the application after installation
+ */
+export async function downloadAndInstallUpdate(): Promise<void> {
+  return invoke("download_and_install_update");
+}
+
+/**
+ * Listen for update available events (emitted on startup if update found)
+ */
+export function onUpdateAvailable(
+  callback: (info: UpdateInfo) => void,
+): Promise<UnlistenFn> {
+  return listen<UpdateInfo>("update:available", (event) => {
+    callback(event.payload);
+  });
+}
+
+/**
+ * Listen for update download progress
+ */
+export function onUpdateProgress(
+  callback: (progress: UpdateProgress) => void,
+): Promise<UnlistenFn> {
+  return listen<UpdateProgress>("update:progress", (event) => {
+    callback(event.payload);
+  });
+}
+
+/**
+ * Listen for update installation starting
+ */
+export function onUpdateInstalling(callback: () => void): Promise<UnlistenFn> {
+  return listen("update:installing", () => {
+    callback();
+  });
+}
+
 // Combined window API
 export const window = {
   minimize: minimizeWindow,
@@ -140,12 +205,22 @@ export const app = {
   getVersion: getAppVersion,
 };
 
+// Combined updater API
+export const updater = {
+  check: checkForUpdates,
+  downloadAndInstall: downloadAndInstallUpdate,
+  onAvailable: onUpdateAvailable,
+  onProgress: onUpdateProgress,
+  onInstalling: onUpdateInstalling,
+};
+
 // Default export
 export default {
   window,
   notification,
   autoStart,
   app,
+  updater,
   onMenuEvent,
   onDeepLink,
 };
