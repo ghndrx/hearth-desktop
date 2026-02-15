@@ -3,8 +3,9 @@
 	import { app, isLoading } from '$lib/stores/app';
 	import { activityStore } from '$lib/stores/activity';
 	import { pushToTalk } from '$lib/stores/pushToTalk';
+	import { screenShare } from '$lib/stores/screenShare';
 	import { MenuHandler, DeepLinkHandler, KeyboardHandler } from '$lib';
-	import { ToastContainer, SearchModal, HelpModal } from '$lib/components';
+	import { ToastContainer, SearchModal, HelpModal, ScreenShareModal, ScreenSharePreview } from '$lib/components';
 	import '$lib/styles/theme.css';
 	import '../app.css';
 
@@ -26,6 +27,9 @@
 		
 		// Clean up push-to-talk handler
 		pushToTalk.destroy();
+		
+		// Clean up screen sharing
+		screenShare.reset();
 	});
 </script>
 
@@ -37,6 +41,10 @@
 <!-- Global modals -->
 <SearchModal />
 <HelpModal />
+<ScreenShareModal />
+
+<!-- Screen share floating preview -->
+<ScreenSharePreview />
 
 <!-- Toast notifications -->
 <ToastContainer position="bottom-right" />

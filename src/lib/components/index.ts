@@ -40,3 +40,7 @@ export { default as ConnectionStatus } from './ConnectionStatus.svelte';
 
 // Voice components
 export { default as VoiceCallPanel } from './VoiceCallPanel.svelte';
+
+// Screen share components
+export { default as ScreenShareModal } from './ScreenShareModal.svelte';
+export { default as ScreenSharePreview } from './ScreenSharePreview.svelte';

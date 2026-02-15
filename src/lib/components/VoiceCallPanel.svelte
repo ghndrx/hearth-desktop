@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { voiceCall, formatDuration } from '$lib/stores/voiceCall';
-	import { voiceSettings, isPTTPressed } from '$lib/stores';
+	import { voiceSettings, isPTTPressed, screenShare, isScreenSharing } from '$lib/stores';
 	import Avatar from './Avatar.svelte';
 	import Tooltip from './Tooltip.svelte';
 
@@ -17,6 +17,10 @@
 	}[$voiceCall.connectionQuality];
 
 	function handleDisconnect() {
+		// Stop screen sharing if active before disconnecting
+		if ($isScreenSharing) {
+			screenShare.stopSharing();
+		}
 		voiceCall.disconnect();
 	}
 
@@ -29,7 +33,13 @@
 	}
 
 	function handleToggleScreenShare() {
-		voiceCall.toggleScreenShare();
+		if ($isScreenSharing) {
+			// Stop sharing
+			screenShare.stopSharing();
+		} else {
+			// Open the screen share modal
+			screenShare.openModal();
+		}
 	}
 </script>
 
