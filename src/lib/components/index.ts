@@ -38,6 +38,8 @@ export { default as Toast } from "./Toast.svelte";
 export { default as ToastContainer } from "./ToastContainer.svelte";
 export { default as ConnectionStatus } from "./ConnectionStatus.svelte";
 export { default as MuteIndicator } from "./MuteIndicator.svelte";
+export { default as FocusModeIndicator } from "./FocusModeIndicator.svelte";
+export { default as ErrorBoundary } from "./ErrorBoundary.svelte";
 
 // Voice components
 export { default as VoiceCallPanel } from "./VoiceCallPanel.svelte";

@@ -5,7 +5,7 @@
 	import { pushToTalk } from '$lib/stores/pushToTalk';
 	import { screenShare } from '$lib/stores/screenShare';
 	import { MenuHandler, DeepLinkHandler, KeyboardHandler } from '$lib';
-	import { ToastContainer, SearchModal, HelpModal, ScreenShareModal, ScreenSharePreview } from '$lib/components';
+	import { ToastContainer, SearchModal, HelpModal, ScreenShareModal, ScreenSharePreview, ErrorBoundary } from '$lib/components';
 	import '$lib/styles/theme.css';
 	import '../app.css';
 
@@ -60,7 +60,9 @@
 		<p>Loading...</p>
 	</div>
 {:else}
-	{@render children()}
+	<ErrorBoundary>
+		{@render children()}
+	</ErrorBoundary>
 {/if}
 
 <style>

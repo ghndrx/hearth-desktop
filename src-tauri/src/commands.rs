@@ -198,3 +198,31 @@ pub fn update_tray_badge(app: AppHandle, count: u32) -> Result<(), String> {
 pub fn get_tray_badge() -> u32 {
     crate::tray::get_unread_count()
 }
+
+// ============================================================================
+// Focus Mode Commands
+// ============================================================================
+
+static FOCUS_MODE_ACTIVE: AtomicBool = AtomicBool::new(false);
+
+/// Toggle focus mode state
+#[tauri::command]
+pub fn toggle_focus_mode() -> Result<bool, String> {
+    let current = FOCUS_MODE_ACTIVE.load(Ordering::Relaxed);
+    let new_state = !current;
+    FOCUS_MODE_ACTIVE.store(new_state, Ordering::Relaxed);
+    Ok(new_state)
+}
+
+/// Get current focus mode state
+#[tauri::command]
+pub fn is_focus_mode_active() -> Result<bool, String> {
+    Ok(FOCUS_MODE_ACTIVE.load(Ordering::Relaxed))
+}
+
+/// Set focus mode state explicitly
+#[tauri::command]
+pub fn set_focus_mode(active: bool) -> Result<bool, String> {
+    FOCUS_MODE_ACTIVE.store(active, Ordering::Relaxed);
+    Ok(active)
+}
