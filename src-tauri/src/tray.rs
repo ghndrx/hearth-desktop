@@ -1,14 +1,18 @@
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager, Runtime, AppHandle,
+    Manager, Runtime, AppHandle, State,
 };
+use std::sync::atomic::{AtomicU32, Ordering};
+
+/// Global unread count for tray updates
+static UNREAD_COUNT: AtomicU32 = AtomicU32::new(0);
 
 pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::error::Error>> {
     let handle = app.handle().clone();
     let menu = create_tray_menu(&handle, false)?;
 
-    let _tray = TrayIconBuilder::new()
+    let _tray = TrayIconBuilder::with_id("main")
         .icon(app.default_window_icon().unwrap().clone())
         .tooltip("Hearth")
         .menu(&menu)
@@ -109,4 +113,37 @@ pub fn update_tray_mute_state<R: Runtime>(
     is_muted: bool,
 ) -> Result<(), Box<dyn std::error::Error>> {
     update_tray_menu(app, is_muted)
+}
+
+/// Update the tray icon tooltip to show unread count
+pub fn update_tray_tooltip<R: Runtime>(
+    app: &AppHandle<R>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let count = UNREAD_COUNT.load(Ordering::Relaxed);
+    let tooltip = if count > 0 {
+        format!("Hearth ({} unread)", count)
+    } else {
+        "Hearth".to_string()
+    };
+    
+    if let Some(tray) = app.tray_by_id("main") {
+        tray.set_tooltip(Some(&tooltip))?;
+    }
+    
+    Ok(())
+}
+
+/// Set the unread message count and update tray
+pub fn set_unread_count<R: Runtime>(
+    app: &AppHandle<R>,
+    count: u32,
+) -> Result<(), Box<dyn std::error::Error>> {
+    UNREAD_COUNT.store(count, Ordering::Relaxed);
+    update_tray_tooltip(app)?;
+    Ok(())
+}
+
+/// Get current unread count
+pub fn get_unread_count() -> u32 {
+    UNREAD_COUNT.load(Ordering::Relaxed)
 }
