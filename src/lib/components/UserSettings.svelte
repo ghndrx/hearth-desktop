@@ -2,7 +2,7 @@
   import { fade, fly } from 'svelte/transition';
   import { createEventDispatcher } from 'svelte';
   import { user, auth } from '$lib/stores/auth';
-  import { settings, type Theme, type MessageDisplay, type VoiceInputMode } from '$lib/stores/settings';
+  import { settings, type Theme, type MessageDisplay, type VoiceInputMode, type TraySettings } from '$lib/stores/settings';
   import { pushToTalk, isCapturingPTTKey, formatKeyDisplay, getKeyCode } from '$lib/stores/pushToTalk';
   import Avatar from './Avatar.svelte';
   
@@ -621,14 +621,70 @@
                     <span class="text-sm text-[var(--text-muted)]">Play notification sounds for messages.</span>
                   </div>
                   <label class="relative inline-block w-10 h-6 flex-shrink-0">
-                    <input 
-                      type="checkbox" 
+                    <input
+                      type="checkbox"
                       checked={appSettings.enableSounds}
                       on:change={() => toggleSetting('enableSounds')}
                       class="opacity-0 w-0 h-0"
                     />
                     <span class="absolute cursor-pointer inset-0 bg-[var(--bg-modifier-accent)] rounded-full transition-colors before:content-[''] before:absolute before:h-[18px] before:w-[18px] before:left-[3px] before:bottom-[3px] before:bg-white before:rounded-full before:transition-transform [&:has(input:checked)]:bg-[var(--brand-primary)] [&:has(input:checked)]:before:translate-x-4"></span>
                   </label>
+                </div>
+              </div>
+
+              <!-- System Tray Settings -->
+              <div class="mb-6">
+                <h2 class="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] mb-2">System Tray</h2>
+
+                <div class="flex justify-between items-center py-4 border-b border-[var(--bg-modifier-accent)]">
+                  <div>
+                    <span class="block text-base text-[var(--text-primary)] mb-1">Minimize to Tray</span>
+                    <span class="text-sm text-[var(--text-muted)]">Keep Hearth running in the system tray when closing the window.</span>
+                  </div>
+                  <label class="relative inline-block w-10 h-6 flex-shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={appSettings.tray?.minimizeToTray ?? true}
+                      on:change={() => settings.updateTray({ minimizeToTray: !appSettings.tray?.minimizeToTray })}
+                      class="opacity-0 w-0 h-0"
+                    />
+                    <span class="absolute cursor-pointer inset-0 bg-[var(--bg-modifier-accent)] rounded-full transition-colors before:content-[''] before:absolute before:h-[18px] before:w-[18px] before:left-[3px] before:bottom-[3px] before:bg-white before:rounded-full before:transition-transform [&:has(input:checked)]:bg-[var(--brand-primary)] [&:has(input:checked)]:before:translate-x-4"></span>
+                  </label>
+                </div>
+
+                <div class="flex justify-between items-center py-4 border-b border-[var(--bg-modifier-accent)]">
+                  <div>
+                    <span class="block text-base text-[var(--text-primary)] mb-1">Show Tray Icon</span>
+                    <span class="text-sm text-[var(--text-muted)]">Display Hearth icon in the system tray.</span>
+                  </div>
+                  <label class="relative inline-block w-10 h-6 flex-shrink-0">
+                    <input
+                      type="checkbox"
+                      checked={appSettings.tray?.trayIconEnabled ?? true}
+                      on:change={() => settings.updateTray({ trayIconEnabled: !appSettings.tray?.trayIconEnabled })}
+                      class="opacity-0 w-0 h-0"
+                    />
+                    <span class="absolute cursor-pointer inset-0 bg-[var(--bg-modifier-accent)] rounded-full transition-colors before:content-[''] before:absolute before:h-[18px] before:w-[18px] before:left-[3px] before:bottom-[3px] before:bg-white before:rounded-full before:transition-transform [&:has(input:checked)]:bg-[var(--brand-primary)] [&:has(input:checked)]:before:translate-x-4"></span>
+                  </label>
+                </div>
+
+                <div class="py-4">
+                  <span class="block text-base text-[var(--text-primary)] mb-2">Tray Click Behavior</span>
+                  <span class="text-sm text-[var(--text-muted)] block mb-3">What happens when you click the tray icon.</span>
+                  <div class="flex gap-3">
+                    <button
+                      class="flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors {appSettings.tray?.trayClickBehavior === 'toggle' ? 'bg-[var(--brand-primary)] text-white' : 'bg-[var(--bg-modifier-accent)] text-[var(--text-secondary)] hover:bg-[var(--bg-modifier-hover)]'}"
+                      on:click={() => settings.updateTray({ trayClickBehavior: 'toggle' })}
+                    >
+                      Toggle Window
+                    </button>
+                    <button
+                      class="flex-1 px-4 py-2 rounded-md text-sm font-medium transition-colors {appSettings.tray?.trayClickBehavior === 'show' ? 'bg-[var(--brand-primary)] text-white' : 'bg-[var(--bg-modifier-accent)] text-[var(--text-secondary)] hover:bg-[var(--bg-modifier-hover)]'}"
+                      on:click={() => settings.updateTray({ trayClickBehavior: 'show' })}
+                    >
+                      Show Only
+                    </button>
+                  </div>
                 </div>
               </div>
             </section>
