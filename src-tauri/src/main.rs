@@ -81,6 +81,31 @@ fn main() {
                 })
                 .ok();
 
+            // Toggle mute with Cmd/Ctrl+Shift+M
+            shortcut_manager
+                .register("CommandOrControl+Shift+M", {
+                    let app_handle = app.handle().clone();
+                    move || {
+                        let muted = crate::commands::toggle_mute().unwrap_or(false);
+                        // Update the tray menu to reflect new state
+                        let _ = crate::tray::update_tray_mute_state(&app_handle, muted);
+                        
+                        // Show a toast notification via the window
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            let message = if muted {
+                                "Notifications muted"
+                            } else {
+                                "Notifications unmuted"
+                            };
+                            let _ = window.emit("mute-state-changed", serde_json::json!({
+                                "muted": muted,
+                                "message": message
+                            }));
+                        }
+                    }
+                })
+                .ok();
+
             // Register deep link handler
             let handle = app.handle().clone();
             app.listen("deep-link://new-url", move |event| {
@@ -124,6 +149,10 @@ fn main() {
             commands::clipboard_read_text,
             commands::clipboard_has_text,
             commands::clipboard_clear,
+            // Quick Mute commands
+            commands::toggle_mute,
+            commands::is_muted,
+            commands::set_mute,
             updater::check_for_updates,
             updater::download_and_install_update,
             // Activity detection for rich presence

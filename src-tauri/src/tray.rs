@@ -1,24 +1,19 @@
 use tauri::{
-    menu::{Menu, MenuItem},
+    menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager, Runtime,
+    Manager, Runtime, AppHandle,
 };
 
 pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::error::Error>> {
-    // Create menu items
-    let show_i = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
-    let hide_i = MenuItem::with_id(app, "hide", "Hide", true, None::<&str>)?;
-    let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-
-    // Create the menu
-    let menu = Menu::with_items(app, &[&show_i, &hide_i, &quit_i])?;
+    let handle = app.handle().clone();
+    let menu = create_tray_menu(&handle, false)?;
 
     let _tray = TrayIconBuilder::new()
         .icon(app.default_window_icon().unwrap().clone())
         .tooltip("Hearth")
         .menu(&menu)
         .menu_on_left_click(false)
-        .on_menu_event(|app, event| {
+        .on_menu_event(move |app, event| {
             match event.id().as_ref() {
                 "show" => {
                     if let Some(window) = app.get_webview_window("main") {
@@ -29,6 +24,21 @@ pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::er
                 "hide" => {
                     if let Some(window) = app.get_webview_window("main") {
                         let _ = window.hide();
+                    }
+                }
+                "toggle_mute" => {
+                    // Toggle mute state
+                    let muted = crate::commands::toggle_mute().unwrap_or(false);
+                    // Update the menu to reflect new state
+                    let _ = update_tray_menu(app, muted);
+                    
+                    // Show a notification toast when muting/unmuting
+                    if muted {
+                        let _ = app.notification()
+                            .builder()
+                            .title("Hearth")
+                            .body("Notifications muted")
+                            .show();
                     }
                 }
                 "quit" => {
@@ -58,4 +68,45 @@ pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::er
         .build(app)?;
 
     Ok(())
+}
+
+fn create_tray_menu<R: Runtime>(
+    app: &AppHandle<R>,
+    is_muted: bool,
+) -> Result<Menu<R>, Box<dyn std::error::Error>> {
+    let show_i = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
+    let hide_i = MenuItem::with_id(app, "hide", "Hide", true, None::<&str>)?;
+    let separator = PredefinedMenuItem::separator(app)?;
+    
+    let mute_text = if is_muted {
+        "Unmute Notifications"
+    } else {
+        "Mute Notifications"
+    };
+    let toggle_mute_i = MenuItem::with_id(app, "toggle_mute", mute_text, true, None::<&str>)?;
+    
+    let separator2 = PredefinedMenuItem::separator(app)?;
+    let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
+
+    let menu = Menu::with_items(app, &[&show_i, &hide_i, &separator, &toggle_mute_i, &separator2, &quit_i])?;
+    Ok(menu)
+}
+
+fn update_tray_menu<R: Runtime>(
+    app: &AppHandle<R>,
+    is_muted: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    if let Some(tray) = app.tray_by_id("main") {
+        let new_menu = create_tray_menu(app, is_muted)?;
+        tray.set_menu(Some(new_menu))?;
+    }
+    Ok(())
+}
+
+/// Update tray menu from external calls (e.g., when mute is toggled via keyboard shortcut)
+pub fn update_tray_mute_state<R: Runtime>(
+    app: &AppHandle<R>,
+    is_muted: bool,
+) -> Result<(), Box<dyn std::error::Error>> {
+    update_tray_menu(app, is_muted)
 }

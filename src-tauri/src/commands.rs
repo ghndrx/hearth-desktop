@@ -152,3 +152,33 @@ pub async fn clipboard_clear(app: AppHandle) -> Result<(), String> {
         .write_text("")
         .map_err(|e| e.to_string())
 }
+
+// ============================================================================
+// Quick Mute Commands
+// ============================================================================
+
+use std::sync::atomic::{AtomicBool, Ordering};
+
+static NOTIFICATIONS_MUTED: AtomicBool = AtomicBool::new(false);
+
+/// Toggle notification mute state
+#[tauri::command]
+pub fn toggle_mute() -> Result<bool, String> {
+    let current = NOTIFICATIONS_MUTED.load(Ordering::Relaxed);
+    let new_state = !current;
+    NOTIFICATIONS_MUTED.store(new_state, Ordering::Relaxed);
+    Ok(new_state)
+}
+
+/// Get current mute state
+#[tauri::command]
+pub fn is_muted() -> Result<bool, String> {
+    Ok(NOTIFICATIONS_MUTED.load(Ordering::Relaxed))
+}
+
+/// Set mute state explicitly
+#[tauri::command]
+pub fn set_mute(muted: bool) -> Result<bool, String> {
+    NOTIFICATIONS_MUTED.store(muted, Ordering::Relaxed);
+    Ok(muted)
+}
