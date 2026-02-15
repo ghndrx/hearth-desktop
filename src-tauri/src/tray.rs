@@ -1,7 +1,7 @@
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager, Runtime, AppHandle, State,
+    Manager, Runtime, AppHandle,
 };
 use std::sync::atomic::{AtomicU32, AtomicBool, Ordering};
 
@@ -78,6 +78,43 @@ pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::er
                         .body(message)
                         .show();
                 }
+                "check_updates" => {
+                    // Trigger update check
+                    let app_handle = app.clone();
+                    tauri::async_runtime::spawn(async move {
+                        match crate::updater::check_for_updates(app_handle.clone()).await {
+                            Ok(Some(update)) => {
+                                // Update available
+                                let _ = app_handle.notification()
+                                    .builder()
+                                    .title("Hearth Update Available")
+                                    .body(format!("Version {} is available! (Current: {})", update.version, update.current_version))
+                                    .show();
+                                
+                                // Also emit to UI
+                                if let Some(window) = app_handle.get_webview_window("main") {
+                                    let _ = window.emit("update:available", update);
+                                }
+                            }
+                            Ok(None) => {
+                                // No update available
+                                let _ = app_handle.notification()
+                                    .builder()
+                                    .title("Hearth")
+                                    .body("You're running the latest version!")
+                                    .show();
+                            }
+                            Err(e) => {
+                                // Failed to check
+                                let _ = app_handle.notification()
+                                    .builder()
+                                    .title("Hearth")
+                                    .body(format!("Failed to check for updates: {}", e))
+                                    .show();
+                            }
+                        }
+                    });
+                }
                 "quit" => {
                     app.exit(0);
                 }
@@ -131,10 +168,13 @@ fn create_tray_menu<R: Runtime>(
     };
     let toggle_focus_i = MenuItem::with_id(app, "toggle_focus", focus_text, true, None::<&str>)?;
     
+    // Check for updates
+    let check_updates_i = MenuItem::with_id(app, "check_updates", "Check for Updates...", true, None::<&str>)?;
+    
     let separator2 = PredefinedMenuItem::separator(app)?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
-    let menu = Menu::with_items(app, &[&show_i, &hide_i, &separator, &toggle_mute_i, &toggle_focus_i, &separator2, &quit_i])?;
+    let menu = Menu::with_items(app, &[&show_i, &hide_i, &separator, &toggle_mute_i, &toggle_focus_i, &check_updates_i, &separator2, &quit_i])?;
     Ok(menu)
 }
 
