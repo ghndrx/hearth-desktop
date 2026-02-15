@@ -2,6 +2,7 @@
 	import { onMount } from 'svelte';
 	import { app, isLoading } from '$lib/stores/app';
 	import { MenuHandler, DeepLinkHandler } from '$lib';
+	import { ToastContainer } from '$lib/components';
 	import '$lib/styles/theme.css';
 	import '../app.css';
 
@@ -15,6 +16,9 @@
 <!-- Desktop event handlers (invisible) -->
 <MenuHandler />
 <DeepLinkHandler />
+
+<!-- Toast notifications -->
+<ToastContainer position="bottom-right" />
 
 <svelte:head>
 	<title>Hearth</title>
