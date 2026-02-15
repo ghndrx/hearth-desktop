@@ -2,6 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { app, isLoading } from '$lib/stores/app';
 	import { activityStore } from '$lib/stores/activity';
+	import { pushToTalk } from '$lib/stores/pushToTalk';
 	import { MenuHandler, DeepLinkHandler, KeyboardHandler } from '$lib';
 	import { ToastContainer, SearchModal, HelpModal } from '$lib/components';
 	import '$lib/styles/theme.css';
@@ -14,11 +15,17 @@
 		
 		// Start activity detection for rich presence
 		activityStore.startPolling();
+		
+		// Initialize push-to-talk hotkey handler
+		pushToTalk.init();
 	});
 
 	onDestroy(() => {
 		// Clean up activity polling on unmount
 		activityStore.stopPolling();
+		
+		// Clean up push-to-talk handler
+		pushToTalk.destroy();
 	});
 </script>
 

@@ -3,7 +3,8 @@ export { websocket } from './websocket';
 export { servers, currentServer, currentServer as activeServer } from './servers';
 export { channels, currentChannel, currentChannel as activeChannel, loadServerChannels } from './channels';
 export { messages } from './messages';
-export { settings, isSettingsOpen, appSettings, currentTheme } from './settings';
+export { settings, isSettingsOpen, appSettings, currentTheme, voiceSettings, type VoiceSettings, type VoiceInputMode } from './settings';
+export { pushToTalk, isPTTPressed, isPTTRecording, isCapturingPTTKey, formatKeyDisplay, getKeyCode } from './pushToTalk';
 export { typingStore, formatTypingText, setCurrentUserId } from './typing';
 export { toasts, toastCount, type Toast, type ToastType, type ToastOptions } from './toasts';
 export { 
