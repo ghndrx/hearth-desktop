@@ -8,6 +8,8 @@ import {
 import { appSettings } from "./settings";
 import { user } from "./auth";
 import { currentChannel } from "./channels";
+import { muteStore } from "./mute";
+import { invoke } from "@tauri-apps/api/core";
 
 export interface NotificationState {
   permissionGranted: boolean;
@@ -71,10 +73,25 @@ function createNotificationStore() {
     }
   }
 
-  function shouldShowNotification(message: MessageNotification): boolean {
+  async function isGloballyMuted(): Promise<boolean> {
+    if (!browser) return false;
+    try {
+      return await invoke<boolean>("is_muted");
+    } catch {
+      return false;
+    }
+  }
+
+  async function shouldShowNotification(
+    message: MessageNotification,
+  ): Promise<boolean> {
     const settings = get(appSettings);
     const currentUserData = get(user);
     const activeChannel = get(currentChannel);
+
+    // Check if globally muted
+    const muted = await isGloballyMuted();
+    if (muted) return false;
 
     // Check if notifications are enabled
     if (!settings.notificationsEnabled) return false;
@@ -141,7 +158,8 @@ function createNotificationStore() {
       }
     }
 
-    if (!shouldShowNotification(message)) return;
+    const shouldShow = await shouldShowNotification(message);
+    if (!shouldShow) return;
     if (isDuplicate(message.id)) return;
 
     const title = message.serverName

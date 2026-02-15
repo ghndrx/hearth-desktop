@@ -87,3 +87,4 @@ export {
   isNotificationPermissionGranted,
   type MessageNotification,
 } from "./notifications";
+export { muteStore, type MuteState } from "./mute";
