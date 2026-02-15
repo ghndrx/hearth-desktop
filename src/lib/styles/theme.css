@@ -1,10 +1,10 @@
-/* Hearth Desktop Theme Variables */
+/* Hearth Theme Variables */
 
 :root {
 	/* Brand */
-	--brand-primary: #e87620;
-	--brand-hover: #d95e16;
-
+	--brand-primary: #5865f2;
+	--brand-hover: #4752c4;
+	
 	/* Backgrounds */
 	--bg-primary: #313338;
 	--bg-secondary: #2b2d31;
@@ -13,7 +13,7 @@
 	--bg-modifier-active: rgba(79, 84, 92, 0.24);
 	--bg-modifier-selected: rgba(79, 84, 92, 0.32);
 	--bg-modifier-accent: rgba(79, 84, 92, 0.48);
-
+	
 	/* Text */
 	--text-primary: #f2f3f5;
 	--text-secondary: #b5bac1;
@@ -22,22 +22,22 @@
 	--text-positive: #23a559;
 	--text-warning: #f0b232;
 	--text-danger: #f23f43;
-
+	
 	/* Status */
 	--status-online: #23a559;
 	--status-idle: #f0b232;
 	--status-dnd: #f23f43;
 	--status-offline: #80848e;
 	--status-danger: #f23f43;
-
+	
 	/* Borders */
 	--border-subtle: rgba(79, 84, 92, 0.24);
-
+	
 	/* Scrollbar */
 	--scrollbar-track: transparent;
 	--scrollbar-thumb: #1a1b1e;
 	--scrollbar-thumb-hover: #202225;
-
+	
 	/* Shadows */
 	--shadow-elevation-low: 0 1px 0 rgba(0, 0, 0, 0.2);
 	--shadow-elevation-medium: 0 4px 8px rgba(0, 0, 0, 0.24);
@@ -45,10 +45,10 @@
 }
 
 /* Light theme */
-[data-theme='light'] {
-	--brand-primary: #e87620;
-	--brand-hover: #d95e16;
-
+[data-theme="light"] {
+	--brand-primary: #5865f2;
+	--brand-hover: #4752c4;
+	
 	--bg-primary: #ffffff;
 	--bg-secondary: #f2f3f5;
 	--bg-tertiary: #e3e5e8;
@@ -56,18 +56,18 @@
 	--bg-modifier-active: rgba(116, 127, 141, 0.16);
 	--bg-modifier-selected: rgba(116, 127, 141, 0.24);
 	--bg-modifier-accent: rgba(116, 127, 141, 0.24);
-
+	
 	--text-primary: #060607;
 	--text-secondary: #4e5058;
 	--text-muted: #6d6f78;
 	--text-link: #006ce7;
-
+	
 	--scrollbar-thumb: #c4c9ce;
 	--scrollbar-thumb-hover: #b5bac1;
 }
 
 /* OLED / Midnight theme */
-[data-theme='midnight'] {
+[data-theme="midnight"] {
 	--bg-primary: #000000;
 	--bg-secondary: #0a0a0a;
 	--bg-tertiary: #0f0f0f;
@@ -83,8 +83,7 @@
 	padding: 0;
 }
 
-html,
-body {
+html, body {
 	height: 100%;
 	font-family: 'gg sans', 'Noto Sans', 'Helvetica Neue', Helvetica, Arial, sans-serif;
 	font-size: 16px;
