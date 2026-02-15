@@ -49,3 +49,6 @@ export { default as VoiceCallPanel } from "./VoiceCallPanel.svelte";
 // Screen share components
 export { default as ScreenShareModal } from "./ScreenShareModal.svelte";
 export { default as ScreenSharePreview } from "./ScreenSharePreview.svelte";
+
+// Download manager
+export { default as DownloadManager } from "./DownloadManager.svelte";

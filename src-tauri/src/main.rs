@@ -185,6 +185,11 @@ fn main() {
             commands::toggle_focus_mode,
             commands::is_focus_mode_active,
             commands::set_focus_mode,
+            // File commands
+            commands::open_file,
+            commands::reveal_in_folder,
+            commands::file_exists,
+            commands::get_file_info,
             updater::check_for_updates,
             updater::download_and_install_update,
             // Activity detection for rich presence
