@@ -88,3 +88,4 @@ export {
   type MessageNotification,
 } from "./notifications";
 export { muteStore, type MuteState } from "./mute";
+export { focusModeStore, type FocusModeState } from "./focusMode";

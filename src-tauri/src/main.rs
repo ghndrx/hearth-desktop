@@ -106,6 +106,31 @@ fn main() {
                 })
                 .ok();
 
+            // Toggle focus mode with Cmd/Ctrl+Shift+F
+            shortcut_manager
+                .register("CommandOrControl+Shift+F", {
+                    let app_handle = app.handle().clone();
+                    move || {
+                        let active = crate::commands::toggle_focus_mode().unwrap_or(false);
+                        // Update the tray menu to reflect new state
+                        let _ = crate::tray::update_tray_focus_state(&app_handle, active);
+                        
+                        // Show a toast notification via the window
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            let message = if active {
+                                "Focus mode enabled - only mentions and DMs"
+                            } else {
+                                "Focus mode disabled"
+                            };
+                            let _ = window.emit("focus-mode-changed", serde_json::json!({
+                                "active": active,
+                                "message": message
+                            }));
+                        }
+                    }
+                })
+                .ok();
+
             // Register deep link handler
             let handle = app.handle().clone();
             app.listen("deep-link://new-url", move |event| {
@@ -156,6 +181,10 @@ fn main() {
             // Tray badge commands
             commands::update_tray_badge,
             commands::get_tray_badge,
+            // Focus Mode commands
+            commands::toggle_focus_mode,
+            commands::is_focus_mode_active,
+            commands::set_focus_mode,
             updater::check_for_updates,
             updater::download_and_install_update,
             // Activity detection for rich presence

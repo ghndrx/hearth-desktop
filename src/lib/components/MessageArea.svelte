@@ -6,6 +6,7 @@
 	import TypingIndicator from './TypingIndicator.svelte';
 	import EmojiPicker from './EmojiPicker.svelte';
 	import MuteIndicator from './MuteIndicator.svelte';
+	import FocusModeIndicator from './FocusModeIndicator.svelte';
 
 	let messageInput = '';
 	let messagesContainer: HTMLDivElement;
@@ -212,6 +213,7 @@
 			{/if}
 			<div class="flex-1"></div>
 			<MuteIndicator />
+			<FocusModeIndicator />
 		</header>
 
 		<!-- Messages -->
