@@ -54,13 +54,19 @@
 
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import QuickReactions from './QuickReactions.svelte';
 	
 	export let message: any;
 	export let grouped = false;
 	export let isOwn = false;
 	export let roleColor: string | null = null;
 	
-	const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher<{
+		react: { messageId: string; emoji: string };
+		edit: { messageId: string; content: string };
+		delete: { messageId: string };
+		reply: { messageId: string };
+	}>();
 	
 	let showActions = false;
 	let editing = false;
@@ -243,34 +249,37 @@
 	
 	<!-- Message Actions -->
 	{#if showActions && !editing}
-		<div class="absolute right-4 -top-4 flex gap-1 bg-[#313338] border border-[#1e1f22] rounded-md p-0.5 shadow-md">
-			<button 
-				class="p-1.5 hover:bg-[#383a40] rounded text-[#b5bac1] hover:text-[#dbdee1] transition-colors"
-				on:click={() => handleReaction('👍')}
-				title="Add Reaction"
-			>
-				👍
-			</button>
-			{#if isOwn}
-				<button 
-					class="p-1.5 hover:bg-[#383a40] rounded text-[#b5bac1] hover:text-[#dbdee1] transition-colors"
-					on:click={startEdit}
-					title="Edit"
-				>
-					<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-						<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-					</svg>
-				</button>
-				<button 
-					class="p-1.5 hover:bg-[#f23f43] hover:text-white rounded text-[#b5bac1] transition-colors"
-					on:click={handleDelete}
-					title="Delete"
-				>
-					<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-						<path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-					</svg>
-				</button>
-			{/if}
+		<div class="absolute right-4 -top-4 flex items-center gap-1">
+			<QuickReactions 
+				visible={showActions} 
+				on:react={(e) => handleReaction(e.detail.emoji)}
+				on:mouseenter={() => showActions = true}
+				on:mouseleave={() => showActions = false}
+			/>
+			<div class="flex gap-1 bg-[#313338] border border-[#1e1f22] rounded-md p-0.5 shadow-md">
+				{#if isOwn}
+					<button 
+						class="p-1.5 hover:bg-[#383a40] rounded text-[#b5bac1] hover:text-[#dbdee1] transition-colors"
+						on:click={startEdit}
+						title="Edit"
+						type="button"
+					>
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+							<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
+						</svg>
+					</button>
+					<button 
+						class="p-1.5 hover:bg-[#f23f43] hover:text-white rounded text-[#b5bac1] transition-colors"
+						on:click={handleDelete}
+						title="Delete"
+						type="button"
+					>
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+							<path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
+						</svg>
+					</button>
+				{/if}
+			</div>
 		</div>
 	{/if}
 </div>
