@@ -1,6 +1,7 @@
 // Prevents additional console window on Windows in release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod activity;
 mod commands;
 mod deeplink;
 mod menu;
@@ -8,6 +9,7 @@ mod tray;
 mod updater;
 
 use tauri::{GlobalShortcutBuilder, Manager, WindowEvent};
+use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 fn main() {
     tauri::Builder::default()
@@ -20,9 +22,12 @@ fn main() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_window_state::Builder::new().build())
         .on_window_event(|window, event| {
             // Minimize to tray on close instead of quitting
             if let WindowEvent::CloseRequested { api, .. } = event {
+                // Save window state before hiding
+                let _ = window.app_handle().save_window_state(StateFlags::all());
                 // Hide the window instead of closing
                 let _ = window.hide();
                 // Prevent the window from being destroyed
@@ -121,6 +126,10 @@ fn main() {
             commands::clipboard_clear,
             updater::check_for_updates,
             updater::download_and_install_update,
+            // Activity detection for rich presence
+            activity::get_running_activities,
+            activity::get_idle_status,
+            activity::get_idle_status_with_threshold,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

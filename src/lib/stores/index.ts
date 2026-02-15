@@ -18,3 +18,24 @@ export {
 	type VoiceParticipant,
 	type VoiceCallState 
 } from './voiceCall';
+export {
+	activityStore,
+	isIdle,
+	isScreenLocked,
+	primaryActivity,
+	idleIn,
+	getActivityTypeLabel,
+	formatActivityDuration,
+	type DetectedActivity,
+	type IdleStatus,
+	type ActivityState
+} from './activity';
+export {
+	presenceStore,
+	getStatusColor,
+	getStatusLabel,
+	getActivityLabel,
+	type Presence,
+	type PresenceStatus,
+	type Activity
+} from './presence';

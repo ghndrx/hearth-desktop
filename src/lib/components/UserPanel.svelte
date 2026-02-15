@@ -2,9 +2,14 @@
 	import { user, auth } from '$lib/stores/auth';
 	import { gatewayState } from '$lib/gateway';
 	import { settings } from '$lib/stores/settings';
+	import { primaryActivity, isIdle } from '$lib/stores/activity';
 	import ConnectionStatus from './ConnectionStatus.svelte';
+	import UserActivity from './UserActivity.svelte';
 
 	export let status: 'online' | 'idle' | 'dnd' | 'offline' = 'online';
+	
+	// Auto-update status based on idle detection
+	$: effectiveStatus = $isIdle && status === 'online' ? 'idle' : status;
 
 	let isMuted = false;
 	let isDeafened = false;
@@ -38,7 +43,7 @@
 		idle: '#f0b232',
 		dnd: '#f23f43',
 		offline: '#80848e'
-	}[status];
+	}[effectiveStatus];
 </script>
 
 <div class="user-panel">
@@ -56,7 +61,9 @@
 
 		<div class="user-details">
 			<span class="username">{$user?.display_name || $user?.username}</span>
-			{#if $gatewayState === 'connected'}
+			{#if $primaryActivity}
+				<UserActivity localActivity={$primaryActivity} compact showTime={false} />
+			{:else if $gatewayState === 'connected'}
 				<span class="discriminator">#{discriminator}</span>
 			{:else}
 				<ConnectionStatus compact />

@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { app, isLoading } from '$lib/stores/app';
+	import { activityStore } from '$lib/stores/activity';
 	import { MenuHandler, DeepLinkHandler, KeyboardHandler } from '$lib';
 	import { ToastContainer, SearchModal, HelpModal } from '$lib/components';
 	import '$lib/styles/theme.css';
@@ -10,6 +11,14 @@
 
 	onMount(() => {
 		app.init();
+		
+		// Start activity detection for rich presence
+		activityStore.startPolling();
+	});
+
+	onDestroy(() => {
+		// Clean up activity polling on unmount
+		activityStore.stopPolling();
 	});
 </script>
 
