@@ -23,6 +23,20 @@ fn main() {
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_window_state::Builder::new().build())
+        .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
+            // When a second instance is launched, focus the existing window
+            let _ = app
+                .get_webview_window("main")
+                .expect("no main window")
+                .set_focus();
+            
+            // Handle deep link URLs from the second instance arguments
+            for arg in args {
+                if arg.starts_with("hearth://") {
+                    deeplink::handle_deep_link(app, &arg);
+                }
+            }
+        }))
         .on_window_event(|window, event| {
             // Minimize to tray on close instead of quitting
             if let WindowEvent::CloseRequested { api, .. } = event {
