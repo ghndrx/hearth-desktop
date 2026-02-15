@@ -182,3 +182,19 @@ pub fn set_mute(muted: bool) -> Result<bool, String> {
     NOTIFICATIONS_MUTED.store(muted, Ordering::Relaxed);
     Ok(muted)
 }
+
+// ============================================================================
+// Tray Badge Commands
+// ============================================================================
+
+/// Update the tray icon with unread message count
+#[tauri::command]
+pub fn update_tray_badge(app: AppHandle, count: u32) -> Result<(), String> {
+    crate::tray::set_unread_count(&app, count).map_err(|e| e.to_string())
+}
+
+/// Get current unread count from tray
+#[tauri::command]
+pub fn get_tray_badge() -> u32 {
+    crate::tray::get_unread_count()
+}

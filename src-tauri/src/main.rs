@@ -153,6 +153,9 @@ fn main() {
             commands::toggle_mute,
             commands::is_muted,
             commands::set_mute,
+            // Tray badge commands
+            commands::update_tray_badge,
+            commands::get_tray_badge,
             updater::check_for_updates,
             updater::download_and_install_update,
             // Activity detection for rich presence
