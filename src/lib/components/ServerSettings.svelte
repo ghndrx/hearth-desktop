@@ -405,6 +405,7 @@
 											maxlength={1024}
 											rows={4}
 											disabled={!isOwner}
+											spellcheck="true"
 										></textarea>
 										<span class="char-count">{serverForm.description.length}/1024</span>
 									</div>
@@ -871,6 +872,7 @@
 							placeholder="What's this channel about?"
 							maxlength={1024}
 							rows={3}
+							spellcheck="true"
 						></textarea>
 					</div>
 					

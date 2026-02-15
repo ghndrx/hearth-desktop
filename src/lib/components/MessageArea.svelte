@@ -283,6 +283,7 @@
 											bind:value={editContent}
 											on:keydown={handleEditKeydown}
 											rows="2"
+											spellcheck="true"
 										></textarea>
 										<div class="text-xs text-gray-500 mt-1">
 											escape to <button class="text-hearth-400 hover:underline" on:click={cancelEdit}>cancel</button>
@@ -432,6 +433,7 @@
 					bind:value={messageInput}
 					on:input={handleInput}
 					on:keydown={handleKeydown}
+					spellcheck="true"
 				></textarea>
 				<div class="flex items-center gap-1 p-2 relative">
 					<button 

@@ -181,6 +181,7 @@
 					bind:value={editContent}
 					on:keydown={handleKeydown}
 					autofocus
+					spellcheck="true"
 					class="w-full min-h-[44px] p-3 bg-[#383a40] rounded-lg text-[#f2f3f5] text-base resize-none border-0 focus:outline-none"
 				></textarea>
 				<div class="text-xs text-[#949ba4] mt-1">
