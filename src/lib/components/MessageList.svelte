@@ -5,7 +5,6 @@
 	import { user } from '$lib/stores/auth';
 	import { currentServer } from '$lib/stores/servers';
 	import Message from './Message.svelte';
-	import MessageInput from './MessageInput.svelte';
 
 	let messageContainer: HTMLElement;
 	let shouldScroll = true;
@@ -14,7 +13,12 @@
 		loadMessages($currentChannel.id);
 	}
 
-	$: channelMessages = $messages[$currentChannel?.id] || [];
+	$: channelMessages = ($currentChannel?.id ? $messages[$currentChannel.id] : undefined) || [];
+	$: console.log('MessageList debug:', { 
+		channelId: $currentChannel?.id, 
+		messageCount: channelMessages.length,
+		allMessages: $messages
+	});
 
 	function handleScroll() {
 		const { scrollTop, scrollHeight, clientHeight } = messageContainer;
@@ -56,51 +60,16 @@
 	}
 </script>
 
-<div class="flex-1 flex flex-col min-w-0">
-	<!-- Channel Header -->
-	<div class="h-12 px-4 flex items-center border-b border-[#1e1f22] bg-[#313338] shrink-0">
-		{#if $currentChannel}
-			{#if $currentChannel.type === 1 || $currentChannel.type === 3}
-				<!-- DM Header -->
-				<div class="flex items-center gap-3">
-					<div
-						class="w-6 h-6 rounded-full bg-[#5865f2] flex items-center justify-center overflow-hidden"
-					>
-						{#if $currentChannel.recipients?.[0]?.avatar}
-							<img
-								src={$currentChannel.recipients[0].avatar}
-								alt=""
-								class="w-full h-full object-cover"
-							/>
-						{:else}
-							<span class="text-white text-xs font-medium">
-								{($currentChannel.recipients?.[0]?.username || '?')[0].toUpperCase()}
-							</span>
-						{/if}
-					</div>
-					<span class="text-[#f2f3f5] font-semibold text-base">
-						{$currentChannel.recipients?.[0]?.display_name ||
-							$currentChannel.recipients?.[0]?.username ||
-							'Unknown'}
-					</span>
-				</div>
-			{:else}
-				<!-- Server Channel Header -->
-				<div class="flex items-center gap-2">
-					<span class="text-[#b5bac1] text-2xl font-light">#</span>
-					<span class="text-[#f2f3f5] font-semibold text-base">{$currentChannel.name}</span>
-				</div>
-				{#if $currentChannel.topic}
-					<div class="ml-4 px-2 text-[#b5bac1] text-sm truncate">{$currentChannel.topic}</div>
-				{/if}
-			{/if}
-		{:else}
-			<span class="text-[#949ba4] text-base">Select a channel</span>
-		{/if}
-	</div>
-
-	<!-- Messages -->
-	<div class="flex-1 overflow-y-auto px-4" bind:this={messageContainer} on:scroll={handleScroll}>
+<!-- Messages container - flex-1 to fill space between header and input -->
+<div
+	class="message-list-container"
+	bind:this={messageContainer}
+	on:scroll={handleScroll}
+	role="log"
+	aria-label="Message history"
+	aria-live="polite"
+	aria-relevant="additions"
+>
 		{#if $currentChannel}
 			<!-- Channel Welcome -->
 			<div class="pt-4 pb-5">
@@ -169,10 +138,34 @@
 				<p class="text-[#949ba4] text-base">Select a channel to start chatting</p>
 			</div>
 		{/if}
-	</div>
-
-	<!-- Message Input -->
-	{#if $currentChannel}
-		<MessageInput />
-	{/if}
 </div>
+
+<style>
+	.message-list-container {
+		flex: 1;
+		overflow-y: auto;
+		overflow-x: hidden;
+		padding: 0 16px;
+		min-height: 0; /* Critical for flex overflow scrolling */
+		/* Add padding at bottom so last message isn't cut off */
+		padding-bottom: 8px;
+	}
+	
+	/* Custom scrollbar styling */
+	.message-list-container::-webkit-scrollbar {
+		width: 8px;
+	}
+	
+	.message-list-container::-webkit-scrollbar-track {
+		background: transparent;
+	}
+	
+	.message-list-container::-webkit-scrollbar-thumb {
+		background: #1a1b1e;
+		border-radius: 4px;
+	}
+	
+	.message-list-container::-webkit-scrollbar-thumb:hover {
+		background: #232428;
+	}
+</style>

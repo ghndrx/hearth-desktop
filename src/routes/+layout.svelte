@@ -1,67 +1,25 @@
 <script lang="ts">
-	import { onMount, onDestroy } from 'svelte';
-	import { app, isLoading } from '$lib/stores/app';
-	import { activityStore } from '$lib/stores/activity';
-	import { pushToTalk } from '$lib/stores/pushToTalk';
-	import { screenShare } from '$lib/stores/screenShare';
-	import { MenuHandler, DeepLinkHandler, KeyboardHandler } from '$lib';
-	import { 	ToastContainer,
-	SearchModal,
-	HelpModal,
-	ScreenShareModal,
-	ScreenSharePreview,
-	ErrorBoundary,
-	TitleBar,
-	DownloadManager } from '$lib/components';
+	import { onMount } from 'svelte';
+	import { auth, isAuthenticated, isLoading } from '$lib/stores/auth';
+	import { gateway } from '$lib/gateway';
 	import '$lib/styles/theme.css';
-	import '../app.css';
-
-	let { children } = $props();
-
+	
 	onMount(() => {
-		app.init();
-		
-		// Start activity detection for rich presence
-		activityStore.startPolling();
-		
-		// Initialize push-to-talk hotkey handler
-		pushToTalk.init();
+		auth.init();
 	});
-
-	onDestroy(() => {
-		// Clean up activity polling on unmount
-		activityStore.stopPolling();
-		
-		// Clean up push-to-talk handler
-		pushToTalk.destroy();
-		
-		// Clean up screen sharing
-		screenShare.reset();
-	});
+	
+	// Connect gateway when authenticated
+	$: if ($isAuthenticated) {
+		const token = localStorage.getItem('hearth_token');
+		if (token) {
+			gateway.connect(token);
+		}
+	}
 </script>
-
-<!-- Desktop event handlers (invisible) -->
-<MenuHandler />
-<DeepLinkHandler />
-<KeyboardHandler />
-
-<!-- Global modals -->
-<SearchModal />
-<HelpModal />
-<ScreenShareModal />
-
-<!-- Screen share floating preview -->
-<ScreenSharePreview />
-
-<!-- Toast notifications -->
-<ToastContainer position="bottom-right" />
-
-<!-- Download Manager -->
-<DownloadManager />
 
 <svelte:head>
 	<title>Hearth</title>
-	<meta name="description" content="Hearth Desktop - Native chat client" />
+	<meta name="description" content="Self-hosted chat with E2EE" />
 </svelte:head>
 
 {#if $isLoading}
@@ -70,14 +28,7 @@
 		<p>Loading...</p>
 	</div>
 {:else}
-	<div class="app-container">
-		<TitleBar />
-		<main class="main-content">
-			<ErrorBoundary>
-				{@render children()}
-			</ErrorBoundary>
-		</main>
-	</div>
+	<slot />
 {/if}
 
 <style>
@@ -85,20 +36,7 @@
 		margin: 0;
 		padding: 0;
 	}
-
-	.app-container {
-		display: flex;
-		flex-direction: column;
-		height: 100vh;
-		overflow: hidden;
-	}
-
-	.main-content {
-		flex: 1;
-		overflow: hidden;
-		display: flex;
-	}
-
+	
 	.loading {
 		display: flex;
 		flex-direction: column;
@@ -108,7 +46,7 @@
 		background: var(--bg-tertiary);
 		color: var(--text-muted);
 	}
-
+	
 	.spinner {
 		width: 48px;
 		height: 48px;
@@ -117,13 +55,11 @@
 		border-radius: 50%;
 		animation: spin 1s linear infinite;
 	}
-
+	
 	@keyframes spin {
-		to {
-			transform: rotate(360deg);
-		}
+		to { transform: rotate(360deg); }
 	}
-
+	
 	.loading p {
 		margin-top: 16px;
 	}

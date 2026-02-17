@@ -1,15 +1,17 @@
 <script lang="ts">
-  export let variant: 'primary' | 'secondary' | 'danger' | 'success' = 'primary';
+  export let variant: 'primary' | 'secondary' | 'danger' | 'success' | 'ghost' = 'primary';
   export let size: 'sm' | 'md' | 'lg' = 'md';
   export let disabled = false;
   export let type: 'button' | 'submit' | 'reset' = 'button';
   export let fullWidth = false;
+  export let ariaLabel: string | undefined = undefined;
 
   const variantClasses = {
     primary: 'bg-blurple-500 hover:bg-blurple-600 text-white',
     secondary: 'bg-gray-600 hover:bg-gray-700 text-white',
     danger: 'bg-red-500 hover:bg-red-600 text-white',
     success: 'bg-green-500 hover:bg-green-600 text-white',
+    ghost: 'bg-transparent hover:bg-white/10 text-gray-300 hover:text-white',
   };
 
   const sizeClasses = {
@@ -32,6 +34,7 @@
   {type}
   {disabled}
   class={buttonClass}
+  aria-label={ariaLabel}
   on:click
 >
   <slot />

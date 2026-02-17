@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <defs>
+    <linearGradient id="fireGrad" x1="50%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#FF6B35"/>
+      <stop offset="50%" stop-color="#F7931E"/>
+      <stop offset="100%" stop-color="#FFD93D"/>
+    </linearGradient>
+    <linearGradient id="glowGrad" x1="50%" y1="100%" x2="50%" y2="0%">
+      <stop offset="0%" stop-color="#FF6B35" stop-opacity="0.3"/>
+      <stop offset="100%" stop-color="#FFD93D" stop-opacity="0"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="coloredBlur"/>
+      <feMerge>
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Glow background -->
+  <circle cx="100" cy="110" r="60" fill="url(#glowGrad)"/>
+  
+  <!-- Hearth base (fireplace) -->
+  <path d="M50 150 Q50 170 70 170 L130 170 Q150 170 150 150 L150 140 Q100 150 50 140 Z" fill="#4a4a4a"/>
+  <path d="M55 145 Q55 160 70 165 L130 165 Q145 160 145 145 L145 138 Q100 148 55 138 Z" fill="#2d2d2d"/>
+  
+  <!-- Main flame -->
+  <g filter="url(#glow)">
+    <path d="M100 50 
+             Q120 70 115 90 
+             Q125 75 130 95
+             Q140 85 135 110
+             Q145 100 140 125
+             Q150 115 145 140
+             L145 145
+             Q100 155 55 145
+             L55 140
+             Q50 115 60 125
+             Q55 100 65 110
+             Q60 85 70 95
+             Q75 75 85 90
+             Q80 70 100 50Z" 
+          fill="url(#fireGrad)"/>
+  </g>
+  
+  <!-- Inner flame highlight -->
+  <path d="M100 70 
+           Q110 85 108 100 
+           Q115 90 118 105
+           Q125 95 122 120
+           L122 130
+           Q100 138 78 130
+           L78 120
+           Q75 95 82 105
+           Q85 90 92 100
+           Q90 85 100 70Z" 
+        fill="#FFE066" opacity="0.6"/>
+  
+  <!-- Sparkles -->
+  <circle cx="75" cy="60" r="2" fill="#FFD93D" opacity="0.8">
+    <animate attributeName="opacity" values="0.8;0.2;0.8" dur="1.5s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="125" cy="55" r="1.5" fill="#FFD93D" opacity="0.6">
+    <animate attributeName="opacity" values="0.6;0.1;0.6" dur="2s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="90" cy="45" r="1" fill="#FF6B35" opacity="0.7">
+    <animate attributeName="opacity" values="0.7;0.2;0.7" dur="1.8s" repeatCount="indefinite"/>
+  </circle>
+  <circle cx="115" cy="40" r="1.5" fill="#F7931E" opacity="0.5">
+    <animate attributeName="opacity" values="0.5;0.1;0.5" dur="2.2s" repeatCount="indefinite"/>
+  </circle>
+</svg>

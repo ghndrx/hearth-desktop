@@ -353,3 +353,49 @@ pub struct FileInfo {
     created: Option<u64>,
     modified: Option<u64>,
 }
+
+// ============================================================================
+// Window Attention Commands
+// ============================================================================
+
+/// Flash the window taskbar icon to get user attention
+/// Used when receiving notifications while window is not focused
+#[tauri::command]
+pub async fn request_window_attention(window: Window) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        // On macOS, we bounce the dock icon
+        window.request_user_attention(Some(tauri::UserAttentionType::Informational))
+            .map_err(|e| e.to_string())?;
+    }
+    
+    #[cfg(target_os = "windows")]
+    {
+        // On Windows, flash the taskbar icon
+        window.request_user_attention(Some(tauri::UserAttentionType::Informational))
+            .map_err(|e| e.to_string())?;
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        // On Linux, request attention via the window manager
+        window.request_user_attention(Some(tauri::UserAttentionType::Informational))
+            .map_err(|e| e.to_string())?;
+    }
+    
+    Ok(())
+}
+
+/// Flash the window urgently (critical notification)
+#[tauri::command]
+pub async fn request_urgent_attention(window: Window) -> Result<(), String> {
+    window.request_user_attention(Some(tauri::UserAttentionType::Critical))
+        .map_err(|e| e.to_string())
+}
+
+/// Cancel any active window attention request
+#[tauri::command]
+pub async fn cancel_window_attention(window: Window) -> Result<(), String> {
+    window.request_user_attention(None)
+        .map_err(|e| e.to_string())
+}

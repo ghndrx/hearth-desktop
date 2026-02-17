@@ -1,7 +1,12 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen, type UnlistenFn } from "@tauri-apps/api/event";
-import { sendNotification } from "@tauri-apps/plugin-notification";
+import {
+  sendNotification,
+  requestPermission as requestNotificationPermission,
+  isPermissionGranted,
+} from "@tauri-apps/plugin-notification";
 import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
+import { readText, writeText } from "@tauri-apps/plugin-clipboard-manager";
 
 // Update Types
 export interface UpdateInfo {
@@ -214,6 +219,349 @@ export const updater = {
   onInstalling: onUpdateInstalling,
 };
 
+// ============================================================================
+// Clipboard Functions
+// ============================================================================
+
+export async function clipboardReadText(): Promise<string> {
+  return readText();
+}
+
+export async function clipboardWriteText(text: string): Promise<void> {
+  return writeText(text);
+}
+
+export async function clipboardHasText(): Promise<boolean> {
+  try {
+    const text = await readText();
+    return text.length > 0;
+  } catch {
+    return false;
+  }
+}
+
+export async function clipboardClear(): Promise<void> {
+  return writeText("");
+}
+
+// Combined clipboard API
+export const clipboard = {
+  readText: clipboardReadText,
+  writeText: clipboardWriteText,
+  hasText: clipboardHasText,
+  clear: clipboardClear,
+};
+
+// ============================================================================
+// Focus Mode Functions
+// ============================================================================
+
+export async function toggleFocusMode(): Promise<boolean> {
+  return invoke("toggle_focus_mode");
+}
+
+export async function isFocusModeActive(): Promise<boolean> {
+  return invoke("is_focus_mode_active");
+}
+
+export async function setFocusMode(active: boolean): Promise<boolean> {
+  return invoke("set_focus_mode", { active });
+}
+
+export function onFocusModeChanged(
+  callback: (event: { active: boolean; message: string }) => void,
+): Promise<UnlistenFn> {
+  return listen("focus-mode-changed", (event) => {
+    callback(event.payload as { active: boolean; message: string });
+  });
+}
+
+// Combined focus mode API
+export const focusMode = {
+  toggle: toggleFocusMode,
+  isActive: isFocusModeActive,
+  set: setFocusMode,
+  onChanged: onFocusModeChanged,
+};
+
+// ============================================================================
+// Quick Mute Functions
+// ============================================================================
+
+export async function toggleMute(): Promise<boolean> {
+  return invoke("toggle_mute");
+}
+
+export async function isMuted(): Promise<boolean> {
+  return invoke("is_muted");
+}
+
+export async function setMute(muted: boolean): Promise<boolean> {
+  return invoke("set_mute", { muted });
+}
+
+export function onMuteStateChanged(
+  callback: (event: { muted: boolean; message: string }) => void,
+): Promise<UnlistenFn> {
+  return listen("mute-state-changed", (event) => {
+    callback(event.payload as { muted: boolean; message: string });
+  });
+}
+
+// Combined mute API
+export const mute = {
+  toggle: toggleMute,
+  isMuted,
+  set: setMute,
+  onChanged: onMuteStateChanged,
+};
+
+// ============================================================================
+// File Functions
+// ============================================================================
+
+export interface FileInfo {
+  name: string;
+  path: string;
+  size: number;
+  extension: string | null;
+  isFile: boolean;
+  isDir: boolean;
+  created: number | null;
+  modified: number | null;
+}
+
+export async function openFile(filepath: string): Promise<void> {
+  return invoke("open_file", { filepath });
+}
+
+export async function revealInFolder(filepath: string): Promise<void> {
+  return invoke("reveal_in_folder", { filepath });
+}
+
+export async function fileExists(filepath: string): Promise<boolean> {
+  return invoke("file_exists", { filepath });
+}
+
+export async function getFileInfo(filepath: string): Promise<FileInfo> {
+  return invoke("get_file_info", { filepath });
+}
+
+// Combined file API
+export const file = {
+  open: openFile,
+  revealInFolder,
+  exists: fileExists,
+  getInfo: getFileInfo,
+};
+
+// ============================================================================
+// Window Attention Functions
+// ============================================================================
+
+export async function requestWindowAttention(): Promise<void> {
+  return invoke("request_window_attention");
+}
+
+export async function requestUrgentAttention(): Promise<void> {
+  return invoke("request_urgent_attention");
+}
+
+export async function cancelWindowAttention(): Promise<void> {
+  return invoke("cancel_window_attention");
+}
+
+// Combined window attention API
+export const windowAttention = {
+  request: requestWindowAttention,
+  requestUrgent: requestUrgentAttention,
+  cancel: cancelWindowAttention,
+};
+
+// ============================================================================
+// Tray Badge Functions
+// ============================================================================
+
+export async function updateTrayBadge(count: number): Promise<void> {
+  return invoke("update_tray_badge", { count });
+}
+
+export async function getTrayBadge(): Promise<number> {
+  return invoke("get_tray_badge");
+}
+
+// Combined tray badge API
+export const trayBadge = {
+  update: updateTrayBadge,
+  get: getTrayBadge,
+};
+
+// ============================================================================
+// Native Notification Permission
+// ============================================================================
+
+export async function requestNativeNotificationPermission(): Promise<boolean> {
+  const granted = await isPermissionGranted();
+  if (!granted) {
+    const permission = await requestNotificationPermission();
+    return permission === "granted";
+  }
+  return true;
+}
+
+// ============================================================================
+// Power Management Functions
+// ============================================================================
+
+export interface PowerStatus {
+  isAcPower: boolean;
+  isCharging: boolean;
+  batteryPercentage: number | null;
+  timeRemaining: string | null;
+  isPowerSaveMode: boolean;
+}
+
+export async function preventSleep(): Promise<void> {
+  return invoke("prevent_sleep");
+}
+
+export async function allowSleep(): Promise<void> {
+  return invoke("allow_sleep");
+}
+
+export async function isSleepPrevented(): Promise<boolean> {
+  return invoke("is_sleep_prevented");
+}
+
+export async function getPowerStatus(): Promise<PowerStatus> {
+  return invoke("get_power_status");
+}
+
+// Combined power API
+export const power = {
+  preventSleep,
+  allowSleep,
+  isSleepPrevented,
+  getStatus: getPowerStatus,
+};
+
+// ============================================================================
+// Screenshot Functions
+// ============================================================================
+
+export interface ScreenshotInfo {
+  filename: string;
+  path: string;
+  size: number;
+  createdAt: number;
+}
+
+export async function captureScreenshot(): Promise<string> {
+  return invoke("capture_screenshot");
+}
+
+export async function captureWindowScreenshot(
+  windowId: number,
+): Promise<string> {
+  return invoke("capture_window_screenshot", { windowId });
+}
+
+export async function captureRegionScreenshot(
+  x: number,
+  y: number,
+  width: number,
+  height: number,
+): Promise<string> {
+  return invoke("capture_region_screenshot", { x, y, width, height });
+}
+
+export async function getScreenshotsDir(): Promise<string> {
+  return invoke("get_screenshots_dir");
+}
+
+export async function listScreenshots(): Promise<ScreenshotInfo[]> {
+  return invoke("list_screenshots");
+}
+
+export async function deleteScreenshot(path: string): Promise<void> {
+  return invoke("delete_screenshot", { path });
+}
+
+// Combined screenshot API
+export const screenshot = {
+  capture: captureScreenshot,
+  captureWindow: captureWindowScreenshot,
+  captureRegion: captureRegionScreenshot,
+  getDir: getScreenshotsDir,
+  list: listScreenshots,
+  delete: deleteScreenshot,
+};
+
+// ============================================================================
+// Audio Functions
+// ============================================================================
+
+export interface AudioDevice {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  deviceType: "Input" | "Output";
+}
+
+export async function getAudioInputDevices(): Promise<AudioDevice[]> {
+  return invoke("get_audio_input_devices");
+}
+
+export async function getAudioOutputDevices(): Promise<AudioDevice[]> {
+  return invoke("get_audio_output_devices");
+}
+
+export async function setAudioInputDevice(deviceId: string): Promise<void> {
+  return invoke("set_audio_input_device", { deviceId });
+}
+
+export async function setAudioOutputDevice(deviceId: string): Promise<void> {
+  return invoke("set_audio_output_device", { deviceId });
+}
+
+export async function getInputVolume(): Promise<number> {
+  return invoke("get_input_volume");
+}
+
+export async function setInputVolume(volume: number): Promise<void> {
+  return invoke("set_input_volume", { volume });
+}
+
+export async function getOutputVolume(): Promise<number> {
+  return invoke("get_output_volume");
+}
+
+export async function setOutputVolume(volume: number): Promise<void> {
+  return invoke("set_output_volume", { volume });
+}
+
+export async function isOutputMuted(): Promise<boolean> {
+  return invoke("is_output_muted");
+}
+
+export async function toggleOutputMute(): Promise<boolean> {
+  return invoke("toggle_output_mute");
+}
+
+// Combined audio API
+export const audio = {
+  getInputDevices: getAudioInputDevices,
+  getOutputDevices: getAudioOutputDevices,
+  setInputDevice: setAudioInputDevice,
+  setOutputDevice: setAudioOutputDevice,
+  getInputVolume,
+  setInputVolume,
+  getOutputVolume,
+  setOutputVolume,
+  isOutputMuted,
+  toggleOutputMute,
+};
+
 // Default export
 export default {
   window,
@@ -221,6 +569,15 @@ export default {
   autoStart,
   app,
   updater,
+  clipboard,
+  focusMode,
+  mute,
+  file,
+  windowAttention,
+  trayBadge,
+  power,
+  screenshot,
+  audio,
   onMenuEvent,
   onDeepLink,
 };

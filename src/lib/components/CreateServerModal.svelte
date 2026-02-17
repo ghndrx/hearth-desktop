@@ -1,13 +1,13 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import { createServer } from '$lib/stores/servers';
+	import { createServer, type Server } from '$lib/stores/servers';
 	import Modal from './Modal.svelte';
 
 	export let open = false;
 
 	const dispatch = createEventDispatcher<{
-		created: { id: string; name: string };
-		joined: { id: string; name: string };
+		created: Server;
+		joined: Server;
 	}>();
 
 	let step: 'choose' | 'create' | 'join' = 'choose';

@@ -5,11 +5,13 @@
 	import CreateServerModal from './CreateServerModal.svelte';
 	import ServerIcon from './ServerIcon.svelte';
 	import ServerFolder from './ServerFolder.svelte';
+	import { handleListKeyboard } from '$lib/utils/keyboard';
 	import type { Server } from '$lib/stores/servers';
 
 	const dispatch = createEventDispatcher();
 
 	let showCreateModal = false;
+	let serverListElement: HTMLElement;
 
 	// Server folders - can be populated from a store in production
 	interface ServerFolderData {
@@ -62,14 +64,49 @@
 		showCreateModal = false;
 	}
 
+	function handleServerCreated(event: CustomEvent<Server>) {
+		const server = event.detail;
+		showCreateModal = false;
+		currentServer.set(server);
+		// Navigate to the new server - use 'general' as default channel
+		goto(`/channels/${server.id}/general`);
+	}
+
 	function toggleFolder(folderId: string) {
 		folders = folders.map((f) =>
 			f.id === folderId ? { ...f, expanded: !f.expanded } : f
 		);
 	}
+
+	function getServerButtons(): HTMLElement[] {
+		if (!serverListElement) return [];
+		return Array.from(serverListElement.querySelectorAll<HTMLElement>('button.server-icon, button.explore-icon'));
+	}
+
+	function handleKeydown(event: KeyboardEvent) {
+		const buttons = getServerButtons();
+		if (buttons.length === 0) return;
+
+		const currentButton = document.activeElement as HTMLElement;
+		const currentIndex = buttons.indexOf(currentButton);
+		if (currentIndex === -1) return;
+
+		const { handled, newIndex } = handleListKeyboard(event, currentIndex, buttons.length, {
+			wrap: true
+		});
+
+		if (handled && newIndex !== currentIndex) {
+			buttons[newIndex]?.focus();
+		}
+	}
 </script>
 
-<nav class="server-list" aria-label="Servers">
+<nav 
+	bind:this={serverListElement}
+	class="server-list" 
+	aria-label="Servers"
+	on:keydown={handleKeydown}
+>
 	<!-- Home/DM button -->
 	<ServerIcon
 		isHome={true}
@@ -124,8 +161,10 @@
 		<button
 			class="explore-icon"
 			on:click={() => goto('/guild-discovery')}
+			aria-label="Explore public servers"
+			type="button"
 		>
-			<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+			<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
 				<path
 					stroke-linecap="round"
 					stroke-linejoin="round"
@@ -134,13 +173,13 @@
 				/>
 			</svg>
 		</button>
-		<div class="tooltip">
+		<div class="tooltip" role="tooltip">
 			Explore Public Servers
 		</div>
 	</div>
 </nav>
 
-<CreateServerModal open={showCreateModal} on:close={closeCreateServer} />
+<CreateServerModal open={showCreateModal} on:close={closeCreateServer} on:created={handleServerCreated} />
 
 <style>
 	.server-list {
@@ -203,6 +242,12 @@
 		border-radius: 16px;
 		background-color: #23a559;
 		color: white;
+	}
+
+	.explore-icon:focus-visible {
+		outline: 2px solid var(--brand-primary, #5865f2);
+		outline-offset: 2px;
+		border-radius: 16px;
 	}
 
 	.explore-icon .icon {

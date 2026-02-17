@@ -2,18 +2,13 @@
 	import { user, auth } from '$lib/stores/auth';
 	import { gatewayState } from '$lib/gateway';
 	import { settings } from '$lib/stores/settings';
-	import { primaryActivity, isIdle } from '$lib/stores/activity';
-	import { downloadsIsOpen, downloadsActions, hasActiveDownloads, downloadStats } from '$lib/stores/downloads';
-	import ConnectionStatus from './ConnectionStatus.svelte';
-	import UserActivity from './UserActivity.svelte';
+	import { popoutStore } from '$lib/stores/popout';
 
 	export let status: 'online' | 'idle' | 'dnd' | 'offline' = 'online';
-	
-	// Auto-update status based on idle detection
-	$: effectiveStatus = $isIdle && status === 'online' ? 'idle' : status;
 
 	let isMuted = false;
 	let isDeafened = false;
+	let userInfoBtn: HTMLButtonElement;
 
 	function toggleMute() {
 		isMuted = !isMuted;
@@ -26,6 +21,28 @@
 
 	function openSettings() {
 		settings.open('account');
+	}
+
+	function openUserPopout(event: MouseEvent) {
+		if (!$user) return;
+		
+		const rect = userInfoBtn.getBoundingClientRect();
+		popoutStore.open({
+			user: {
+				id: $user.id,
+				username: $user.username,
+				display_name: $user.display_name,
+				avatar: $user.avatar,
+				banner: $user.banner,
+				bio: $user.bio,
+				pronouns: null,
+				bot: false,
+				status: status,
+				created_at: $user.created_at
+			},
+			position: { x: rect.left, y: rect.top - 10 },
+			anchor: 'bottom'
+		});
 	}
 
 	// Generate a discriminator from user ID (Discord-style 4 digits)
@@ -44,11 +61,11 @@
 		idle: '#f0b232',
 		dnd: '#f23f43',
 		offline: '#80848e'
-	}[effectiveStatus];
+	}[status];
 </script>
 
-<div class="user-panel">
-	<button class="user-info" on:click={openSettings}>
+<div class="user-panel" role="region" aria-label="User controls">
+	<button class="user-info" bind:this={userInfoBtn} on:click={openUserPopout} aria-label="View profile for {$user?.display_name || $user?.username}" type="button">
 		<div class="avatar">
 			{#if $user?.avatar}
 				<img src={$user.avatar} alt="" />
@@ -62,31 +79,28 @@
 
 		<div class="user-details">
 			<span class="username">{$user?.display_name || $user?.username}</span>
-			{#if $primaryActivity}
-				<UserActivity localActivity={$primaryActivity} compact showTime={false} />
-			{:else if $gatewayState === 'connected'}
-				<span class="discriminator">#{discriminator}</span>
-			{:else}
-				<ConnectionStatus compact />
-			{/if}
+			<span class="discriminator">#{discriminator}</span>
 		</div>
 	</button>
 
-	<div class="controls">
+	<div class="controls" role="group" aria-label="Audio and settings controls">
 		<button
 			class="control-btn"
 			class:active={isMuted}
 			on:click={toggleMute}
 			title={isMuted ? 'Unmute' : 'Mute'}
+			aria-label={isMuted ? 'Unmute microphone' : 'Mute microphone'}
+			aria-pressed={isMuted}
+			type="button"
 		>
 			{#if isMuted}
-				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
 					<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
 					<path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
 					<path d="M2.7 3.7L21.3 21.3" stroke="#f23f43" stroke-width="2.5" stroke-linecap="round"/>
 				</svg>
 			{:else}
-				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
 					<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
 					<path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
 				</svg>
@@ -98,16 +112,19 @@
 			class:active={isDeafened}
 			on:click={toggleDeafen}
 			title={isDeafened ? 'Undeafen' : 'Deafen'}
+			aria-label={isDeafened ? 'Undeafen audio' : 'Deafen audio'}
+			aria-pressed={isDeafened}
+			type="button"
 		>
 			{#if isDeafened}
-				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
 					<path d="M12 2C6.48 2 2 6.48 2 12v4c0 1.1.9 2 2 2h1v-6H4v-2c0-4.42 3.58-8 8-8s8 3.58 8 8v2h-1v6h1c1.1 0 2-.9 2-2v-4c0-5.52-4.48-10-10-10z"/>
 					<rect x="6" y="12" width="4" height="8" rx="1"/>
 					<rect x="14" y="12" width="4" height="8" rx="1"/>
 					<path d="M2.7 3.7L21.3 21.3" stroke="#f23f43" stroke-width="2.5" stroke-linecap="round"/>
 				</svg>
 			{:else}
-				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
 					<path d="M12 2C6.48 2 2 6.48 2 12v4c0 1.1.9 2 2 2h1v-6H4v-2c0-4.42 3.58-8 8-8s8 3.58 8 8v2h-1v6h1c1.1 0 2-.9 2-2v-4c0-5.52-4.48-10-10-10z"/>
 					<rect x="6" y="12" width="4" height="8" rx="1"/>
 					<rect x="14" y="12" width="4" height="8" rx="1"/>
@@ -115,22 +132,8 @@
 			{/if}
 		</button>
 
-		<button 
-			class="control-btn" 
-			class:active={$hasActiveDownloads}
-			on:click={() => downloadsActions.toggleOpen()} 
-			title="Downloads{$downloadStats.active > 0 ? ` (${$downloadStats.active} active)` : ''}"
-		>
-			<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-				<path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/>
-			</svg>
-			{#if $hasActiveDownloads}
-				<span class="download-badge">{$downloadStats.active}</span>
-			{/if}
-		</button>
-
-		<button class="control-btn" on:click={openSettings} title="User Settings">
-			<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+		<button class="control-btn" on:click={openSettings} title="User Settings" aria-label="Open user settings" type="button">
+			<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor" aria-hidden="true">
 				<path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58c.18-.14.23-.41.12-.61l-1.92-3.32c-.12-.22-.37-.29-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54c-.04-.24-.24-.41-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96c-.22-.08-.47 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58c-.18.14-.23.41-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
 			</svg>
 		</button>
@@ -242,7 +245,6 @@
 		border-radius: 4px;
 		color: #b5bac1;
 		cursor: pointer;
-		position: relative;
 	}
 
 	.control-btn:hover {
@@ -252,25 +254,5 @@
 
 	.control-btn.active {
 		color: #dbdee1;
-	}
-
-	.download-badge {
-		position: absolute;
-		top: 2px;
-		right: 2px;
-		background: #5865f2;
-		color: white;
-		font-size: 9px;
-		font-weight: 700;
-		padding: 1px 4px;
-		border-radius: 8px;
-		min-width: 14px;
-		text-align: center;
-		animation: pulse 2s ease-in-out infinite;
-	}
-
-	@keyframes pulse {
-		0%, 100% { opacity: 1; }
-		50% { opacity: 0.7; }
 	}
 </style>

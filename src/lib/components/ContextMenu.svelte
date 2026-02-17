@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
+  import { onMount, onDestroy, createEventDispatcher, tick } from 'svelte';
+  import { handleListKeyboard } from '$lib/utils/keyboard';
   
   export let x = 0;
   export let y = 0;
@@ -8,6 +9,20 @@
   const dispatch = createEventDispatcher();
   
   let menuElement: HTMLDivElement;
+  let focusedIndex = 0;
+  
+  function getMenuItems(): HTMLElement[] {
+    if (!menuElement) return [];
+    return Array.from(menuElement.querySelectorAll<HTMLElement>('[role="menuitem"]:not([disabled])'));
+  }
+  
+  function focusItem(index: number) {
+    const items = getMenuItems();
+    if (items[index]) {
+      items[index].focus();
+      focusedIndex = index;
+    }
+  }
   
   function handleClick(event: MouseEvent) {
     if (menuElement && !menuElement.contains(event.target as Node)) {
@@ -16,8 +31,18 @@
   }
   
   function handleKeydown(event: KeyboardEvent) {
-    if (event.key === 'Escape') {
-      close();
+    if (!show) return;
+    
+    const items = getMenuItems();
+    if (items.length === 0) return;
+    
+    const { handled, newIndex } = handleListKeyboard(event, focusedIndex, items.length, {
+      wrap: true,
+      onEscape: close
+    });
+    
+    if (handled && newIndex !== focusedIndex) {
+      focusItem(newIndex);
     }
   }
   
@@ -28,13 +53,19 @@
   
   onMount(() => {
     document.addEventListener('click', handleClick);
-    document.addEventListener('keydown', handleKeydown);
   });
   
   onDestroy(() => {
     document.removeEventListener('click', handleClick);
-    document.removeEventListener('keydown', handleKeydown);
   });
+  
+  // Focus first item when menu opens
+  $: if (show) {
+    tick().then(() => {
+      focusedIndex = 0;
+      focusItem(0);
+    });
+  }
   
   // Adjust position to stay within viewport
   $: if (show && menuElement) {
@@ -57,6 +88,8 @@
     class="context-menu"
     style="left: {x}px; top: {y}px;"
     role="menu"
+    aria-label="Context menu"
+    on:keydown={handleKeydown}
   >
     <slot />
   </div>

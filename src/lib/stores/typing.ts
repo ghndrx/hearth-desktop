@@ -1,11 +1,10 @@
-import { writable, derived } from "svelte/store";
-import { gateway } from "./gateway";
+import { writable, derived } from 'svelte/store';
+import { gateway } from './gateway';
 
 export interface TypingUser {
   userId: string;
   username: string;
   displayName?: string;
-  avatar?: string;
   startedAt: number;
 }
 
@@ -20,12 +19,12 @@ let cleanupInterval: ReturnType<typeof setInterval> | null = null;
 
 function createTypingStore() {
   // Start cleanup interval
-  if (typeof window !== "undefined" && !cleanupInterval) {
+  if (typeof window !== 'undefined' && !cleanupInterval) {
     cleanupInterval = setInterval(cleanupExpired, 1000);
   }
 
   // Subscribe to gateway typing events
-  gateway.on("TYPING_START", (data) => {
+  gateway.on('TYPING_START', (data) => {
     const event = data as {
       channel_id: string;
       user_id: string;
@@ -33,7 +32,6 @@ function createTypingStore() {
         user?: {
           username: string;
           display_name?: string;
-          avatar?: string;
         };
       };
       timestamp?: number;
@@ -43,17 +41,15 @@ function createTypingStore() {
     const currentUserId = getCurrentUserId();
     if (event.user_id === currentUserId) return;
 
-    const username = event.member?.user?.username || "Someone";
+    const username = event.member?.user?.username || 'Someone';
     const displayName = event.member?.user?.display_name;
-    const avatar = event.member?.user?.avatar;
 
-    typingState.update((state) => {
+    typingState.update(state => {
       const channelTyping = state.get(event.channel_id) || new Map();
       channelTyping.set(event.user_id, {
         userId: event.user_id,
         username,
         displayName,
-        avatar,
         startedAt: Date.now(),
       });
       state.set(event.channel_id, channelTyping);
@@ -62,14 +58,14 @@ function createTypingStore() {
   });
 
   // Clear typing when user sends a message
-  gateway.on("MESSAGE_CREATE", (data) => {
+  gateway.on('MESSAGE_CREATE', (data) => {
     const message = data as { channel_id: string; author_id: string };
     clearUserTyping(message.channel_id, message.author_id);
   });
 
   function cleanupExpired() {
     const now = Date.now();
-    typingState.update((state) => {
+    typingState.update(state => {
       let changed = false;
       for (const [channelId, channelTyping] of state) {
         for (const [userId, user] of channelTyping) {
@@ -88,7 +84,7 @@ function createTypingStore() {
   }
 
   function clearUserTyping(channelId: string, userId: string) {
-    typingState.update((state) => {
+    typingState.update(state => {
       const channelTyping = state.get(channelId);
       if (channelTyping?.has(userId)) {
         channelTyping.delete(userId);
@@ -103,7 +99,7 @@ function createTypingStore() {
 
   function getTypingUsers(channelId: string): TypingUser[] {
     let users: TypingUser[] = [];
-    typingState.subscribe((state) => {
+    typingState.subscribe(state => {
       const channelTyping = state.get(channelId);
       users = channelTyping ? Array.from(channelTyping.values()) : [];
     })();
@@ -112,7 +108,7 @@ function createTypingStore() {
 
   // Create a derived store for a specific channel
   function forChannel(channelId: string) {
-    return derived(typingState, ($state) => {
+    return derived(typingState, $state => {
       const channelTyping = $state.get(channelId);
       return channelTyping ? Array.from(channelTyping.values()) : [];
     });
@@ -142,21 +138,21 @@ export const typingStore = createTypingStore();
 
 // Helper to format typing indicator text
 export function formatTypingText(users: TypingUser[]): string {
-  if (users.length === 0) return "";
-
-  const names = users.map((u) => u.displayName || u.username);
-
+  if (users.length === 0) return '';
+  
+  const names = users.map(u => u.displayName || u.username);
+  
   if (names.length === 1) {
     return `${names[0]} is typing...`;
   }
-
+  
   if (names.length === 2) {
     return `${names[0]} and ${names[1]} are typing...`;
   }
-
+  
   if (names.length === 3) {
     return `${names[0]}, ${names[1]}, and ${names[2]} are typing...`;
   }
-
+  
   return `${names[0]}, ${names[1]}, and ${names.length - 2} others are typing...`;
 }

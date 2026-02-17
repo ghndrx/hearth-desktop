@@ -1,9 +1,9 @@
 /* Hearth Theme Variables */
 
 :root {
-	/* Brand */
-	--brand-primary: #5865f2;
-	--brand-hover: #4752c4;
+	/* Brand - A11Y-003: Lightened for WCAG 4.5:1 contrast on dark backgrounds */
+	--brand-primary: #8b94f7;
+	--brand-hover: #8b94f7;  /* Same as primary - hover uses opacity/filter instead */
 	
 	/* Backgrounds */
 	--bg-primary: #313338;
@@ -14,21 +14,21 @@
 	--bg-modifier-selected: rgba(79, 84, 92, 0.32);
 	--bg-modifier-accent: rgba(79, 84, 92, 0.48);
 	
-	/* Text */
+	/* Text - A11Y-003: Adjusted positive/danger for WCAG 4.5:1 compliance */
 	--text-primary: #f2f3f5;
 	--text-secondary: #b5bac1;
 	--text-muted: #949ba4;
 	--text-link: #00a8fc;
-	--text-positive: #23a559;
+	--text-positive: #2dc766;
 	--text-warning: #f0b232;
-	--text-danger: #f23f43;
+	--text-danger: #ff6b6f;
 	
-	/* Status */
-	--status-online: #23a559;
+	/* Status - A11Y-003: Updated to match accessible text colors */
+	--status-online: #2dc766;
 	--status-idle: #f0b232;
-	--status-dnd: #f23f43;
+	--status-dnd: #ff6b6f;
 	--status-offline: #80848e;
-	--status-danger: #f23f43;
+	--status-danger: #ff6b6f;
 	
 	/* Borders */
 	--border-subtle: rgba(79, 84, 92, 0.24);
@@ -44,10 +44,10 @@
 	--shadow-elevation-high: 0 8px 16px rgba(0, 0, 0, 0.24);
 }
 
-/* Light theme */
+/* Light theme - A11Y-003: Adjusted for WCAG 4.5:1 contrast compliance */
 [data-theme="light"] {
-	--brand-primary: #5865f2;
-	--brand-hover: #4752c4;
+	--brand-primary: #4752c4;
+	--brand-hover: #3c46a8;
 	
 	--bg-primary: #ffffff;
 	--bg-secondary: #f2f3f5;
@@ -59,8 +59,8 @@
 	
 	--text-primary: #060607;
 	--text-secondary: #4e5058;
-	--text-muted: #6d6f78;
-	--text-link: #006ce7;
+	--text-muted: #5f6169;
+	--text-link: #0059bb;
 	
 	--scrollbar-thumb: #c4c9ce;
 	--scrollbar-thumb-hover: #b5bac1;

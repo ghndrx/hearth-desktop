@@ -7,6 +7,7 @@
 	export let subtitle = '';
 	export let size: 'small' | 'large' = 'small';
 	export let showCloseButton = true;
+	export let maxWidth: string | undefined = undefined;
 
 	const dispatch = createEventDispatcher<{
 		close: void;
@@ -64,6 +65,7 @@
 <svelte:window on:keydown={handleKeydown} />
 
 {#if open}
+	<!-- svelte-ignore a11y_click_events_have_key_events a11y_no_static_element_interactions -->
 	<div class="modal-backdrop" transition:fade={{ duration: 100 }} on:click={handleBackdropClick}>
 		<div
 			class="modal {size}"
@@ -73,6 +75,7 @@
 			aria-labelledby={title ? 'modal-title' : undefined}
 			aria-describedby={subtitle ? 'modal-subtitle' : undefined}
 			transition:scale={{ duration: 100, start: 0.95 }}
+			style={maxWidth ? `max-width: ${maxWidth}` : undefined}
 		>
 			{#if title || subtitle || showCloseButton}
 				<div class="modal-header" class:has-subtitle={subtitle}>

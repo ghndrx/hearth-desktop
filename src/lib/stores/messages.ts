@@ -22,6 +22,15 @@ export interface Message {
 	pinned: boolean;
 	created_at: string;
 	edited_at: string | null;
+	// FEAT-001: Thread reply tracking
+	thread_reply_count?: number;
+	thread_last_reply_at?: string;
+	thread_participants?: Array<{
+		id: string;
+		username: string;
+		display_name?: string | null;
+		avatar?: string | null;
+	}>;
 }
 
 // Backend message format (for normalization)
@@ -55,6 +64,7 @@ export interface Attachment {
 	url: string;
 	content_type: string;
 	size: number;
+	alt_text?: string; // A11Y-004: Accessibility description for images
 }
 
 export interface Reaction {
@@ -93,13 +103,16 @@ function normalizeMessage(msg: BackendMessage): Message {
 }
 
 export async function loadMessages(channelId: string, before?: string) {
+	console.log('[Messages] loadMessages called for channel:', channelId);
 	loadingMessages.update(l => ({ ...l, [channelId]: true }));
 	
 	try {
 		const params = new URLSearchParams({ limit: '50' });
 		if (before) params.set('before', before);
 		
+		console.log('[Messages] Fetching from API:', `/channels/${channelId}/messages?${params}`);
 		const data = await api.get<BackendMessage[]>(`/channels/${channelId}/messages?${params}`);
+		console.log('[Messages] Received', data.length, 'messages');
 		const normalized = data.map(normalizeMessage);
 		
 		messages.update(m => {
@@ -126,8 +139,21 @@ export async function sendMessage(
 	channelId: string,
 	content: string,
 	attachments: File[] = [],
-	replyToId?: string
+	replyToId?: string,
+	altTexts: Record<string, string> = {} // A11Y-004: Alt text for accessibility
 ) {
+	console.log('[sendMessage] Starting:', { channelId, content: content?.substring(0, 50), attachmentCount: attachments?.length });
+	
+	if (!channelId) {
+		console.error('[sendMessage] ERROR: No channel ID provided');
+		throw new Error('No channel ID provided');
+	}
+	
+	if (!content?.trim() && (!attachments || attachments.length === 0)) {
+		console.error('[sendMessage] ERROR: Empty message');
+		throw new Error('Message content is empty');
+	}
+	
 	try {
 		let data: { content: string; reply_to?: string } | FormData = { content };
 		if (replyToId) {
@@ -143,19 +169,27 @@ export async function sendMessage(
 			}
 			attachments.forEach((file, i) => {
 				formData.append(`files[${i}]`, file);
+				// A11Y-004: Include alt text for each file if provided
+				const altText = altTexts[file.name];
+				if (altText) {
+					formData.append(`alt_texts[${i}]`, altText);
+				}
 			});
 			data = formData;
 		}
 		
+		console.log('[sendMessage] Making API call to:', `/channels/${channelId}/messages`);
 		const response = await api.post<BackendMessage>(`/channels/${channelId}/messages`, data);
+		console.log('[sendMessage] API response:', response);
 		const message = normalizeMessage(response);
 		
 		// Add to local store (will also come via WebSocket)
 		addMessage(message);
+		console.log('[sendMessage] Message added to store:', message.id);
 		
 		return message;
 	} catch (error) {
-		console.error('Failed to send message:', error);
+		console.error('[sendMessage] FAILED:', error);
 		throw error;
 	}
 }
@@ -258,13 +292,14 @@ export function removeMessage(channelId: string, messageId: string) {
 
 // Handle incoming WebSocket events (data already normalized by gateway)
 export function handleMessageCreate(data: Record<string, unknown>) {
-	// Ensure required fields exist
+	console.log('[messages store] handleMessageCreate:', data);
+	
 	const message: Message = {
 		id: data.id as string,
 		channel_id: data.channel_id as string,
-		author_id: data.author_id as string || '',
+		author_id: (data.author_id as string) || ((data.author as Record<string, unknown>)?.id as string) || '',
 		author: data.author as Message['author'],
-		content: data.content as string || '',
+		content: (data.content as string) || '',
 		encrypted: false,
 		attachments: (data.attachments as Attachment[]) || [],
 		reactions: (data.reactions as Reaction[]) || [],
@@ -273,6 +308,8 @@ export function handleMessageCreate(data: Record<string, unknown>) {
 		created_at: (data.created_at as string) || new Date().toISOString(),
 		edited_at: (data.edited_at as string) || null,
 	};
+	
+	console.log('[messages store] Adding message:', message.id, '-', message.content?.substring(0, 50));
 	addMessage(message);
 }
 

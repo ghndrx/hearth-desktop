@@ -1,244 +1,190 @@
-import { writable, derived, get } from 'svelte/store';
-import type { Channel } from './channels';
-import { user } from './auth';
+import { writable, derived } from 'svelte/store';
 
-/**
- * Participant in a voice call
- */
 export interface VoiceParticipant {
 	id: string;
 	username: string;
-	displayName?: string;
+	display_name: string | null;
 	avatar: string | null;
-	muted: boolean;
-	deafened: boolean;
-	speaking: boolean;
-	screenSharing: boolean;
+	isMuted: boolean;
+	isDeafened: boolean;
+	isSpeaking: boolean;
+	isScreenSharing: boolean;
+	isVideoEnabled: boolean;
+	joinedAt: Date;
 }
 
-/**
- * Voice call state
- */
 export interface VoiceCallState {
-	connected: boolean;
-	connecting: boolean;
-	channel: Channel | null;
+	isActive: boolean;
+	channelId: string | null;
+	channelName: string | null;
+	serverId: string | null;
+	serverName: string | null;
 	participants: VoiceParticipant[];
-	muted: boolean;
-	deafened: boolean;
-	screenSharing: boolean;
-	connectionQuality: 'excellent' | 'good' | 'poor' | 'disconnected';
-	callDuration: number; // in seconds
+	localMuted: boolean;
+	localDeafened: boolean;
+	startedAt: Date | null;
+	connectionState: 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
 }
 
 const initialState: VoiceCallState = {
-	connected: false,
-	connecting: false,
-	channel: null,
+	isActive: false,
+	channelId: null,
+	channelName: null,
+	serverId: null,
+	serverName: null,
 	participants: [],
-	muted: false,
-	deafened: false,
-	screenSharing: false,
-	connectionQuality: 'disconnected',
-	callDuration: 0
+	localMuted: false,
+	localDeafened: false,
+	startedAt: null,
+	connectionState: 'disconnected'
 };
 
 function createVoiceCallStore() {
 	const { subscribe, set, update } = writable<VoiceCallState>(initialState);
-	let durationInterval: ReturnType<typeof setInterval> | null = null;
-
-	function startDurationTimer() {
-		if (durationInterval) clearInterval(durationInterval);
-		durationInterval = setInterval(() => {
-			update(state => ({
-				...state,
-				callDuration: state.callDuration + 1
-			}));
-		}, 1000);
-	}
-
-	function stopDurationTimer() {
-		if (durationInterval) {
-			clearInterval(durationInterval);
-			durationInterval = null;
-		}
-	}
 
 	return {
 		subscribe,
 
-		/**
-		 * Join a voice channel
-		 */
-		join: async (channel: Channel) => {
+		// Join a voice channel
+		join(channel: { id: string; name: string; serverId?: string; serverName?: string }) {
 			update(state => ({
 				...state,
-				connecting: true,
-				channel
+				isActive: true,
+				channelId: channel.id,
+				channelName: channel.name,
+				serverId: channel.serverId ?? null,
+				serverName: channel.serverName ?? null,
+				startedAt: new Date(),
+				connectionState: 'connecting'
 			}));
-
-			// Simulate connection delay (in real app, this would be WebRTC setup)
-			await new Promise(resolve => setTimeout(resolve, 800));
-
-			const currentUser = get(user);
-			const selfParticipant: VoiceParticipant = {
-				id: currentUser?.id || 'self',
-				username: currentUser?.username || 'You',
-				displayName: currentUser?.display_name ?? undefined,
-				avatar: currentUser?.avatar ?? null,
-				muted: false,
-				deafened: false,
-				speaking: false,
-				screenSharing: false
-			};
-
-			update(state => ({
-				...state,
-				connected: true,
-				connecting: false,
-				participants: [selfParticipant],
-				connectionQuality: 'excellent',
-				callDuration: 0
-			}));
-
-			startDurationTimer();
 		},
 
-		/**
-		 * Leave the current voice channel
-		 */
-		disconnect: () => {
-			stopDurationTimer();
+		// Leave the voice channel
+		leave() {
 			set(initialState);
 		},
 
-		/**
-		 * Toggle mute state
-		 */
-		toggleMute: () => {
+		// Set connection state
+		setConnectionState(connectionState: VoiceCallState['connectionState']) {
+			update(state => ({ ...state, connectionState }));
+		},
+
+		// Add a participant
+		addParticipant(participant: Omit<VoiceParticipant, 'joinedAt' | 'isSpeaking'>) {
 			update(state => {
-				const newMuted = !state.muted;
+				// Don't add duplicates
+				if (state.participants.some(p => p.id === participant.id)) {
+					return state;
+				}
 				return {
 					...state,
-					muted: newMuted,
-					// Update self in participants
-					participants: state.participants.map(p => 
-						p.id === get(user)?.id ? { ...p, muted: newMuted } : p
-					)
+					participants: [
+						...state.participants,
+						{
+							...participant,
+							isSpeaking: false,
+							joinedAt: new Date()
+						}
+					]
 				};
 			});
 		},
 
-		/**
-		 * Toggle deafen state (also mutes when deafening)
-		 */
-		toggleDeafen: () => {
-			update(state => {
-				const newDeafened = !state.deafened;
-				const newMuted = newDeafened ? true : state.muted;
-				return {
-					...state,
-					deafened: newDeafened,
-					muted: newMuted,
-					participants: state.participants.map(p => 
-						p.id === get(user)?.id ? { ...p, deafened: newDeafened, muted: newMuted } : p
-					)
-				};
-			});
-		},
-
-		/**
-		 * Toggle screen sharing
-		 */
-		toggleScreenShare: async () => {
-			update(state => {
-				const newScreenSharing = !state.screenSharing;
-				return {
-					...state,
-					screenSharing: newScreenSharing,
-					participants: state.participants.map(p => 
-						p.id === get(user)?.id ? { ...p, screenSharing: newScreenSharing } : p
-					)
-				};
-			});
-		},
-
-		/**
-		 * Set speaking state (typically called by voice activity detection)
-		 */
-		setSpeaking: (speaking: boolean) => {
-			update(state => ({
-				...state,
-				participants: state.participants.map(p => 
-					p.id === get(user)?.id ? { ...p, speaking } : p
-				)
-			}));
-		},
-
-		/**
-		 * Add a participant (when someone joins)
-		 */
-		addParticipant: (participant: VoiceParticipant) => {
-			update(state => ({
-				...state,
-				participants: [...state.participants, participant]
-			}));
-		},
-
-		/**
-		 * Remove a participant (when someone leaves)
-		 */
-		removeParticipant: (userId: string) => {
+		// Remove a participant
+		removeParticipant(userId: string) {
 			update(state => ({
 				...state,
 				participants: state.participants.filter(p => p.id !== userId)
 			}));
 		},
 
-		/**
-		 * Update participant state
-		 */
-		updateParticipant: (userId: string, updates: Partial<VoiceParticipant>) => {
+		// Update a participant's state
+		updateParticipant(userId: string, updates: Partial<VoiceParticipant>) {
 			update(state => ({
 				...state,
-				participants: state.participants.map(p => 
+				participants: state.participants.map(p =>
 					p.id === userId ? { ...p, ...updates } : p
 				)
 			}));
 		},
 
-		/**
-		 * Update connection quality
-		 */
-		setConnectionQuality: (quality: VoiceCallState['connectionQuality']) => {
+		// Set speaking state for a participant
+		setSpeaking(userId: string, isSpeaking: boolean) {
 			update(state => ({
 				...state,
-				connectionQuality: quality
+				participants: state.participants.map(p =>
+					p.id === userId ? { ...p, isSpeaking } : p
+				)
 			}));
+		},
+
+		// Toggle local mute
+		toggleMute() {
+			update(state => ({ ...state, localMuted: !state.localMuted }));
+		},
+
+		// Toggle local deafen
+		toggleDeafen() {
+			update(state => {
+				const newDeafened = !state.localDeafened;
+				return {
+					...state,
+					localDeafened: newDeafened,
+					// Deafening also mutes
+					localMuted: newDeafened ? true : state.localMuted
+				};
+			});
+		},
+
+		// Set mute state explicitly
+		setMuted(muted: boolean) {
+			update(state => ({ ...state, localMuted: muted }));
+		},
+
+		// Set deafen state explicitly
+		setDeafened(deafened: boolean) {
+			update(state => ({
+				...state,
+				localDeafened: deafened,
+				localMuted: deafened ? true : state.localMuted
+			}));
+		},
+
+		// Reset store
+		reset() {
+			set(initialState);
 		}
 	};
 }
 
-export const voiceCall = createVoiceCallStore();
+export const voiceCallStore = createVoiceCallStore();
 
 // Derived stores for convenience
-export const isInVoiceCall = derived(voiceCall, $vc => $vc.connected);
-export const voiceChannel = derived(voiceCall, $vc => $vc.channel);
-export const voiceParticipants = derived(voiceCall, $vc => $vc.participants);
-export const isMuted = derived(voiceCall, $vc => $vc.muted);
-export const isDeafened = derived(voiceCall, $vc => $vc.deafened);
-export const isScreenSharing = derived(voiceCall, $vc => $vc.screenSharing);
+export const isInVoiceCall = derived(voiceCallStore, $state => $state.isActive);
+export const voiceCallParticipants = derived(voiceCallStore, $state => $state.participants);
+export const voiceCallParticipantCount = derived(voiceCallStore, $state => $state.participants.length);
+export const voiceCallChannel = derived(voiceCallStore, $state => ({
+	id: $state.channelId,
+	name: $state.channelName,
+	serverId: $state.serverId,
+	serverName: $state.serverName
+}));
+export const voiceCallDuration = derived(voiceCallStore, $state => $state.startedAt);
+export const voiceConnectionState = derived(voiceCallStore, $state => $state.connectionState);
 
-/**
- * Format call duration as MM:SS or HH:MM:SS
- */
-export function formatDuration(seconds: number): string {
-	const hours = Math.floor(seconds / 3600);
-	const mins = Math.floor((seconds % 3600) / 60);
-	const secs = seconds % 60;
-
+// Helper to format call duration
+export function formatCallDuration(startedAt: Date | null): string {
+	if (!startedAt) return '00:00';
+	
+	const now = new Date();
+	const diff = Math.floor((now.getTime() - startedAt.getTime()) / 1000);
+	
+	const hours = Math.floor(diff / 3600);
+	const minutes = Math.floor((diff % 3600) / 60);
+	const seconds = diff % 60;
+	
 	if (hours > 0) {
-		return `${hours}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+		return `${hours}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 	}
-	return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+	return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }

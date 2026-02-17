@@ -2,9 +2,12 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod activity;
+mod audio;
 mod commands;
 mod deeplink;
 mod menu;
+mod power;
+mod screenshot;
 mod tray;
 mod updater;
 
@@ -210,6 +213,29 @@ fn main() {
             activity::get_running_activities,
             activity::get_idle_status,
             activity::get_idle_status_with_threshold,
+            // Power management commands
+            power::prevent_sleep,
+            power::allow_sleep,
+            power::is_sleep_prevented,
+            power::get_power_status,
+            // Screenshot commands
+            screenshot::capture_screenshot,
+            screenshot::capture_window_screenshot,
+            screenshot::capture_region_screenshot,
+            screenshot::get_screenshots_dir,
+            screenshot::list_screenshots,
+            screenshot::delete_screenshot,
+            // Audio commands
+            audio::get_audio_input_devices,
+            audio::get_audio_output_devices,
+            audio::set_audio_input_device,
+            audio::set_audio_output_device,
+            audio::get_input_volume,
+            audio::set_input_volume,
+            audio::get_output_volume,
+            audio::set_output_volume,
+            audio::is_output_muted,
+            audio::toggle_output_mute,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

@@ -10,5 +10,11 @@ export default defineConfig({
 		watch: {
 			ignored: ['**/src-tauri/**']
 		}
+	},
+	test: {
+		include: ['src/**/*.{test,spec}.{js,ts}'],
+		environment: 'jsdom',
+		globals: true,
+		setupFiles: ['src/lib/__tests__/setup.ts']
 	}
 });
