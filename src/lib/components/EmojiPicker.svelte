@@ -1,9 +1,15 @@
 <script lang="ts">
-  import { createEventDispatcher, onMount, onDestroy } from 'svelte';
+  import { createEventDispatcher, onMount, onDestroy, tick } from 'svelte';
+  import { handleListKeyboard } from '$lib/utils/keyboard';
 
   export let show = false;
 
   const dispatch = createEventDispatcher<{ select: string; close: void }>();
+
+  // Grid columns for keyboard navigation
+  const GRID_COLUMNS = 9;
+  let focusedEmojiIndex = -1;
+  let emojisContainer: HTMLDivElement;
 
   // Skin tone modifiers
   const skinTones = [
@@ -184,6 +190,19 @@
     }
   }
 
+  function getEmojiButtons(): HTMLElement[] {
+    if (!emojisContainer) return [];
+    return Array.from(emojisContainer.querySelectorAll<HTMLElement>('.emoji-btn'));
+  }
+
+  function focusEmojiAt(index: number) {
+    const buttons = getEmojiButtons();
+    if (buttons[index]) {
+      buttons[index].focus();
+      focusedEmojiIndex = index;
+    }
+  }
+
   function handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
       if (showSkinTonePicker) {
@@ -191,7 +210,46 @@
       } else {
         dispatch('close');
       }
+      return;
     }
+  }
+
+  function handleGridKeydown(event: KeyboardEvent) {
+    const buttons = getEmojiButtons();
+    if (buttons.length === 0) return;
+
+    // If not focused on grid yet, don't handle
+    if (focusedEmojiIndex < 0) return;
+
+    const { handled, newIndex } = handleListKeyboard(event, focusedEmojiIndex, buttons.length, {
+      wrap: false,
+      gridNavigation: true,
+      gridColumns: GRID_COLUMNS,
+      onSelect: (idx) => {
+        const emoji = filteredEmojis[idx];
+        if (emoji) selectEmoji(emoji);
+      },
+      onEscape: () => dispatch('close')
+    });
+
+    if (handled && newIndex !== focusedEmojiIndex) {
+      focusEmojiAt(newIndex);
+    }
+  }
+
+  function handleSearchKeydown(event: KeyboardEvent) {
+    // Arrow down from search moves to first emoji
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      focusedEmojiIndex = 0;
+      tick().then(() => focusEmojiAt(0));
+    } else if (event.key === 'Escape') {
+      dispatch('close');
+    }
+  }
+
+  function handleEmojiFocus(index: number) {
+    focusedEmojiIndex = index;
   }
 
   function selectSkinTone(index: number) {
@@ -222,11 +280,11 @@
 </script>
 
 {#if show}
-  <div bind:this={pickerElement} class="emoji-picker">
+  <div bind:this={pickerElement} class="emoji-picker" role="dialog" aria-label="Emoji picker" aria-modal="true">
     <!-- Header with search and skin tone -->
     <div class="header">
       <div class="search-container">
-        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16">
+        <svg class="search-icon" viewBox="0 0 24 24" width="16" height="16" aria-hidden="true">
           <path fill="currentColor" d="M21.707 20.293l-4.054-4.054A8.46 8.46 0 0 0 19.5 11c0-4.687-3.813-8.5-8.5-8.5S2.5 6.313 2.5 11s3.813 8.5 8.5 8.5a8.46 8.46 0 0 0 5.239-1.847l4.054 4.054a1 1 0 0 0 1.414-1.414zM11 17.5c-3.584 0-6.5-2.916-6.5-6.5S7.416 4.5 11 4.5s6.5 2.916 6.5 6.5-2.916 6.5-6.5 6.5z"/>
         </svg>
         <input
@@ -235,6 +293,8 @@
           placeholder="Search emoji"
           bind:value={searchQuery}
           class="search-input"
+          aria-label="Search emoji"
+          on:keydown={handleSearchKeydown}
         />
       </div>
 
@@ -244,20 +304,28 @@
           class="skin-tone-button"
           on:click|stopPropagation={() => showSkinTonePicker = !showSkinTonePicker}
           title="Select skin tone"
+          aria-label="Select skin tone: {skinTones[selectedSkinTone].name}"
+          aria-expanded={showSkinTonePicker}
+          aria-haspopup="listbox"
+          type="button"
         >
-          <span class="skin-tone-preview" style="background-color: {skinTones[selectedSkinTone].color}"></span>
+          <span class="skin-tone-preview" style="background-color: {skinTones[selectedSkinTone].color}" aria-hidden="true"></span>
         </button>
 
         {#if showSkinTonePicker}
-          <div class="skin-tone-picker">
+          <div class="skin-tone-picker" role="listbox" aria-label="Skin tone options">
             {#each skinTones as tone, i}
               <button
                 class="skin-tone-option"
                 class:selected={selectedSkinTone === i}
                 on:click|stopPropagation={() => selectSkinTone(i)}
                 title={tone.name}
+                role="option"
+                aria-selected={selectedSkinTone === i}
+                aria-label="{tone.name} skin tone"
+                type="button"
               >
-                <span class="skin-tone-swatch" style="background-color: {tone.color}"></span>
+                <span class="skin-tone-swatch" style="background-color: {tone.color}" aria-hidden="true"></span>
               </button>
             {/each}
           </div>
@@ -266,7 +334,7 @@
     </div>
 
     <!-- Category tabs -->
-    <div class="categories">
+    <div class="categories" role="tablist" aria-label="Emoji categories">
       {#each categories as category, i}
         {#if i > 0 || hasRecentEmojis}
           <button
@@ -274,8 +342,12 @@
             class:active={selectedCategory === i && !searchQuery}
             on:click={() => { selectedCategory = i; searchQuery = ''; }}
             title={category.name}
+            role="tab"
+            aria-selected={selectedCategory === i && !searchQuery}
+            aria-label={category.name}
+            type="button"
           >
-            {category.icon}
+            <span aria-hidden="true">{category.icon}</span>
           </button>
         {/if}
       {/each}
@@ -293,12 +365,22 @@
     {/if}
 
     <!-- Emoji grid -->
-    <div class="emojis">
-      {#each filteredEmojis as emoji}
+    <div 
+      bind:this={emojisContainer}
+      class="emojis" 
+      role="grid" tabindex="0" 
+      aria-label="{searchQuery ? 'Search Results' : categories[selectedCategory].name} emoji"
+      on:keydown={handleGridKeydown}
+    >
+      {#each filteredEmojis as emoji, i}
         <button
           class="emoji-btn"
           on:click={() => selectEmoji(emoji)}
+          on:focus={() => handleEmojiFocus(i)}
           title={emoji}
+          aria-label="Select {emoji} emoji"
+          type="button"
+          tabindex={focusedEmojiIndex === i ? 0 : -1}
         >
           {applySkintone(emoji)}
         </button>
@@ -404,6 +486,11 @@
     outline: none;
   }
 
+  .search-input:focus-visible {
+    outline: 2px solid var(--blurple, #5865f2);
+    outline-offset: -2px;
+  }
+
   .skin-tone-container {
     position: relative;
   }
@@ -423,6 +510,11 @@
 
   .skin-tone-button:hover {
     background-color: var(--bg-modifier-hover, #35373c);
+  }
+
+  .skin-tone-button:focus-visible {
+    outline: 2px solid var(--blurple, #5865f2);
+    outline-offset: 2px;
   }
 
   .skin-tone-preview {
@@ -498,6 +590,12 @@
     opacity: 0.8;
   }
 
+  .category-btn:focus-visible {
+    outline: 2px solid var(--blurple, #5865f2);
+    outline-offset: -2px;
+    opacity: 1;
+  }
+
   .category-btn.active {
     opacity: 1;
     border-bottom-color: var(--blurple, #5865f2);
@@ -537,6 +635,12 @@
   .emoji-btn:hover {
     background-color: var(--bg-modifier-hover, #35373c);
     transform: scale(1.15);
+  }
+
+  .emoji-btn:focus-visible {
+    outline: 2px solid var(--blurple, #5865f2);
+    outline-offset: -2px;
+    background-color: var(--bg-modifier-hover, #35373c);
   }
 
   .no-results {

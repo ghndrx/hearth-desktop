@@ -38,15 +38,18 @@
 		class:home={isHome}
 		class:add={isAdd}
 		on:click
+		aria-label={isHome ? 'Direct Messages' : isAdd ? 'Add a Server' : server?.name || 'Server'}
+		aria-current={isSelected ? 'page' : undefined}
+		type="button"
 	>
 		{#if isHome}
-			<!-- Discord logo for home -->
-			<svg class="icon" viewBox="0 0 24 24" fill="currentColor">
-				<path d="M19.27 5.33C17.94 4.71 16.5 4.26 15 4a.09.09 0 0 0-.07.03c-.18.33-.39.76-.53 1.09a16.09 16.09 0 0 0-4.8 0c-.14-.34-.35-.76-.54-1.09c-.01-.02-.04-.03-.07-.03c-1.5.26-2.93.71-4.27 1.33c-.01 0-.02.01-.03.02c-2.72 4.07-3.47 8.03-3.1 11.95c0 .02.01.04.03.05c1.8 1.32 3.53 2.12 5.24 2.65c.03.01.06 0 .07-.02c.4-.55.76-1.13 1.07-1.74c.02-.04 0-.08-.04-.09c-.57-.22-1.11-.48-1.64-.78c-.04-.02-.04-.08-.01-.11c.11-.08.22-.17.33-.25c.02-.02.05-.02.07-.01c3.44 1.57 7.15 1.57 10.55 0c.02-.01.05-.01.07.01c.11.09.22.17.33.26c.04.03.04.09-.01.11c-.52.31-1.07.56-1.64.78c-.04.01-.05.06-.04.09c.32.61.68 1.19 1.07 1.74c.03.01.06.02.09.01c1.72-.53 3.45-1.33 5.25-2.65c.02-.01.03-.03.03-.05c.44-4.53-.73-8.46-3.1-11.95c-.01-.01-.02-.02-.04-.02zM8.52 14.91c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.84 2.12-1.89 2.12zm6.97 0c-1.03 0-1.89-.95-1.89-2.12s.84-2.12 1.89-2.12c1.06 0 1.9.96 1.89 2.12c0 1.17-.83 2.12-1.89 2.12z"/>
+			<!-- Hearth flame icon for home -->
+			<svg class="icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+				<path d="M12 2C8.5 6 4 9.5 4 14c0 4.42 3.58 8 8 8s8-3.58 8-8c0-4.5-4.5-8-8-12zm0 18c-3.31 0-6-2.69-6-6 0-2.97 2.16-5.77 4-7.82V8c1.5 1.5 4 4.5 4 6 0 1.66-1.34 3-3 3s-3-1.34-3-3h2c0 .55.45 1 1 1s1-.45 1-1c0-.73-1.12-2.39-2-3.39V14c0 2.21 1.79 4 4 4s4-1.79 4-4c0-1.87-1.35-4.17-3-6.04C16.36 10.17 18 12.77 18 14c0 3.31-2.69 6-6 6z"/>
 			</svg>
 		{:else if isAdd}
 			<!-- Plus icon for add server -->
-			<svg class="icon add-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+			<svg class="icon add-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
 				<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
 			</svg>
 		{:else if server}
@@ -144,6 +147,13 @@
 		border-radius: 16px;
 		background-color: #5865f2;
 		color: white;
+	}
+
+	/* Focus visible state for keyboard navigation */
+	.server-icon:focus-visible {
+		outline: 2px solid var(--brand-primary, #5865f2);
+		outline-offset: 2px;
+		border-radius: 16px;
 	}
 
 	/* Selected state */

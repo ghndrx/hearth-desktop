@@ -21,6 +21,7 @@ export interface Activity {
   url?: string;
   details?: string;
   state?: string;
+  emoji?: string; // Custom status emoji
   timestamps?: {
     start?: number;
     end?: number;

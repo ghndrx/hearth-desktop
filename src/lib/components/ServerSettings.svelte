@@ -6,6 +6,10 @@
 	import { user } from '$lib/stores/auth';
 	import Avatar from './Avatar.svelte';
 	import Modal from './Modal.svelte';
+	import RoleEditor from './RoleEditor.svelte';
+	import AuditLogViewer from './AuditLogViewer.svelte';
+	import AutoModerationSettings from './AutoModerationSettings.svelte';
+	import BanListSection from './BanListSection.svelte';
 	
 	export let open = false;
 	
@@ -55,9 +59,9 @@
 		{ value: 'south-africa', label: 'South Africa', flag: '🇿🇦' }
 	];
 	
-	let newChannel = {
+	let newChannel: { name: string; type: 'text' | 'voice' | 'announcement'; topic: string } = {
 		name: '',
-		type: 0,
+		type: 'text',
 		topic: ''
 	};
 	
@@ -75,7 +79,9 @@
 		{ id: 'emoji', label: 'Emoji', icon: 'emoji' },
 		{ id: 'divider-moderation', label: 'Moderation', divider: true },
 		{ id: 'safety', label: 'Safety Setup', icon: 'safety' },
+		{ id: 'automod', label: 'AutoMod', icon: 'automod' },
 		{ id: 'audit-log', label: 'Audit Log', icon: 'log' },
+		{ id: 'bans', label: 'Bans', icon: 'bans' },
 		{ id: 'divider-channels', label: 'Channel Settings', divider: true },
 		{ id: 'channels', label: 'Channels', icon: 'channels' },
 		{ id: 'divider-other', label: '', divider: true },
@@ -127,6 +133,11 @@
 	];
 	
 	$: isOwner = $currentServer?.owner_id === $user?.id;
+	$: console.log('ServerSettings ownership check:', { 
+		serverOwnerId: $currentServer?.owner_id, 
+		userId: $user?.id, 
+		isOwner 
+	});
 	
 	$: if (open && $currentServer) {
 		serverForm = {
@@ -244,8 +255,8 @@
 	async function handleCreateChannel() {
 		if (!$currentServer || !newChannel.name.trim()) return;
 		try {
-			await createChannel($currentServer.id, newChannel.name.trim(), newChannel.type);
-			newChannel = { name: '', type: 0, topic: '' };
+			await createChannel($currentServer.id, { name: newChannel.name.trim(), type: newChannel.type, topic: newChannel.topic });
+			newChannel = { name: '', type: 'text', topic: '' };
 			showCreateChannelModal = false;
 		} catch (error) {
 			console.error('Failed to create channel:', error);
@@ -405,7 +416,6 @@
 											maxlength={1024}
 											rows={4}
 											disabled={!isOwner}
-											spellcheck="true"
 										></textarea>
 										<span class="char-count">{serverForm.description.length}/1024</span>
 									</div>
@@ -551,15 +561,9 @@
 						</section>
 					
 					{:else if activeSection === 'roles'}
-						<section>
+						<section class="roles-section">
 							<h1>Roles</h1>
-							
-							<div class="placeholder-section">
-								<div class="placeholder-icon">🛡️</div>
-								<h3>Role Management</h3>
-								<p>Create and manage roles for your server members.</p>
-								<p class="coming-soon">Coming soon</p>
-							</div>
+							<RoleEditor serverId={$currentServer.id} {isOwner} />
 						</section>
 					
 					{:else if activeSection === 'emoji'}
@@ -575,15 +579,26 @@
 						</section>
 					
 					{:else if activeSection === 'audit-log'}
-						<section>
+						<section class="audit-log-section">
 							<h1>Audit Log</h1>
-							
-							<div class="placeholder-section">
-								<div class="placeholder-icon">📜</div>
-								<h3>Audit Log</h3>
-								<p>View a log of all administrative actions in your server.</p>
-								<p class="coming-soon">Coming soon</p>
-							</div>
+							<AuditLogViewer serverId={$currentServer.id} />
+						</section>
+					
+					{:else if activeSection === 'automod'}
+						<section class="automod-section">
+							<AutoModerationSettings serverId={$currentServer.id} {isOwner} />
+						</section>
+					
+					{:else if activeSection === 'bans'}
+						<section>
+							<h1>Bans</h1>
+							<p class="section-desc">
+								View and manage banned users in this server.
+							</p>
+							<BanListSection 
+								serverId={$currentServer.id}
+								canUnban={isOwner}
+							/>
 						</section>
 					
 					{:else if activeSection === 'channels'}
@@ -759,7 +774,7 @@
 	
 	<!-- Delete Confirmation Modal -->
 	{#if showDeleteModal}
-		<Modal on:close={() => showDeleteModal = false}>
+		<Modal open={true} on:close={() => showDeleteModal = false}>
 			<div class="delete-modal">
 				<h2>Delete '{$currentServer.name}'</h2>
 				<p>
@@ -793,13 +808,13 @@
 	
 	<!-- Create Channel Modal -->
 	{#if showCreateChannelModal}
-		<Modal on:close={() => showCreateChannelModal = false}>
+		<Modal open={true} on:close={() => showCreateChannelModal = false}>
 			<div class="create-channel-modal">
 				<h2>Create Channel</h2>
 				
 				<div class="channel-type-select">
-					<label class="channel-type-option" class:selected={newChannel.type === 0}>
-						<input type="radio" value={0} bind:group={newChannel.type} />
+					<label class="channel-type-option" class:selected={newChannel.type === 'text'}>
+						<input type="radio" value="text" bind:group={newChannel.type} />
 						<span class="type-icon">#</span>
 						<div>
 							<span class="type-name">Text</span>
@@ -807,8 +822,8 @@
 						</div>
 					</label>
 					
-					<label class="channel-type-option" class:selected={newChannel.type === 2}>
-						<input type="radio" value={2} bind:group={newChannel.type} />
+					<label class="channel-type-option" class:selected={newChannel.type === 'voice'}>
+						<input type="radio" value="voice" bind:group={newChannel.type} />
 						<span class="type-icon">🔊</span>
 						<div>
 							<span class="type-name">Voice</span>
@@ -820,7 +835,7 @@
 				<div class="form-field">
 					<label for="channel-name">Channel Name</label>
 					<div class="channel-name-input">
-						<span class="prefix">{newChannel.type === 0 ? '#' : '🔊'}</span>
+						<span class="prefix">{newChannel.type === 'text' ? '#' : '🔊'}</span>
 						<input 
 							type="text" 
 							id="channel-name"
@@ -849,7 +864,7 @@
 	
 	<!-- Edit Channel Modal -->
 	{#if editingChannel}
-		<Modal on:close={() => editingChannel = null}>
+		<Modal open={true} on:close={() => editingChannel = null}>
 			<div class="edit-channel-modal">
 				<h2>Edit Channel</h2>
 				
@@ -872,7 +887,6 @@
 							placeholder="What's this channel about?"
 							maxlength={1024}
 							rows={3}
-							spellcheck="true"
 						></textarea>
 					</div>
 					
@@ -920,7 +934,7 @@
 	.settings-overlay {
 		position: fixed;
 		inset: 0;
-		background: var(--bg-tertiary);
+		background: var(--bg-tertiary, #1e1f22);
 		z-index: 1000;
 		display: flex;
 	}
@@ -1433,6 +1447,49 @@
 		color: var(--text-muted);
 		padding: 16px;
 		text-align: center;
+	}
+	
+	/* Roles Section */
+	.roles-section {
+		height: calc(100vh - 200px);
+		min-height: 500px;
+		display: flex;
+		flex-direction: column;
+	}
+	
+	.roles-section h1 {
+		flex-shrink: 0;
+	}
+	
+	.roles-section :global(.role-editor) {
+		flex: 1;
+		background: var(--bg-secondary);
+		border-radius: 8px;
+		overflow: hidden;
+	}
+	
+	/* Audit Log Section */
+	.audit-log-section {
+		height: calc(100vh - 200px);
+		min-height: 500px;
+		display: flex;
+		flex-direction: column;
+	}
+	
+	.audit-log-section h1 {
+		flex-shrink: 0;
+	}
+	
+	.audit-log-section :global(.audit-log-viewer) {
+		flex: 1;
+		background: var(--bg-secondary);
+		border-radius: 8px;
+		overflow: hidden;
+	}
+	
+	/* AutoMod Section */
+	.automod-section {
+		min-height: 400px;
 	}
 	
 	/* Placeholder Section */

@@ -1,22 +1,35 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import type { Channel } from '$lib/stores/channels';
+	import { splitViewStore, canAddSplitPanel, splitViewEnabled } from '$lib/stores/splitView';
 	import Avatar from './Avatar.svelte';
+	import ContextMenu from './ContextMenu.svelte';
+	import ContextMenuItem from './ContextMenuItem.svelte';
 
 	export let channel: Channel;
+	export let serverId: string = '';
 	export let active = false;
 	export let muted = false;
 	export let unread = false;
+	export let canManageChannels = false;
 	export let connectedUsers: Array<{
 		id: string;
 		username: string;
 		avatar: string | null;
 		speaking?: boolean;
 	}> = [];
+	
+	// FEAT-003: Split view pin state
+	$: isPinned = splitViewStore.isPinned(channel.id, channel.type === 1 ? 'dm' : 'channel');
+	$: canPinToSplitView = $splitViewEnabled && ($canAddSplitPanel || isPinned);
 
 	const dispatch = createEventDispatcher<{
 		select: Channel;
 		openSettings: Channel;
+		invite: Channel;
+		mute: Channel;
+		delete: Channel;
+		copyId: string;
 	}>();
 
 	// Channel types: 0=text, 1=dm, 2=voice, 3=group_dm, 4=category
@@ -25,8 +38,12 @@
 	$: isPrivate = channel.e2ee_enabled;
 
 	let showSettings = false;
+	let showContextMenu = false;
+	let contextMenuX = 0;
+	let contextMenuY = 0;
 
 	function handleSelect() {
+		console.log('[ChannelItem] handleSelect called for:', channel.id, channel.name);
 		dispatch('select', channel);
 	}
 
@@ -34,13 +51,56 @@
 		e.stopPropagation();
 		dispatch('openSettings', channel);
 	}
+
+	function handleContextMenu(e: MouseEvent) {
+		e.preventDefault();
+		contextMenuX = e.clientX;
+		contextMenuY = e.clientY;
+		showContextMenu = true;
+	}
+
+	function handleInvite() {
+		showContextMenu = false;
+		dispatch('invite', channel);
+	}
+
+	function handleMute() {
+		showContextMenu = false;
+		dispatch('mute', channel);
+	}
+
+	function handleDelete() {
+		showContextMenu = false;
+		dispatch('delete', channel);
+	}
+
+	function handleCopyId() {
+		showContextMenu = false;
+		navigator.clipboard.writeText(channel.id);
+		dispatch('copyId', channel.id);
+	}
+
+	// FEAT-003: Handle pin/unpin to split view
+	function handlePinToSplitView() {
+		showContextMenu = false;
+		if (isPinned) {
+			splitViewStore.unpinByTarget(channel.id, channel.type === 1 ? 'dm' : 'channel');
+		} else if (channel.type === 1) {
+			// DM channel
+			splitViewStore.pinDM(channel, serverId);
+		} else {
+			// Server channel
+			splitViewStore.pinChannel(channel, serverId);
+		}
+	}
 </script>
 
 <div
 	class="channel-item-wrapper"
 	on:mouseenter={() => showSettings = true}
 	on:mouseleave={() => showSettings = false}
-	role="group"
+	on:contextmenu={handleContextMenu}
+	role="listitem"
 >
 	<div class="channel-item-row">
 		<button
@@ -50,8 +110,11 @@
 			class:unread
 			class:voice={isVoice}
 			on:click={handleSelect}
+			aria-label="{isVoice ? 'Voice channel' : isPrivate ? 'Private channel' : 'Text channel'}: {channel.name}{unread ? ', unread messages' : ''}{muted ? ', muted' : ''}"
+			aria-current={active ? 'page' : undefined}
+			type="button"
 		>
-			<div class="channel-icon">
+			<div class="channel-icon" aria-hidden="true">
 				{#if isPrivate}
 					<!-- Lock icon for private/encrypted channels -->
 					<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
@@ -79,9 +142,11 @@
 			<button
 				class="settings-button"
 				title="Edit Channel"
+				aria-label="Edit {channel.name} channel settings"
 				on:click={handleSettingsClick}
+				type="button"
 			>
-				<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+				<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
 					<path d="M19.14 12.94c.04-.31.06-.63.06-.94 0-.31-.02-.63-.06-.94l2.03-1.58a.49.49 0 0 0 .12-.61l-1.92-3.32a.49.49 0 0 0-.59-.22l-2.39.96c-.5-.38-1.03-.7-1.62-.94l-.36-2.54a.484.484 0 0 0-.48-.41h-3.84c-.24 0-.43.17-.47.41l-.36 2.54c-.59.24-1.13.57-1.62.94l-2.39-.96a.49.49 0 0 0-.59.22L2.74 8.87c-.12.21-.08.47.12.61l2.03 1.58c-.04.31-.06.63-.06.94s.02.63.06.94l-2.03 1.58a.49.49 0 0 0-.12.61l1.92 3.32c.12.22.37.29.59.22l2.39-.96c.5.38 1.03.7 1.62.94l.36 2.54c.05.24.24.41.48.41h3.84c.24 0 .44-.17.47-.41l.36-2.54c.59-.24 1.13-.56 1.62-.94l2.39.96c.22.08.47 0 .59-.22l1.92-3.32c.12-.22.07-.47-.12-.61l-2.01-1.58zM12 15.6c-1.98 0-3.6-1.62-3.6-3.6s1.62-3.6 3.6-3.6 3.6 1.62 3.6 3.6-1.62 3.6-3.6 3.6z"/>
 				</svg>
 			</button>
@@ -113,6 +178,27 @@
 		</div>
 	{/if}
 </div>
+
+<!-- Channel Context Menu -->
+<ContextMenu x={contextMenuX} y={contextMenuY} show={showContextMenu} on:close={() => showContextMenu = false}>
+	{#if !isVoice}
+		<ContextMenuItem label="Invite People" icon="👤" on:click={handleInvite} />
+	{/if}
+	<!-- FEAT-003: Pin to Split View option -->
+	{#if canPinToSplitView && !isVoice}
+		<ContextMenuItem 
+			label={isPinned ? 'Unpin from Split View' : 'Pin to Split View'} 
+			icon={isPinned ? '📌' : '📍'} 
+			on:click={handlePinToSplitView} 
+		/>
+	{/if}
+	<ContextMenuItem label={muted ? 'Unmute Channel' : 'Mute Channel'} icon={muted ? '🔔' : '🔕'} on:click={handleMute} />
+	{#if canManageChannels}
+		<ContextMenuItem label="Edit Channel" icon="⚙️" on:click={() => { showContextMenu = false; dispatch('openSettings', channel); }} />
+		<ContextMenuItem label="Delete Channel" icon="🗑️" danger on:click={handleDelete} />
+	{/if}
+	<ContextMenuItem label="Copy Channel ID" icon="📋" on:click={handleCopyId} />
+</ContextMenu>
 
 <style>
 	.channel-item-wrapper {

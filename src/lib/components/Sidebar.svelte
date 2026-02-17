@@ -17,7 +17,7 @@
 	}
 </script>
 
-<aside class="w-[72px] bg-dark-950 flex flex-col items-center py-3 gap-2 shrink-0">
+<aside class="w-[72px] bg-dark-950 flex flex-col items-center py-3 gap-2 shrink-0" role="navigation" aria-label="Server navigation">
 	<!-- Home/DM button -->
 	<button
 		class="w-12 h-12 rounded-[24px] bg-dark-700 hover:bg-hearth-500 hover:rounded-[16px]
@@ -25,8 +25,10 @@
 		on:click={() => currentServer.set(null)}
 		class:bg-hearth-500={!$currentServer}
 		class:rounded-[16px]={!$currentServer}
-		aria-label="Home"
+		aria-label="Direct Messages"
+		aria-current={!$currentServer ? 'page' : undefined}
 		title="Direct Messages"
+		type="button"
 	>
 		<svg
 			class="w-7 h-7 text-gray-400 group-hover:text-white transition-colors"
@@ -49,6 +51,8 @@
 			class:rounded-[16px]={$currentServer?.id === server.id}
 			on:click={() => selectServer(server)}
 			aria-label={server.name}
+			aria-current={$currentServer?.id === server.id ? 'page' : undefined}
+			type="button"
 		>
 			{#if server.icon}
 				<img
@@ -84,6 +88,7 @@
 		       flex items-center justify-center transition-all duration-200 group"
 		aria-label="Add a Server"
 		title="Add a Server"
+		type="button"
 	>
 		<svg
 			class="w-6 h-6 text-green-500 group-hover:text-white transition-colors"

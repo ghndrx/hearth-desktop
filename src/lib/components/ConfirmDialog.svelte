@@ -46,6 +46,7 @@
 			on:click={handleCancel}
 			disabled={loading}
 			type="button"
+			aria-label={cancelText}
 		>
 			{cancelText}
 		</button>
@@ -54,9 +55,11 @@
 			on:click={handleConfirm}
 			disabled={loading}
 			type="button"
+			aria-label={confirmText}
+			aria-busy={loading}
 		>
 			{#if loading}
-				<span class="loading-spinner"></span>
+				<span class="loading-spinner" aria-hidden="true"></span>
 				Please wait...
 			{:else}
 				{confirmText}

@@ -1,18 +1,18 @@
 <script lang="ts">
 	import { onMount, onDestroy, tick } from 'svelte';
-	import { messages, activeChannel, websocket, currentUser } from '$stores';
+	import { messages, activeChannel, currentUser } from '$stores';
 	import { loadMessages, addMessage, sendMessage as sendMessageFn, sendTypingIndicator, editMessage, deleteMessage } from '$lib/stores/messages';
 	import type { Message } from '$lib/stores/messages';
+	import { gateway, onGatewayEvent } from '$lib/gateway';
 	import TypingIndicator from './TypingIndicator.svelte';
 	import EmojiPicker from './EmojiPicker.svelte';
-	import MuteIndicator from './MuteIndicator.svelte';
-	import FocusModeIndicator from './FocusModeIndicator.svelte';
 
 	let messageInput = '';
 	let messagesContainer: HTMLDivElement;
 	let textareaEl: HTMLTextAreaElement;
 	let unsubscribeWS: (() => void) | null = null;
 	let lastTypingTime = 0;
+	let currentSubscribedChannel: string | null = null;
 	
 	// Reply state
 	let replyingTo: Message | null = null;
@@ -27,27 +27,68 @@
 	// Emoji picker
 	let showEmojiPicker = false;
 
+	// File upload
+	let fileInputEl: HTMLInputElement;
+	let pendingFiles: File[] = [];
+
+	function openFilePicker() {
+		fileInputEl?.click();
+	}
+
+	function handleFileSelect(e: Event) {
+		const input = e.target as HTMLInputElement;
+		if (input.files?.length) {
+			pendingFiles = [...pendingFiles, ...Array.from(input.files)];
+			// TODO: Show file preview and handle upload with message
+			console.log('Files selected:', pendingFiles);
+			input.value = ''; // Reset for next selection
+		}
+	}
+
+	function removeFile(index: number) {
+		pendingFiles = pendingFiles.filter((_, i) => i !== index);
+	}
+
 	$: channelMessages = $activeChannel
 		? $messages[$activeChannel.id] || []
 		: [];
 
 	$: if ($activeChannel) {
+		console.log('[MessageArea] Active channel changed:', $activeChannel.id);
 		loadMessages($activeChannel.id);
 		// Clear reply state when changing channels
 		replyingTo = null;
 		editingMessage = null;
+		
+		// Subscribe to channel for real-time updates
+		if (currentSubscribedChannel && currentSubscribedChannel !== $activeChannel.id) {
+			gateway.unsubscribeChannel(currentSubscribedChannel);
+		}
+		gateway.subscribeChannel($activeChannel.id);
+		currentSubscribedChannel = $activeChannel.id;
 	}
 
 	onMount(() => {
-		unsubscribeWS = websocket.on('MESSAGE_CREATE', (event) => {
-			const message = event.data as Message;
-			addMessage(message);
-			scrollToBottom();
+		console.log('[MessageArea] Mounted, subscribing to gateway events');
+		
+		// Listen for new messages from gateway
+		unsubscribeWS = onGatewayEvent('MESSAGE_CREATE', (data) => {
+			console.log('[MessageArea] MESSAGE_CREATE event received:', data);
+			const message = data as Message;
+			// Only process messages for the current channel
+			if (message.channel_id === $activeChannel?.id) {
+				addMessage(message);
+				scrollToBottom();
+			}
 		});
 	});
 
 	onDestroy(() => {
+		console.log('[MessageArea] Unmounting, cleaning up');
 		unsubscribeWS?.();
+		if (currentSubscribedChannel) {
+			gateway.unsubscribeChannel(currentSubscribedChannel);
+		}
 	});
 
 	function scrollToBottom() {
@@ -74,10 +115,17 @@
 		const content = messageInput.trim();
 		const replyToId = replyingTo?.id;
 		
+		console.log('[MessageArea] Sending message to channel:', $activeChannel.id, 'content:', content);
+		
 		messageInput = '';
 		replyingTo = null;
 		
-		await sendMessageFn($activeChannel.id, content, [], replyToId);
+		try {
+			const result = await sendMessageFn($activeChannel.id, content, [], replyToId);
+			console.log('[MessageArea] Message sent successfully:', result);
+		} catch (error) {
+			console.error('[MessageArea] Failed to send message:', error);
+		}
 	}
 	
 	function startReply(message: Message) {
@@ -201,25 +249,36 @@
 	}
 </script>
 
-<div class="flex-1 flex flex-col bg-dark-700 min-w-0">
+<div class="flex-1 flex flex-col bg-dark-700 min-w-0" role="main">
 	{#if $activeChannel}
 		<!-- Channel header -->
 		<header class="h-12 px-4 flex items-center border-b border-dark-900 shadow-sm shrink-0">
-			<span class="text-xl text-gray-400 mr-2">#</span>
-			<h1 class="font-semibold text-white">{$activeChannel.name}</h1>
+			<span class="text-xl text-gray-400 mr-2" aria-hidden="true">#</span>
+			<h2 class="font-semibold text-white" id="channel-heading">{$activeChannel.name}</h2>
 			{#if $activeChannel.topic}
-				<div class="mx-4 w-px h-6 bg-dark-500"></div>
-				<p class="text-sm text-gray-400 truncate">{$activeChannel.topic}</p>
+				<div class="mx-4 w-px h-6 bg-dark-500" aria-hidden="true"></div>
+				<p class="text-sm text-gray-400 truncate" id="channel-topic">{$activeChannel.topic}</p>
 			{/if}
-			<div class="flex-1"></div>
-			<MuteIndicator />
-			<FocusModeIndicator />
 		</header>
+
+		<!-- Screen reader announcements for new messages -->
+		<div 
+			class="sr-only" 
+			role="status" 
+			aria-live="polite" 
+			aria-atomic="false"
+			id="message-announcements"
+		></div>
 
 		<!-- Messages -->
 		<div
 			class="flex-1 overflow-y-auto px-4 py-4"
 			bind:this={messagesContainer}
+			role="log"
+			aria-label="Message history for {$activeChannel.name}"
+			aria-describedby="channel-topic"
+			aria-live="polite"
+			aria-relevant="additions"
 		>
 			{#each channelMessages as message, index (message.id)}
 				{#if shouldShowDateDivider(channelMessages, index)}
@@ -288,7 +347,6 @@
 											bind:value={editContent}
 											on:keydown={handleEditKeydown}
 											rows="2"
-											spellcheck="true"
 										></textarea>
 										<div class="text-xs text-gray-500 mt-1">
 											escape to <button class="text-hearth-400 hover:underline" on:click={cancelEdit}>cancel</button>
@@ -331,12 +389,14 @@
 					
 					<!-- Message action buttons (hover) -->
 					{#if hoveredMessageId === message.id && !editingMessage}
-						<div class="absolute right-4 -top-3 flex items-center gap-0.5 bg-dark-800 rounded-md border border-dark-500 shadow-lg">
+						<div class="absolute right-4 -top-3 flex items-center gap-0.5 bg-dark-800 rounded-md border border-dark-500 shadow-lg" role="toolbar" aria-label="Message actions">
 							<button 
 								class="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-dark-600 rounded"
 								title="Add Reaction"
+								aria-label="Add reaction"
+								type="button"
 							>
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
 										d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 								</svg>
@@ -344,9 +404,11 @@
 							<button 
 								class="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-dark-600 rounded"
 								title="Reply"
+								aria-label="Reply to message"
+								type="button"
 								on:click={() => startReply(message)}
 							>
-								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 									<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
 										d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
 								</svg>
@@ -355,9 +417,11 @@
 								<button 
 									class="p-1.5 text-gray-400 hover:text-gray-100 hover:bg-dark-600 rounded"
 									title="Edit"
+									aria-label="Edit message"
+									type="button"
 									on:click={() => startEdit(message)}
 								>
-									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
 											d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
 									</svg>
@@ -365,9 +429,11 @@
 								<button 
 									class="p-1.5 text-gray-400 hover:text-red-400 hover:bg-dark-600 rounded"
 									title="Delete"
+									aria-label="Delete message"
+									type="button"
 									on:click={() => handleDelete(message)}
 								>
-									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+									<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 										<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
 											d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
 									</svg>
@@ -399,9 +465,9 @@
 			
 			<!-- Reply banner -->
 			{#if replyingTo}
-				<div class="flex items-center justify-between bg-dark-800 border-l-2 border-hearth-500 px-3 py-2 rounded-t-lg">
+				<div class="flex items-center justify-between bg-dark-800 border-l-2 border-hearth-500 px-3 py-2 rounded-t-lg" role="status" aria-label="Replying to {replyingTo.author?.username}">
 					<div class="flex items-center gap-2 text-sm overflow-hidden">
-						<svg class="w-4 h-4 text-hearth-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg class="w-4 h-4 text-hearth-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
 								d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
 						</svg>
@@ -412,17 +478,30 @@
 					<button 
 						class="text-gray-400 hover:text-gray-200 p-1"
 						on:click={cancelReply}
+						aria-label="Cancel reply"
+						type="button"
 					>
-						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
 						</svg>
 					</button>
 				</div>
 			{/if}
 			
-			<div class="bg-dark-600 flex items-end" class:rounded-lg={!replyingTo} class:rounded-b-lg={replyingTo}>
-				<button class="p-3 text-gray-400 hover:text-gray-200">
-					<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			<!-- Hidden file input -->
+			<input
+				bind:this={fileInputEl}
+				type="file"
+				multiple
+				accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.txt,.zip"
+				on:change={handleFileSelect}
+				class="hidden"
+				aria-hidden="true"
+			/>
+			
+			<div class="bg-dark-600 flex items-end" class:rounded-lg={!replyingTo} class:rounded-b-lg={replyingTo} role="group" aria-label="Message composition">
+				<button class="p-3 text-gray-400 hover:text-gray-200" aria-label="Upload file" type="button" on:click={openFilePicker}>
+					<svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 						<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
 							d="M12 4v16m8-8H4" />
 					</svg>
@@ -438,14 +517,22 @@
 					bind:value={messageInput}
 					on:input={handleInput}
 					on:keydown={handleKeydown}
-					spellcheck="true"
+					aria-label={replyingTo 
+						? `Reply to ${replyingTo.author?.username}`
+						: `Message ${$activeChannel.name}`}
+					aria-describedby="message-input-hint"
 				></textarea>
+				<span id="message-input-hint" class="sr-only">Press Enter to send, Shift+Enter for new line</span>
 				<div class="flex items-center gap-1 p-2 relative">
 					<button 
 						class="p-1.5 text-gray-400 hover:text-gray-200"
 						on:click={() => showEmojiPicker = !showEmojiPicker}
+						aria-label="Select emoji"
+						aria-expanded={showEmojiPicker}
+						aria-haspopup="dialog"
+						type="button"
 					>
-						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+						<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
 							<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
 								d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 						</svg>
@@ -490,5 +577,18 @@
 	
 	.replying-to {
 		background-color: rgba(239, 68, 68, 0.1) !important;
+	}
+
+	/* Screen reader only - visually hidden but accessible */
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
 	}
 </style>

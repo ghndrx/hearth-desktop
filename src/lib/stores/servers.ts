@@ -9,6 +9,7 @@ export interface Server {
 	description: string | null;
 	owner_id: string;
 	created_at: string;
+	member_count?: number;
 }
 
 // Backend may use 'guild' terminology
@@ -16,7 +17,9 @@ interface BackendServer {
 	id: string;
 	name: string;
 	icon?: string | null;
+	icon_url?: string | null;
 	banner?: string | null;
+	banner_url?: string | null;
 	description?: string | null;
 	owner_id: string;
 	created_at?: string;
@@ -31,8 +34,8 @@ function normalizeServer(srv: BackendServer): Server {
 	return {
 		id: srv.id,
 		name: srv.name,
-		icon: srv.icon ?? null,
-		banner: srv.banner ?? null,
+		icon: srv.icon ?? srv.icon_url ?? null,
+		banner: srv.banner ?? srv.banner_url ?? null,
 		description: srv.description ?? null,
 		owner_id: srv.owner_id,
 		created_at: srv.created_at || new Date().toISOString(),

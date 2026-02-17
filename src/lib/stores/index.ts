@@ -1,103 +1,36 @@
-export { auth, isAuthenticated, user, user as currentUser } from "./auth";
-export { websocket } from "./websocket";
-export {
-  servers,
-  currentServer,
-  currentServer as activeServer,
-} from "./servers";
-export {
-  channels,
-  currentChannel,
-  currentChannel as activeChannel,
-  loadServerChannels,
-} from "./channels";
-export { messages } from "./messages";
-export {
-  settings,
-  isSettingsOpen,
-  appSettings,
-  currentTheme,
-  voiceSettings,
-  type VoiceSettings,
-  type VoiceInputMode,
-} from "./settings";
-export {
-  pushToTalk,
-  isPTTPressed,
-  isPTTRecording,
-  isCapturingPTTKey,
-  formatKeyDisplay,
-  getKeyCode,
-} from "./pushToTalk";
-export { typingStore, formatTypingText, setCurrentUserId } from "./typing";
-export {
-  toasts,
-  toastCount,
-  type Toast,
-  type ToastType,
-  type ToastOptions,
-} from "./toasts";
-export {
-  voiceCall,
-  isInVoiceCall,
-  voiceChannel,
-  voiceParticipants,
-  isMuted,
-  isDeafened,
-  isScreenSharing as isVoiceScreenSharing,
-  formatDuration,
-  type VoiceParticipant,
-  type VoiceCallState,
-} from "./voiceCall";
-export {
-  activityStore,
-  isIdle,
-  isScreenLocked,
-  primaryActivity,
-  idleIn,
-  getActivityTypeLabel,
-  formatActivityDuration,
-  type DetectedActivity,
-  type IdleStatus,
-  type ActivityState,
-} from "./activity";
-export {
-  presenceStore,
-  getStatusColor,
-  getStatusLabel,
-  getActivityLabel,
-  type Presence,
-  type PresenceStatus,
-  type Activity,
-} from "./presence";
-export {
-  screenShare,
-  isScreenShareModalOpen,
-  isScreenSharing,
-  isPreviewing,
-  screenShareStream,
-  screenShareError,
-  selectedScreenSource,
-  type ScreenShareSource,
-  type ScreenShareSourceType,
-  type ScreenShareState,
-} from "./screenShare";
-export {
-  notificationStore,
-  isNotificationPermissionGranted,
-  type MessageNotification,
-} from "./notifications";
-export { muteStore, type MuteState } from "./mute";
-export { focusModeStore, type FocusModeState } from "./focusMode";
-export {
-  downloadsStore,
-  downloadsIsOpen,
-  downloadsActions,
-  downloadStats,
-  hasActiveDownloads,
-  formatFileSize,
-  formatSpeed,
-  formatDuration as formatDownloadDuration,
-  type DownloadItem,
-  type DownloadStats,
-} from "./downloads";
+export { auth, isAuthenticated, user, user as currentUser } from './auth';
+export { gateway, gatewayState, onGatewayEvent } from './gateway';
+export { servers, currentServer, currentServer as activeServer } from './servers';
+export { channels, currentChannel, currentChannel as activeChannel, loadServerChannels } from './channels';
+export { messages } from './messages';
+export { settings, isSettingsOpen, appSettings, currentTheme } from './settings';
+export { typingStore, formatTypingText, setCurrentUserId } from './typing';
+export { popoutStore, isPopoutOpen } from './popout';
+export { threadStore, currentThread, threadMessages, threadLoading } from './thread';
+export { voiceCallStore, isInVoiceCall, voiceCallParticipants, voiceCallChannel, formatCallDuration } from './voiceCall';
+export { pinnedMessagesStore, pinnedMessagesOpen, pinnedMessages, pinnedMessagesLoading } from './pinnedMessages';
+export { searchStore, isSearchOpen, searchResults, searchLoading, searchError, searchTotalCount, searchHasMore } from './search';
+export { getServerRoles, loadServerRoles, createRole, updateRole, deleteRole, reorderRoles, rolesLoading, rolesError, PERMISSIONS, hasPermission, getPermissionList } from './roles';
+export { imagePreviewStore } from './imagePreview';
+export { 
+	splitViewStore, 
+	splitViewPanels, 
+	splitViewConfig, 
+	splitViewEnabled, 
+	splitViewResizing,
+	splitViewPanelCount,
+	canAddSplitPanel,
+	splitViewTotalWidth,
+	type PinnedPanel,
+	type PanelType,
+	type SplitViewConfig
+} from './splitView';
+export { 
+	notifications, 
+	unreadCount, 
+	hasUnread, 
+	isLoading as notificationsLoading,
+	readState,
+	requestNotificationPermission,
+	getNotificationPermission
+} from './notifications';

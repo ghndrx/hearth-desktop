@@ -1,13 +1,9 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import type { Message as MessageType, User } from '$lib/types';
+	import type { Message as MessageType } from '$lib/stores/messages';
 	import Message from './Message.svelte';
 
-	export let messages: (MessageType & {
-		author?: User;
-		replyTo?: MessageType;
-		replyToAuthor?: User;
-	})[] = [];
+	export let messages: MessageType[] = [];
 	export let currentUserId: string | null = null;
 	export let compact = false;
 	export let roleColors: Record<string, string> = {};
@@ -16,9 +12,7 @@
 		react: { messageId: string; emoji: string };
 		edit: { messageId: string; content: string };
 		delete: { messageId: string };
-		reply: {
-			message: MessageType & { author?: User; replyTo?: MessageType; replyToAuthor?: User };
-		};
+		reply: { message: MessageType };
 		mention: { userId: string };
 	}>();
 
@@ -31,8 +25,8 @@
 
 			const prevMessage = messages[index - 1];
 			const timeDiff =
-				new Date(message.createdAt).getTime() - new Date(prevMessage.createdAt).getTime();
-			const isSameAuthor = message.authorId === prevMessage.authorId;
+				new Date(message.created_at).getTime() - new Date(prevMessage.created_at).getTime();
+			const isSameAuthor = message.author_id === prevMessage.author_id;
 			const isWithinTimeWindow = timeDiff < 7 * 60 * 1000; // 7 minutes
 
 			if (isSameAuthor && isWithinTimeWindow) {
@@ -58,9 +52,9 @@
 				<Message
 					{message}
 					grouped={isGrouped(groupIndex, messageIndex)}
-					isOwn={message.authorId === currentUserId}
+					isOwn={message.author_id === currentUserId}
 					
-					roleColor={roleColors[message.authorId] || null}
+					roleColor={roleColors[message.author_id] || null}
 					on:react={(e) => dispatch('react', e.detail)}
 					on:edit={(e) => dispatch('edit', e.detail)}
 					on:delete={(e) => dispatch('delete', e.detail)}

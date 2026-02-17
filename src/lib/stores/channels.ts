@@ -25,7 +25,7 @@ interface BackendChannel {
 	guild_id?: string | null;
 	name: string;
 	topic?: string | null;
-	type: number;
+	type: number | string; // Backend sends string, frontend expects number
 	position?: number;
 	parent_id?: string | null;
 	slowmode?: number;
@@ -49,14 +49,34 @@ export const currentChannel = writable<Channel | null>(null);
 export const channelsLoading = writable(false);
 export const channelsError = writable<string | null>(null);
 
+// Channel type mapping from backend strings to frontend numbers
+const CHANNEL_TYPE_MAP: Record<string, number> = {
+	'text': 0,
+	'dm': 1,
+	'voice': 2,
+	'group_dm': 3,
+	'category': 4,
+	'announcement': 5,
+	'forum': 6,
+	'stage': 7
+};
+
 // Normalize backend channel to frontend format
 function normalizeChannel(ch: BackendChannel): Channel {
+	// Convert string type to numeric
+	let channelType: number;
+	if (typeof ch.type === 'string') {
+		channelType = CHANNEL_TYPE_MAP[ch.type] ?? 0;
+	} else {
+		channelType = ch.type;
+	}
+
 	return {
 		id: ch.id,
 		server_id: ch.server_id || ch.guild_id || null,
 		name: ch.name,
 		topic: ch.topic ?? null,
-		type: ch.type,
+		type: channelType,
 		position: ch.position ?? 0,
 		parent_id: ch.parent_id ?? null,
 		slowmode: ch.slowmode ?? ch.rate_limit_per_user ?? 0,
@@ -130,11 +150,37 @@ export async function loadDMChannels() {
 	}
 }
 
-export async function createChannel(serverId: string, name: string, type: number = 0, parentId?: string) {
+export type ChannelTypeString = 'text' | 'voice' | 'announcement';
+
+export interface CreateChannelOptions {
+	name: string;
+	type?: ChannelTypeString;
+	topic?: string;
+	parentId?: string;
+	nsfw?: boolean;
+}
+
+export async function createChannel(serverId: string, options: CreateChannelOptions) {
 	try {
-		const payload: { name: string; type: number; parent_id?: string } = { name, type };
-		if (parentId) {
-			payload.parent_id = parentId;
+		const payload: {
+			name: string;
+			type: string;
+			topic?: string;
+			parent_id?: string;
+			nsfw?: boolean;
+		} = {
+			name: options.name,
+			type: options.type || 'text'
+		};
+		
+		if (options.topic) {
+			payload.topic = options.topic;
+		}
+		if (options.parentId) {
+			payload.parent_id = options.parentId;
+		}
+		if (options.nsfw !== undefined) {
+			payload.nsfw = options.nsfw;
 		}
 		
 		const response = await api.post<BackendChannel>(`/servers/${serverId}/channels`, payload);

@@ -17,8 +17,8 @@
 	{#each reactions as reaction}
 		<button
 			class="reaction-pill"
-			class:reacted={reaction.userIds?.length > 0}
-			title={reaction.userIds?.length > 0
+			class:reacted={(reaction.user_ids?.length ?? 0) > 0}
+			title={(reaction.user_ids?.length ?? 0) > 0
 				? 'You reacted with {reaction.emoji}'
 				: 'React with {reaction.emoji}'}
 			on:click={() => handleReactionClick(reaction.emoji)}

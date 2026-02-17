@@ -54,19 +54,21 @@
 
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
-	import QuickReactions from './QuickReactions.svelte';
+	import { popoutStore } from '$lib/stores/popout';
+	import { threadStore } from '$lib/stores/thread';
+	import { imagePreviewStore } from '$lib/stores/imagePreview';
+	import MessageActionBar from './MessageActionBar.svelte';
+	import ThreadReplyIndicator from './ThreadReplyIndicator.svelte';
+	import MediaPlayer from './MediaPlayer.svelte';
 	
 	export let message: any;
 	export let grouped = false;
 	export let isOwn = false;
 	export let roleColor: string | null = null;
+	export let isPinned: boolean = false;
+	export let canManageMessages: boolean = false;
 	
-	const dispatch = createEventDispatcher<{
-		react: { messageId: string; emoji: string };
-		edit: { messageId: string; content: string };
-		delete: { messageId: string };
-		reply: { messageId: string };
-	}>();
+	const dispatch = createEventDispatcher();
 	
 	let showActions = false;
 	let editing = false;
@@ -74,6 +76,14 @@
 	
 	function handleReaction(emoji: string) {
 		dispatch('react', { messageId: message.id, emoji });
+	}
+	
+	function handleQuickReact(event: CustomEvent<{ messageId: string; emoji: string }>) {
+		dispatch('react', { messageId: event.detail.messageId, emoji: event.detail.emoji });
+	}
+	
+	function handleReactOpen(event: CustomEvent<{ messageId: string; openPicker: boolean }>) {
+		dispatch('openReactionPicker', { messageId: event.detail.messageId });
 	}
 	
 	function startEdit() {
@@ -99,6 +109,58 @@
 		}
 	}
 	
+	function handleDeleteFromBar(event: CustomEvent<{ messageId: string }>) {
+		if (confirm('Are you sure you want to delete this message?')) {
+			dispatch('delete', { messageId: event.detail.messageId });
+		}
+	}
+	
+	function handleReply(event: CustomEvent<{ messageId: string }>) {
+		dispatch('reply', { message });
+	}
+	
+	function openThread() {
+		threadStore.open(message, message.channel_id);
+	}
+
+	function handleOpenThread() {
+		threadStore.open(message, message.channel_id);
+	}
+
+	function openImagePreview(attachment: { url: string; filename: string; alt_text?: string }) {
+		imagePreviewStore.open({
+			src: attachment.url,
+			alt: attachment.alt_text || attachment.filename,
+			filename: attachment.filename
+		});
+	}
+	
+	function handleThreadFromBar(event: CustomEvent<{ messageId: string }>) {
+		threadStore.open(message, message.channel_id);
+	}
+	
+	function handlePin(event: CustomEvent<{ messageId: string }>) {
+		dispatch('pin', { messageId: event.detail.messageId });
+	}
+	
+	function handleUnpin(event: CustomEvent<{ messageId: string }>) {
+		dispatch('unpin', { messageId: event.detail.messageId });
+	}
+	
+	function handleCopyLink(event: CustomEvent<{ messageId: string }>) {
+		// Copy message link to clipboard
+		const url = `${window.location.origin}/channels/${message.channel_id}/${event.detail.messageId}`;
+		navigator.clipboard.writeText(url).catch(console.error);
+	}
+	
+	function handleCopyText(event: CustomEvent<{ messageId: string }>) {
+		navigator.clipboard.writeText(message.content).catch(console.error);
+	}
+	
+	function handleMarkUnread(event: CustomEvent<{ messageId: string }>) {
+		dispatch('markUnread', { messageId: event.detail.messageId });
+	}
+	
 	function handleKeydown(e: KeyboardEvent) {
 		if (e.key === 'Escape') cancelEdit();
 		if (e.key === 'Enter' && !e.shiftKey) {
@@ -113,34 +175,87 @@
 	$: shortTime = formatTime(message.created_at, 'short');
 	$: isEdited = !!message.edited_at;
 	$: usernameColor = roleColor || message.author?.role_color || '#f2f3f5';
+
+	function handleAuthorClick(event: MouseEvent | KeyboardEvent) {
+		if (!message.author) return;
+		
+		const target = event.currentTarget as HTMLElement;
+		const rect = target.getBoundingClientRect();
+		
+		// Position the popout to the right of the clicked element
+		const position = {
+			x: rect.right,
+			y: rect.top
+		};
+
+		// Build user data for popout
+		const user = {
+			id: message.author.id,
+			username: message.author.username,
+			display_name: message.author.display_name || null,
+			avatar: message.author.avatar || null,
+			banner: message.author.banner || null,
+			bio: message.author.bio || null,
+			pronouns: message.author.pronouns || null,
+			bot: message.author.bot || false,
+			created_at: message.author.created_at || new Date().toISOString()
+		};
+
+		// Build member data if available
+		const member = message.member ? {
+			nickname: message.member.nickname || null,
+			joined_at: message.member.joined_at || new Date().toISOString(),
+			roles: (message.member.roles || []).map((r: any) => ({
+				id: r.id || r,
+				name: r.name || 'Role',
+				color: r.color || '#99aab5'
+			}))
+		} : null;
+
+		popoutStore.open({
+			user,
+			member,
+			position,
+			anchor: 'right'
+		});
+	}
 </script>
 
-<div
+<article
 	class="flex relative px-0 py-0.5 hover:bg-[#2e3035] group transition-colors"
 	class:mt-4={!grouped}
 	on:mouseenter={() => (showActions = true)}
 	on:mouseleave={() => (showActions = false)}
+	aria-label="Message from {displayName}"
 >
 	{#if !grouped}
 		<!-- Avatar (40px) -->
-		<div class="w-10 h-10 mr-4 ml-4 mt-0.5 flex-shrink-0">
+		<button 
+			class="w-10 h-10 mr-4 ml-4 mt-0.5 flex-shrink-0 p-0 border-0 bg-transparent" 
+			on:click={handleAuthorClick}
+			on:keydown={(e) => e.key === 'Enter' && handleAuthorClick(e)}
+			aria-label="View profile of {displayName}"
+			type="button"
+		>
 			{#if avatarUrl}
 				<img 
 					src={avatarUrl} 
-					alt={displayName}
+					alt=""
+					aria-hidden="true"
 					class="w-10 h-10 rounded-full object-cover cursor-pointer hover:opacity-80 transition-opacity"
 				/>
 			{:else}
 				<div 
 					class="w-10 h-10 rounded-full flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
 					style="background-color: {getAvatarColor(displayName)}"
+					aria-hidden="true"
 				>
 					<span class="text-white font-semibold text-base">
 						{displayName.charAt(0).toUpperCase()}
 					</span>
 				</div>
 			{/if}
-		</div>
+		</button>
 	{:else}
 		<!-- Timestamp gutter for grouped messages -->
 		<div class="w-10 mr-4 ml-4 flex-shrink-0 flex items-start justify-center pt-1">
@@ -154,15 +269,19 @@
 		{#if !grouped}
 			<!-- Header with author name and timestamp -->
 			<div class="flex items-baseline gap-2 mb-0.5">
-				<span 
-					class="font-medium text-base cursor-pointer hover:underline"
+				<button 
+					class="font-medium text-base cursor-pointer hover:underline bg-transparent border-0 p-0"
 					style="color: {usernameColor}"
+					on:click={handleAuthorClick}
+					on:keydown={(e) => e.key === 'Enter' && handleAuthorClick(e)}
+					aria-label="View profile of {displayName}"
+					type="button"
 				>
 					{displayName}
-				</span>
-				<span class="text-xs text-[#949ba4] cursor-default" title={timestamp}>
+				</button>
+				<time class="text-xs text-[#949ba4] cursor-default" datetime={message.created_at} title={timestamp}>
 					{shortTime}
-				</span>
+				</time>
 				{#if isEdited}
 					<span class="text-[10px] text-[#949ba4]" title="Edited {formatTime(message.edited_at, 'long')}">(edited)</span>
 				{/if}
@@ -171,8 +290,8 @@
 		
 		<!-- Reply context -->
 		{#if message.reply_to}
-			<div class="flex items-center gap-1 text-sm text-[#949ba4] mb-1 ml-1">
-				<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" class="text-[#b5bac1]">
+			<div class="flex items-center gap-1 text-sm text-[#949ba4] mb-1 ml-1" role="note" aria-label="Reply to {message.reply_to_author?.username || 'Unknown'}">
+				<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor" class="text-[#b5bac1]" aria-hidden="true">
 					<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
 				</svg>
 				<span class="text-[#b5bac1] font-medium">{message.reply_to_author?.username || 'Unknown'}</span>
@@ -187,7 +306,6 @@
 					bind:value={editContent}
 					on:keydown={handleKeydown}
 					autofocus
-					spellcheck="true"
 					class="w-full min-h-[44px] p-3 bg-[#383a40] rounded-lg text-[#f2f3f5] text-base resize-none border-0 focus:outline-none"
 				></textarea>
 				<div class="text-xs text-[#949ba4] mt-1">
@@ -202,21 +320,53 @@
 		
 		<!-- Attachments -->
 		{#if message.attachments?.length > 0}
-			<div class="mt-2 flex flex-wrap gap-2">
+			<div class="mt-2 flex flex-wrap gap-2" role="group" aria-label="Attachments">
 				{#each message.attachments as attachment}
 					{#if attachment.content_type?.startsWith('image/')}
-						<img 
-							src={attachment.url} 
-							alt={attachment.filename}
-							class="max-w-[400px] max-h-[300px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+						<!-- A11Y-004: Use alt_text if available, fallback to filename -->
+						<figure class="relative inline-block">
+							<button
+								type="button"
+								class="image-preview-btn"
+								on:click={() => openImagePreview(attachment)}
+								aria-label="View {attachment.alt_text || attachment.filename} in full screen"
+							>
+								<img 
+									src={attachment.url} 
+									alt={attachment.alt_text || `Image: ${attachment.filename}`}
+									title={attachment.alt_text || attachment.filename}
+									class="max-w-[400px] max-h-[300px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+								/>
+							</button>
+							{#if attachment.alt_text}
+								<figcaption class="sr-only">{attachment.alt_text}</figcaption>
+							{/if}
+						</figure>
+					{:else if attachment.content_type?.startsWith('video/')}
+						<!-- Video Player -->
+						<MediaPlayer
+							src={attachment.url}
+							type="video"
+							filename={attachment.filename}
+							contentType={attachment.content_type}
+						/>
+					{:else if attachment.content_type?.startsWith('audio/')}
+						<!-- Audio Player -->
+						<MediaPlayer
+							src={attachment.url}
+							type="audio"
+							filename={attachment.filename}
+							contentType={attachment.content_type}
 						/>
 					{:else}
+						<!-- Generic file download -->
 						<a 
 							href={attachment.url} 
 							class="flex items-center gap-3 p-3 bg-[#2b2d31] rounded-lg text-[#f2f3f5] hover:bg-[#383a40] transition-colors"
 							download
+							aria-label="Download {attachment.filename}, {formatSize(attachment.size)}"
 						>
-							<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" class="text-[#949ba4]">
+							<svg viewBox="0 0 24 24" width="24" height="24" fill="currentColor" class="text-[#949ba4]" aria-hidden="true">
 								<path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21-1.79-4-4-4S7 2.79 7 5v12.5c0 3.04 2.46 5.5 5.5 5.5s5.5-2.46 5.5-5.5V6h-1.5z"/>
 							</svg>
 							<div class="flex flex-col">
@@ -231,58 +381,56 @@
 		
 		<!-- Reactions -->
 		{#if message.reactions?.length > 0}
-			<div class="flex flex-wrap gap-1 mt-1">
+			<div class="flex flex-wrap gap-1 mt-1" role="group" aria-label="Reactions">
 				{#each message.reactions as reaction}
 					<button 
 						class="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-sm transition-colors border"
 						class:reaction-active={reaction.me}
 						class:reaction-inactive={!reaction.me}
 						on:click={() => handleReaction(reaction.emoji)}
+						aria-label="{reaction.emoji} reaction, {reaction.count} {reaction.count === 1 ? 'person' : 'people'}{reaction.me ? ', you reacted' : ''}"
+						aria-pressed={reaction.me}
+						type="button"
 					>
-						<span>{reaction.emoji}</span>
+						<span aria-hidden="true">{reaction.emoji}</span>
 						<span class="text-xs" class:text-[#dbdee1]={reaction.me} class:text-[#949ba4]={!reaction.me}>{reaction.count}</span>
 					</button>
 				{/each}
 			</div>
 		{/if}
+		
+		<!-- FEAT-001: Thread Reply Indicator -->
+		{#if message.thread_reply_count && message.thread_reply_count > 0}
+			<ThreadReplyIndicator
+				threadId={message.id}
+				replyCount={message.thread_reply_count}
+				lastReplyAt={message.thread_last_reply_at}
+				participants={message.thread_participants || []}
+				on:openThread={handleOpenThread}
+			/>
+		{/if}
 	</div>
 	
-	<!-- Message Actions -->
-	{#if showActions && !editing}
-		<div class="absolute right-4 -top-4 flex items-center gap-1">
-			<QuickReactions 
-				visible={showActions} 
-				on:react={(e) => handleReaction(e.detail.emoji)}
-				on:mouseenter={() => showActions = true}
-				on:mouseleave={() => showActions = false}
-			/>
-			<div class="flex gap-1 bg-[#313338] border border-[#1e1f22] rounded-md p-0.5 shadow-md">
-				{#if isOwn}
-					<button 
-						class="p-1.5 hover:bg-[#383a40] rounded text-[#b5bac1] hover:text-[#dbdee1] transition-colors"
-						on:click={startEdit}
-						title="Edit"
-						type="button"
-					>
-						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-							<path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z"/>
-						</svg>
-					</button>
-					<button 
-						class="p-1.5 hover:bg-[#f23f43] hover:text-white rounded text-[#b5bac1] transition-colors"
-						on:click={handleDelete}
-						title="Delete"
-						type="button"
-					>
-						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
-							<path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z"/>
-						</svg>
-					</button>
-				{/if}
-			</div>
-		</div>
-	{/if}
-</div>
+	<!-- Message Actions Bar (Discord-style floating toolbar) -->
+	<MessageActionBar
+		messageId={message.id}
+		{isOwn}
+		{isPinned}
+		{canManageMessages}
+		visible={showActions && !editing}
+		on:react={handleReactOpen}
+		on:quickReact={handleQuickReact}
+		on:reply={handleReply}
+		on:edit={() => startEdit()}
+		on:delete={handleDeleteFromBar}
+		on:thread={handleThreadFromBar}
+		on:pin={handlePin}
+		on:unpin={handleUnpin}
+		on:copyLink={handleCopyLink}
+		on:copyText={handleCopyText}
+		on:markUnread={handleMarkUnread}
+	/>
+</article>
 
 <style>
 .reaction-active {
@@ -292,5 +440,18 @@
 .reaction-inactive {
 	background-color: #2b2d31;
 	border-color: transparent;
+}
+.image-preview-btn {
+	padding: 0;
+	margin: 0;
+	background: transparent;
+	border: none;
+	cursor: pointer;
+	display: block;
+}
+.image-preview-btn:focus-visible {
+	outline: 2px solid var(--brand-primary, #5865f2);
+	outline-offset: 2px;
+	border-radius: 8px;
 }
 </style>

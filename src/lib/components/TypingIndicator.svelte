@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { typingStore, formatTypingText, type TypingUser } from '$lib/stores/typing';
-	import Avatar from './Avatar.svelte';
 	
 	export let channelId: string;
 	
@@ -8,9 +7,6 @@
 	$: typingUsers = typingStore.forChannel(channelId);
 	$: text = formatTypingText($typingUsers);
 	$: visible = $typingUsers.length > 0;
-	
-	// Show avatars for up to 3 users
-	$: displayedUsers = $typingUsers.slice(0, 3);
 </script>
 
 {#if visible}
@@ -20,18 +16,6 @@
 		aria-live="polite"
 		aria-label={text}
 	>
-		<div class="typing-avatars">
-			{#each displayedUsers as user, i (user.userId)}
-				<div class="avatar-wrapper" style="z-index: {3 - i}; margin-left: {i > 0 ? '-8px' : '0'}">
-					<Avatar
-						src={user.avatar ? `https://cdn.discordapp.com/avatars/${user.userId}/${user.avatar}.png?size=64` : null}
-						size="xs"
-						username={user.displayName || user.username}
-						userId={user.userId}
-					/>
-				</div>
-			{/each}
-		</div>
 		<div class="typing-dots" aria-hidden="true">
 			<span class="dot"></span>
 			<span class="dot"></span>
@@ -47,25 +31,9 @@
 		align-items: center;
 		gap: 8px;
 		padding: 4px 16px;
-		height: 32px;
+		height: 24px;
 		font-size: 13px;
 		color: var(--text-muted, #72767d);
-	}
-
-	.typing-avatars {
-		display: flex;
-		align-items: center;
-		margin-right: 4px;
-	}
-
-	.avatar-wrapper {
-		border-radius: 50%;
-		border: 2px solid var(--background-primary, #313338);
-		transition: transform 0.2s ease;
-	}
-
-	.avatar-wrapper:hover {
-		transform: scale(1.1);
 	}
 	
 	.typing-dots {

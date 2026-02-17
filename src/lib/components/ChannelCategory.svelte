@@ -22,7 +22,13 @@
 </script>
 
 <div class="channel-category" class:collapsed>
-	<button class="category-header" on:click={handleToggle}>
+	<button 
+		class="category-header" 
+		on:click={handleToggle}
+		aria-expanded={!collapsed}
+		aria-label="{name} category, {collapsed ? 'collapsed' : 'expanded'}"
+		type="button"
+	>
 		<svg
 			viewBox="0 0 24 24"
 			width="12"
@@ -30,6 +36,7 @@
 			fill="currentColor"
 			class="collapse-icon"
 			class:rotated={!collapsed}
+			aria-hidden="true"
 		>
 			<path d="M9.29 15.88L13.17 12 9.29 8.12a1 1 0 0 1 1.42-1.42l4.59 4.59a1 1 0 0 1 0 1.42l-4.59 4.59a1 1 0 0 1-1.42 0 1 1 0 0 1 0-1.42z"/>
 		</svg>
@@ -40,9 +47,11 @@
 		<button
 			class="add-channel"
 			title="Create Channel"
+			aria-label="Create channel in {name}"
 			on:click={handleAddChannel}
+			type="button"
 		>
-			<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+			<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
 				<path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z"/>
 			</svg>
 		</button>
@@ -50,7 +59,7 @@
 </div>
 
 {#if !collapsed}
-	<div class="category-channels">
+	<div class="category-channels" role="group" aria-label="{name} channels">
 		<slot />
 	</div>
 {/if}
@@ -81,6 +90,12 @@
 	}
 
 	.category-header:hover {
+		color: #dbdee1;
+	}
+
+	.category-header:focus-visible {
+		outline: 2px solid var(--brand-primary, #5865f2);
+		outline-offset: 2px;
 		color: #dbdee1;
 	}
 
@@ -115,6 +130,12 @@
 
 	.add-channel:hover {
 		color: #dbdee1;
+	}
+
+	.add-channel:focus-visible {
+		outline: 2px solid var(--brand-primary, #5865f2);
+		outline-offset: 2px;
+		opacity: 1;
 	}
 
 	.channel-category:hover .add-channel {

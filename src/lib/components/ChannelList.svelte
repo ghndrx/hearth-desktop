@@ -1,31 +1,108 @@
 <script lang="ts">
-	import { channels, currentChannel, type Channel } from '$lib/stores/channels';
+	import { channels, currentChannel, type Channel, type ChannelTypeString } from '$lib/stores/channels';
 	import { currentServer, leaveServer } from '$lib/stores/servers';
 	import { user } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
-	import { voiceCall, isInVoiceCall, voiceChannel } from '$lib/stores/voiceCall';
-	import { createEventDispatcher } from 'svelte';
+	import { voiceChannelStates, voiceState, voiceActions, isInVoice } from '$lib/stores/voice';
+	import { getVoiceConnectionManager } from '$lib/voice';
+	import { api } from '$lib/api';
+	import { createEventDispatcher, onMount } from 'svelte';
 	import { goto } from '$app/navigation';
 	import UserPanel from './UserPanel.svelte';
 	import ServerHeader from './ServerHeader.svelte';
 	import ChannelCategory from './ChannelCategory.svelte';
 	import ChannelItem from './ChannelItem.svelte';
-	import VoiceCallPanel from './VoiceCallPanel.svelte';
+	import VoiceMiniPlayer from './VoiceMiniPlayer.svelte';
+	import InviteModal from './InviteModal.svelte';
+	import CreateChannelModal from './CreateChannelModal.svelte';
+	import NewDMModal from './NewDMModal.svelte';
 
-	const dispatch = createEventDispatcher();
+	const dispatch = createEventDispatcher<{
+		openQuickSwitcher: void;
+	}>();
+
+	let showNewDMModal = false;
+
+	function openQuickSwitcher() {
+		dispatch('openQuickSwitcher');
+	}
 
 	let textCategoryCollapsed = false;
 	let voiceCategoryCollapsed = false;
+	let showInviteModal = false;
+	let showCreateChannelModal = false;
+	let createChannelType: ChannelTypeString = 'text';
+	let inviteModalComponent: InviteModal;
 
-	// Voice connected users - derived from voice call state
-	$: voiceConnectedUsers = $voiceChannel ? {
-		[$voiceChannel.id]: $voiceCall.participants.map(p => ({
-			id: p.id,
-			username: p.displayName || p.username,
-			avatar: p.avatar,
-			speaking: p.speaking
-		}))
-	} : {};
+	// Get voice users from store, transformed to match ChannelItem's expected format
+	$: voiceConnectedUsers = Object.fromEntries(
+		Object.entries($voiceChannelStates).map(([channelId, users]) => [
+			channelId,
+			users.map(u => ({
+				id: u.id,
+				username: u.display_name || u.username,
+				avatar: u.avatar || null,
+				speaking: u.speaking
+			}))
+		])
+	);
+
+	// Fetch voice states when server changes
+	onMount(() => {
+		if ($currentServer?.id) {
+			fetchVoiceStates($currentServer.id);
+		}
+	});
+
+	$: if ($currentServer?.id) {
+		fetchVoiceStates($currentServer.id);
+	}
+
+	async function fetchVoiceStates(serverId: string) {
+		try {
+			const states = await api.get<Array<{
+				user_id: string;
+				username: string;
+				display_name?: string;
+				avatar?: string;
+				channel_id: string;
+				self_muted: boolean;
+				self_deafened: boolean;
+				self_video: boolean;
+				self_stream: boolean;
+				muted: boolean;
+				deafened: boolean;
+			}>>(`/servers/${serverId}/voice-states`);
+
+			// Group by channel
+			const byChannel: Record<string, typeof states> = {};
+			for (const state of states) {
+				if (!byChannel[state.channel_id]) {
+					byChannel[state.channel_id] = [];
+				}
+				byChannel[state.channel_id].push(state);
+			}
+
+			// Update voice channel states store
+			for (const [channelId, channelUsers] of Object.entries(byChannel)) {
+				voiceChannelStates.setChannelUsers(channelId, channelUsers.map(u => ({
+					id: u.user_id,
+					username: u.username,
+					display_name: u.display_name,
+					avatar: u.avatar,
+					self_muted: u.self_muted,
+					self_deafened: u.self_deafened,
+					self_video: u.self_video,
+					self_stream: u.self_stream,
+					muted: u.muted,
+					deafened: u.deafened,
+					speaking: false
+				})));
+			}
+		} catch (error) {
+			console.error('Failed to fetch voice states:', error);
+		}
+	}
 
 	$: serverChannels = $channels.filter((c) => c.server_id === $currentServer?.id);
 	$: textChannels = serverChannels.filter((c) => c.type === 0);
@@ -33,31 +110,15 @@
 	$: isOwner = $currentServer?.owner_id === $user?.id;
 
 	function selectChannel(channel: Channel) {
-		// Handle voice channels differently - join voice call
-		if (channel.type === 2) {
-			handleJoinVoice(channel);
-			return;
-		}
-		
+		console.log('[ChannelList] selectChannel called with:', channel.id, channel.name);
 		currentChannel.set(channel);
 		if (channel.server_id) {
+			console.log('[ChannelList] Navigating to server channel:', `/channels/${channel.server_id}/${channel.id}`);
 			goto(`/channels/${channel.server_id}/${channel.id}`);
 		} else {
+			console.log('[ChannelList] Navigating to DM:', `/channels/@me/${channel.id}`);
 			goto(`/channels/@me/${channel.id}`);
 		}
-	}
-
-	async function handleJoinVoice(channel: Channel) {
-		// If already in this voice channel, do nothing
-		if ($voiceChannel?.id === channel.id) return;
-		
-		// If in a different voice channel, disconnect first
-		if ($isInVoiceCall) {
-			voiceCall.disconnect();
-		}
-		
-		// Join the new voice channel
-		await voiceCall.join(channel);
 	}
 
 	function openServerSettings() {
@@ -77,24 +138,79 @@
 	}
 
 	function handleInvitePeople() {
-		// TODO: Open invite modal
+		showInviteModal = true;
+	}
+
+	function handleInviteClose() {
+		showInviteModal = false;
+	}
+
+	function handleInviteCreated(event: CustomEvent<{ code: string; maxUses: number; expiresIn: number }>) {
+		console.log('Invite created:', event.detail);
+	}
+
+	async function handleGenerateInvite(event: CustomEvent<{ maxUses: number; expiresIn: number }>) {
+		if (!$currentServer) return;
+		
+		try {
+			const channelId = $currentChannel?.id;
+			const response = await api.post<{ code: string }>(`/servers/${$currentServer.id}/invites`, {
+				channel_id: channelId,
+				max_uses: event.detail.maxUses || 0,
+				max_age: event.detail.expiresIn || 604800
+			});
+			
+			// Call the modal's method to set the generated invite code
+			if (inviteModalComponent && response?.code) {
+				inviteModalComponent.onInviteGenerated(response.code);
+			}
+		} catch (error) {
+			console.error('Failed to generate invite:', error);
+		}
 	}
 
 	function handleAddTextChannel() {
-		// TODO: Open create channel modal
+		createChannelType = 'text';
+		showCreateChannelModal = true;
 	}
 
 	function handleAddVoiceChannel() {
-		// TODO: Open create voice channel modal
+		createChannelType = 'voice';
+		showCreateChannelModal = true;
+	}
+
+	function handleCreateChannelClose() {
+		showCreateChannelModal = false;
+	}
+
+	function handleChannelCreated(event: CustomEvent<Channel>) {
+		const channel = event.detail;
+		// Navigate to the newly created channel
+		if (channel.server_id) {
+			goto(`/channels/${channel.server_id}/${channel.id}`);
+		}
 	}
 
 	function handleChannelSettings(event: CustomEvent<Channel>) {
 		// TODO: Open channel settings
 		console.log('Open settings for channel:', event.detail.name);
 	}
+
+	function handleOpenNewDM() {
+		showNewDMModal = true;
+	}
+
+	function handleNewDMClose() {
+		showNewDMModal = false;
+	}
+
+	function handleDMSelected(event: CustomEvent<{ channelId: string }>) {
+		showNewDMModal = false;
+		// Navigation is handled in the modal
+	}
 </script>
 
-<div class="channel-list">
+<nav class="channel-list" aria-label="Channels and direct messages">
 	<div class="channel-list-content">
 		{#if $currentServer}
 			<ServerHeader
@@ -105,14 +221,14 @@
 				on:invitePeople={handleInvitePeople}
 			/>
 
-			<!-- Text Channels -->
-			{#if textChannels.length > 0}
-				<ChannelCategory
-					name="Text Channels"
-					collapsed={textCategoryCollapsed}
-					on:toggle={(e) => textCategoryCollapsed = e.detail.collapsed}
-					on:addChannel={handleAddTextChannel}
-				>
+			<!-- Text Channels - Always show category to allow creating first channel -->
+			<ChannelCategory
+				name="Text Channels"
+				collapsed={textCategoryCollapsed}
+				on:toggle={(e) => textCategoryCollapsed = e.detail.collapsed}
+				on:addChannel={handleAddTextChannel}
+			>
+				{#if textChannels.length > 0}
 					{#each textChannels as channel (channel.id)}
 						<ChannelItem
 							{channel}
@@ -121,17 +237,21 @@
 							on:openSettings={handleChannelSettings}
 						/>
 					{/each}
-				</ChannelCategory>
-			{/if}
+				{:else}
+					<div class="no-channels-hint">
+						<span>No text channels yet</span>
+					</div>
+				{/if}
+			</ChannelCategory>
 
-			<!-- Voice Channels -->
-			{#if voiceChannels.length > 0}
-				<ChannelCategory
-					name="Voice Channels"
-					collapsed={voiceCategoryCollapsed}
-					on:toggle={(e) => voiceCategoryCollapsed = e.detail.collapsed}
-					on:addChannel={handleAddVoiceChannel}
-				>
+			<!-- Voice Channels - Always show category -->
+			<ChannelCategory
+				name="Voice Channels"
+				collapsed={voiceCategoryCollapsed}
+				on:toggle={(e) => voiceCategoryCollapsed = e.detail.collapsed}
+				on:addChannel={handleAddVoiceChannel}
+			>
+				{#if voiceChannels.length > 0}
 					{#each voiceChannels as channel (channel.id)}
 						<ChannelItem
 							{channel}
@@ -141,47 +261,98 @@
 							on:openSettings={handleChannelSettings}
 						/>
 					{/each}
-				</ChannelCategory>
-			{/if}
+				{:else}
+					<div class="no-channels-hint">
+						<span>No voice channels yet</span>
+					</div>
+				{/if}
+			</ChannelCategory>
 		{:else}
 			<!-- DM List -->
 			<div class="dm-header">
-				<button class="dm-search">Find or start a conversation</button>
+				<button class="dm-search" aria-label="Find or start a conversation" type="button" on:click={handleOpenNewDM}>Find or start a conversation</button>
 			</div>
 
-			<div class="dm-section">
+			<div class="dm-section" role="heading" aria-level="2">
 				<span>DIRECT MESSAGES</span>
 			</div>
 
-			{#each $channels.filter((c) => c.type === 1 || c.type === 3) as dm (dm.id)}
-				<button
-					class="dm-item"
-					class:active={$currentChannel?.id === dm.id}
-					on:click={() => selectChannel(dm)}
-				>
-					<div class="dm-avatar">
-						{#if dm.recipients?.[0]?.avatar}
-							<img src={dm.recipients[0].avatar} alt="" />
-						{:else}
-							<div class="avatar-placeholder">
-								{(dm.recipients?.[0]?.username || '?')[0].toUpperCase()}
+			<ul role="list" aria-label="Direct messages" class="dm-list">
+				{#each $channels.filter((c) => c.type === 1 || c.type === 3) as dm (dm.id)}
+					<li role="listitem">
+						<button
+							class="dm-item"
+							class:active={$currentChannel?.id === dm.id}
+							on:click={() => selectChannel(dm)}
+							aria-current={$currentChannel?.id === dm.id ? 'page' : undefined}
+							aria-label="Direct message with {dm.name || dm.recipients?.map((r) => r.display_name || r.username).join(', ') || 'Unknown'}{dm.e2ee_enabled ? ', encrypted' : ''}"
+							type="button"
+						>
+							<div class="dm-avatar">
+								{#if dm.recipients?.[0]?.avatar}
+									<img src={dm.recipients[0].avatar} alt="" />
+								{:else}
+									<div class="avatar-placeholder">
+										{(dm.recipients?.[0]?.username || '?')[0].toUpperCase()}
+									</div>
+								{/if}
 							</div>
-						{/if}
-					</div>
-					<span class="dm-name">
-						{dm.name || dm.recipients?.map((r) => r.display_name || r.username).join(', ') || 'Unknown'}
-					</span>
-					{#if dm.e2ee_enabled}
-						<span class="e2ee-indicator">🔒</span>
-					{/if}
-				</button>
-			{/each}
+							<span class="dm-name">
+								{dm.name || dm.recipients?.map((r) => r.display_name || r.username).join(', ') || 'Unknown'}
+							</span>
+							{#if dm.e2ee_enabled}
+								<span class="e2ee-indicator" aria-hidden="true">🔒</span>
+							{/if}
+						</button>
+					</li>
+				{/each}
+			</ul>
 		{/if}
 	</div>
 
-	<VoiceCallPanel />
+	<!-- FEAT-002: Voice Mini-Player - Shows when in a voice channel -->
+	<VoiceMiniPlayer 
+		on:disconnect={() => {
+			// Voice disconnected - mini-player will hide automatically
+		}}
+		on:expandFullView={() => {
+			// TODO: Open full voice overlay or navigate to voice channel
+			// Could dispatch event to parent or use voiceCallStore
+		}}
+	/>
+
 	<UserPanel />
-</div>
+</nav>
+
+<!-- Invite Modal -->
+{#if $currentServer}
+	<InviteModal
+		bind:this={inviteModalComponent}
+		open={showInviteModal}
+		serverName={$currentServer.name}
+		serverId={$currentServer.id}
+		channelName={$currentChannel?.name ?? ''}
+		channelId={$currentChannel?.id ?? ''}
+		on:close={handleInviteClose}
+		on:invite={handleInviteCreated}
+		on:generateInvite={handleGenerateInvite}
+	/>
+
+	<!-- Create Channel Modal -->
+	<CreateChannelModal
+		open={showCreateChannelModal}
+		defaultType={createChannelType}
+		on:close={handleCreateChannelClose}
+		on:created={handleChannelCreated}
+	/>
+{/if}
+
+<!-- New DM Modal -->
+<NewDMModal
+	open={showNewDMModal}
+	on:close={handleNewDMClose}
+	on:select={handleDMSelected}
+/>
 
 <style>
 	.channel-list {
@@ -225,6 +396,18 @@
 		font-weight: 600;
 		color: #949ba4;
 		letter-spacing: 0.02em;
+	}
+
+	.dm-list {
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.dm-list li {
+		list-style: none;
+		margin: 0;
+		padding: 0;
 	}
 
 	.dm-item {
@@ -292,5 +475,12 @@
 	.e2ee-indicator {
 		font-size: 12px;
 		opacity: 0.6;
+	}
+
+	.no-channels-hint {
+		padding: 8px 8px 8px 48px;
+		font-size: 13px;
+		color: var(--text-muted);
+		font-style: italic;
 	}
 </style>
