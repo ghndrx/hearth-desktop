@@ -249,6 +249,89 @@ export interface UserProfile {
 	};
 }
 
+// Analytics types (Server Insights)
+export interface ServerInsightsSummary {
+	messages_today: number;
+	active_users_today: number;
+	messages_week: number;
+	active_users_week: number;
+	total_members: number;
+	new_members_week: number;
+	member_change_week: number;
+	message_change_percent: number;
+}
+
+export interface ServerInsightsResponse {
+	server_id: string;
+	period: string;
+	summary: ServerInsightsSummary;
+	top_contributor?: {
+		user_id: string;
+		username: string;
+		message_count: number;
+	};
+	peak_hour?: number;
+	generated_at?: string;
+}
+
+export interface MemberGrowthDataPoint {
+	date: string;
+	count: number;
+	change: number;
+}
+
+export interface MemberGrowthResponse {
+	server_id: string;
+	period: string;
+	data: MemberGrowthDataPoint[];
+}
+
+export interface ActivityHeatmapCell {
+	day_of_week: number;
+	hour: number;
+	message_count: number;
+	unique_users: number;
+}
+
+export interface ActivityHeatmapResponse {
+	server_id: string;
+	period: string;
+	data: ActivityHeatmapCell[];
+	peak_hours: { hour: number; message_count: number }[];
+	total_stats: {
+		total_messages: number;
+		avg_per_hour: number;
+	};
+}
+
+export interface TopChannel {
+	channel_id: string;
+	channel_name: string;
+	channel_type: string;
+	message_count: number;
+	unique_authors: number;
+	last_activity: string;
+}
+
+export interface TopChannelsResponse {
+	server_id: string;
+	period: string;
+	data: TopChannel[];
+}
+
+export interface RetentionDataPoint {
+	week: number;
+	retained_percentage: number;
+	retained_count: number;
+}
+
+export interface RetentionResponse {
+	server_id: string;
+	period: string;
+	data: RetentionDataPoint[];
+	overall_retention: number;
+}
+
 // Auth types
 export interface LoginRequest {
 	email: string;

@@ -27,6 +27,8 @@ urlencoding = "2"
 open = "5"
 opener = "0.7"
 log = "0.4"
+lazy_static = "1.5"
+chrono = { version = "0.4", features = ["serde"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-sys = { version = "0.52", features = ["Win32_System_Power", "Win32_Graphics_Gdi", "Win32_UI_WindowsAndMessaging"] }
