@@ -32,6 +32,9 @@ export { default as MentionHighlight } from './MentionHighlight.svelte';
 
 // Notification components
 export { default as NotificationBell } from './NotificationBell.svelte';
+export { default as DigestIndicator } from './DigestIndicator.svelte';
+export { default as DigestSettings } from './DigestSettings.svelte';
+export { default as MentionsPanel } from './MentionsPanel.svelte';
 
 // Media components
 export { default as MediaPlayer } from './MediaPlayer.svelte';
@@ -102,6 +105,8 @@ export { default as ContextMenuItem } from './ContextMenuItem.svelte';
 export { default as Button } from './Button.svelte';
 export { default as Tooltip } from './Tooltip.svelte';
 export { default as LoadingSpinner } from './LoadingSpinner.svelte';
+export { default as LazyImage } from './LazyImage.svelte';
+export { default as NetworkStatus } from './NetworkStatus.svelte';
 
 // Voice components
 export { default as VoiceCallOverlay } from './VoiceCallOverlay.svelte';
