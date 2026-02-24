@@ -73,6 +73,7 @@ export { default as DeviceManagement } from './DeviceManagement.svelte';
 export { default as RoleEditor } from './RoleEditor.svelte';
 export { default as AutoModerationSettings } from './AutoModerationSettings.svelte';
 export { default as AuditLogViewer } from './AuditLogViewer.svelte';
+export { default as ThemeSettings } from './ThemeSettings.svelte';
 
 // Channel management components
 export { default as SortableChannelList } from './SortableChannelList.svelte';

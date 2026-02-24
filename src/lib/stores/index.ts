@@ -37,3 +37,21 @@ export {
 	requestNotificationPermission,
 	getNotificationPermission
 } from './notifications';
+export {
+	systemThemeInfo,
+	themePreferences,
+	effectiveTheme,
+	effectiveAccentColor,
+	prefersReducedMotion,
+	prefersHighContrast,
+	initializeTheme,
+	setThemeMode,
+	setThemePreferences,
+	toggleTheme,
+	useSystemTheme,
+	isDarkMode,
+	cleanupTheme,
+	type SystemTheme,
+	type ThemeInfo,
+	type ThemePreferences,
+} from './systemTheme';

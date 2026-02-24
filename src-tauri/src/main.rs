@@ -9,6 +9,7 @@ mod dnd;
 mod menu;
 mod power;
 mod screenshot;
+mod theme;
 mod tray;
 mod updater;
 
@@ -171,6 +172,9 @@ fn main() {
             // Start DND schedule checker
             dnd::start_schedule_checker(app.handle().clone());
 
+            // Start system theme watcher
+            theme::start_theme_watcher(app.handle().clone());
+
             Ok(())
         })
         .on_menu_event(|app, event| {
@@ -253,6 +257,10 @@ fn main() {
             dnd::check_notification_allowed,
             dnd::get_dnd_presets,
             dnd::apply_dnd_preset,
+            // System theme commands
+            theme::get_system_theme,
+            theme::get_theme_info,
+            theme::is_dark_mode,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
