@@ -97,6 +97,7 @@ export { default as NewDMModal } from './NewDMModal.svelte';
 // Search components
 export { default as QuickSwitcher } from './QuickSwitcher.svelte';
 export { default as SearchResults } from './SearchResults.svelte';
+export { default as CommandPalette } from './CommandPalette.svelte';
 
 // Context menu components
 export { default as ContextMenu } from './ContextMenu.svelte';
