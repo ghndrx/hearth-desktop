@@ -6,6 +6,18 @@ export type MessageDisplay = 'cozy' | 'compact';
 export type NotificationLevel = 'all' | 'mentions' | 'none';
 
 export type ThreadNotificationLevel = 'all' | 'mentions' | 'none';
+export type VoiceInputMode = 'voice_activity' | 'push_to_talk';
+
+export interface VoiceSettingsState {
+	inputMode: VoiceInputMode;
+	pushToTalkKey: string;
+	pushToTalkKeyDisplay: string;
+	inputVolume: number;
+	outputVolume: number;
+	echoCancellation: boolean;
+	noiseSuppression: boolean;
+	automaticGainControl: boolean;
+}
 
 export interface NotificationSettings {
 	desktopEnabled: boolean;
@@ -65,6 +77,17 @@ const defaultNotificationSettings: NotificationSettings = {
 	threadNotifications: 'all',
 	threadAutoFollow: true,
 	threadFollowOnReply: true
+};
+
+const defaultVoiceSettings: VoiceSettingsState = {
+	inputMode: 'voice_activity',
+	pushToTalkKey: 'Space',
+	pushToTalkKeyDisplay: 'Space',
+	inputVolume: 100,
+	outputVolume: 100,
+	echoCancellation: true,
+	noiseSuppression: true,
+	automaticGainControl: true
 };
 
 const defaultSettings: AppSettings = {
@@ -256,6 +279,54 @@ function createSettingsStore() {
 }
 
 export const settings = createSettingsStore();
+
+// Voice settings store with persistence
+function loadVoiceSettings(): VoiceSettingsState {
+	if (!browser) return defaultVoiceSettings;
+	
+	try {
+		const stored = localStorage.getItem('hearth_voice_settings');
+		if (stored) {
+			const parsed = JSON.parse(stored);
+			return { ...defaultVoiceSettings, ...parsed };
+		}
+	} catch (error) {
+		console.error('Failed to load voice settings:', error);
+	}
+	return defaultVoiceSettings;
+}
+
+function saveVoiceSettings(voiceSettings: VoiceSettingsState) {
+	if (!browser) return;
+	try {
+		localStorage.setItem('hearth_voice_settings', JSON.stringify(voiceSettings));
+	} catch (error) {
+		console.error('Failed to save voice settings:', error);
+	}
+}
+
+function createVoiceSettingsStore() {
+	const { subscribe, update, set } = writable<VoiceSettingsState>(loadVoiceSettings());
+	
+	return {
+		subscribe,
+		
+		updateVoice(updates: Partial<VoiceSettingsState>) {
+			update(state => {
+				const newState = { ...state, ...updates };
+				saveVoiceSettings(newState);
+				return newState;
+			});
+		},
+		
+		reset() {
+			set(defaultVoiceSettings);
+			saveVoiceSettings(defaultVoiceSettings);
+		}
+	};
+}
+
+export const voiceSettings = createVoiceSettingsStore();
 
 // Convenience derived stores
 export const isSettingsOpen = derived(settings, $s => $s.isOpen);

@@ -172,6 +172,17 @@ export const voiceCallChannel = derived(voiceCallStore, $state => ({
 export const voiceCallDuration = derived(voiceCallStore, $state => $state.startedAt);
 export const voiceConnectionState = derived(voiceCallStore, $state => $state.connectionState);
 
+// Wrapper with expected component API
+export const voiceCall = {
+	...voiceCallStore,
+	// Alias for leave()
+	disconnect: voiceCallStore.leave,
+	// Alias for setSpeaking to match pushToTalk usage
+	setSpeaking(speaking: boolean) {
+		// No-op for now - would emit to voice server
+	}
+};
+
 // Helper to format call duration
 export function formatCallDuration(startedAt: Date | null): string {
 	if (!startedAt) return '00:00';
@@ -188,3 +199,6 @@ export function formatCallDuration(startedAt: Date | null): string {
 	}
 	return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
 }
+
+// Alias for formatCallDuration
+export const formatDuration = formatCallDuration;

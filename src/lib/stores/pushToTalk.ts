@@ -1,7 +1,7 @@
 import { writable, derived, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import { voiceCall, isInVoiceCall } from './voiceCall';
-import { settings, voiceSettings } from './settings';
+import { voiceSettings } from './settings';
 
 export interface PushToTalkState {
 	isKeyPressed: boolean;
@@ -296,7 +296,7 @@ function createPushToTalkStore() {
 			}));
 			
 			// Save to settings
-			settings.updateVoice({
+			voiceSettings.updateVoice({
 				pushToTalkKey: keyCode,
 				pushToTalkKeyDisplay: keyDisplay
 			});

@@ -4,17 +4,18 @@
 	import Avatar from './Avatar.svelte';
 	import Tooltip from './Tooltip.svelte';
 
-	$: channelName = $voiceCall.channel?.name || 'Voice Connected';
+	// Map store state to expected component properties
+	$: channelName = $voiceCall.channelName || 'Voice Connected';
 	$: isPushToTalk = $voiceSettings.inputMode === 'push_to_talk';
 	$: pttKeyDisplay = $voiceSettings.pushToTalkKeyDisplay;
 	$: participantCount = $voiceCall.participants.length;
-	$: formattedDuration = formatDuration($voiceCall.callDuration);
-	$: qualityColor = {
-		excellent: '#23a559',
-		good: '#23a559',
-		poor: '#f0b232',
-		disconnected: '#f23f43'
-	}[$voiceCall.connectionQuality];
+	$: formattedDuration = formatDuration($voiceCall.startedAt);
+	$: connected = $voiceCall.connectionState === 'connected';
+	$: connecting = $voiceCall.connectionState === 'connecting';
+	$: muted = $voiceCall.localMuted;
+	$: deafened = $voiceCall.localDeafened;
+	// Connection quality not tracked yet - default to 'excellent'
+	$: qualityColor = connected ? '#23a559' : connecting ? '#f0b232' : '#f23f43';
 
 	function handleDisconnect() {
 		// Stop screen sharing if active before disconnecting
@@ -43,13 +44,13 @@
 	}
 </script>
 
-{#if $voiceCall.connected || $voiceCall.connecting}
-	<div class="voice-call-panel" class:connecting={$voiceCall.connecting}>
+{#if connected || connecting}
+	<div class="voice-call-panel" class:connecting={connecting}>
 		<!-- Connection Info -->
 		<div class="connection-info">
 			<div class="connection-status">
 				<div class="status-indicator" style="background: {qualityColor}">
-					{#if $voiceCall.connecting}
+					{#if connecting}
 						<div class="connecting-spinner"></div>
 					{:else}
 						<svg viewBox="0 0 24 24" width="12" height="12" fill="currentColor">
@@ -60,7 +61,7 @@
 				</div>
 				<div class="status-text">
 					<span class="status-label">
-						{#if $voiceCall.connecting}
+						{#if connecting}
 							Connecting...
 						{:else}
 							Voice Connected
@@ -69,26 +70,26 @@
 					<span class="channel-name">{channelName}</span>
 				</div>
 			</div>
-			{#if !$voiceCall.connecting}
+			{#if !connecting}
 				<span class="call-duration">{formattedDuration}</span>
 			{/if}
 		</div>
 
 		<!-- Participants Preview -->
-		{#if $voiceCall.participants.length > 0 && !$voiceCall.connecting}
+		{#if $voiceCall.participants.length > 0 && !connecting}
 			<div class="participants-preview">
 				{#each $voiceCall.participants.slice(0, 4) as participant (participant.id)}
 					<div 
 						class="participant-avatar" 
-						class:speaking={participant.speaking}
-						class:muted={participant.muted}
+						class:speaking={participant.isSpeaking}
+						class:muted={participant.isMuted}
 					>
 						<Avatar 
 							src={participant.avatar} 
-							username={participant.displayName || participant.username} 
+							username={participant.display_name || participant.username} 
 							size="xs" 
 						/>
-						{#if participant.muted}
+						{#if participant.isMuted}
 							<div class="muted-badge">
 								<svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor">
 									<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
@@ -96,7 +97,7 @@
 								</svg>
 							</div>
 						{/if}
-						{#if participant.screenSharing}
+						{#if participant.isScreenSharing}
 							<div class="screen-badge">
 								<svg viewBox="0 0 24 24" width="10" height="10" fill="currentColor">
 									<path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/>
@@ -112,7 +113,7 @@
 		{/if}
 
 		<!-- Push to Talk Indicator -->
-		{#if isPushToTalk && !$voiceCall.connecting}
+		{#if isPushToTalk && !connecting}
 			<div class="ptt-indicator" class:active={$isPTTPressed}>
 				<svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor">
 					<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
@@ -130,15 +131,15 @@
 
 		<!-- Controls -->
 		<div class="voice-controls">
-			<Tooltip text={$voiceCall.screenSharing ? 'Stop Sharing' : 'Share Screen'} position="top">
+			<Tooltip text={$isScreenSharing ? 'Stop Sharing' : 'Share Screen'} position="top">
 				<button 
 					class="control-btn screen-share"
-					class:active={$voiceCall.screenSharing}
+					class:active={$isScreenSharing}
 					on:click={handleToggleScreenShare}
-					disabled={$voiceCall.connecting}
-					aria-label={$voiceCall.screenSharing ? 'Stop Sharing' : 'Share Screen'}
+					disabled={connecting}
+					aria-label={$isScreenSharing ? 'Stop Sharing' : 'Share Screen'}
 				>
-					{#if $voiceCall.screenSharing}
+					{#if $isScreenSharing}
 						<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
 							<path d="M21 3H3c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h7v2H8v2h8v-2h-2v-2h7c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 14H3V5h18v12z"/>
 							<path d="M12 8l4 4h-3v4h-2v-4H8l4-4z"/>
@@ -151,15 +152,15 @@
 				</button>
 			</Tooltip>
 
-			<Tooltip text={$voiceCall.muted ? 'Unmute' : 'Mute'} position="top">
+			<Tooltip text={muted ? 'Unmute' : 'Mute'} position="top">
 				<button 
 					class="control-btn" 
-					class:active={$voiceCall.muted}
+					class:active={muted}
 					on:click={handleToggleMute}
-					disabled={$voiceCall.connecting}
-					aria-label={$voiceCall.muted ? 'Unmute' : 'Mute'}
+					disabled={connecting}
+					aria-label={muted ? 'Unmute' : 'Mute'}
 				>
-					{#if $voiceCall.muted}
+					{#if muted}
 						<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
 							<path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
 							<path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
@@ -174,15 +175,15 @@
 				</button>
 			</Tooltip>
 
-			<Tooltip text={$voiceCall.deafened ? 'Undeafen' : 'Deafen'} position="top">
+			<Tooltip text={deafened ? 'Undeafen' : 'Deafen'} position="top">
 				<button 
 					class="control-btn" 
-					class:active={$voiceCall.deafened}
+					class:active={deafened}
 					on:click={handleToggleDeafen}
-					disabled={$voiceCall.connecting}
-					aria-label={$voiceCall.deafened ? 'Undeafen' : 'Deafen'}
+					disabled={connecting}
+					aria-label={deafened ? 'Undeafen' : 'Deafen'}
 				>
-					{#if $voiceCall.deafened}
+					{#if deafened}
 						<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
 							<path d="M12 2C6.48 2 2 6.48 2 12v4c0 1.1.9 2 2 2h1v-6H4v-2c0-4.42 3.58-8 8-8s8 3.58 8 8v2h-1v6h1c1.1 0 2-.9 2-2v-4c0-5.52-4.48-10-10-10z"/>
 							<rect x="6" y="12" width="4" height="8" rx="1"/>

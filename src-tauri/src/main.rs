@@ -5,6 +5,7 @@ mod activity;
 mod audio;
 mod commands;
 mod deeplink;
+mod dnd;
 mod menu;
 mod power;
 mod screenshot;
@@ -167,6 +168,9 @@ fn main() {
                 updater::check_updates_on_startup(update_handle).await;
             });
 
+            // Start DND schedule checker
+            dnd::start_schedule_checker(app.handle().clone());
+
             Ok(())
         })
         .on_menu_event(|app, event| {
@@ -236,6 +240,19 @@ fn main() {
             audio::set_output_volume,
             audio::is_output_muted,
             audio::toggle_output_mute,
+            // Do Not Disturb commands
+            dnd::get_dnd_status,
+            dnd::toggle_dnd,
+            dnd::set_dnd,
+            dnd::set_dnd_until,
+            dnd::is_dnd_active,
+            dnd::get_dnd_schedule,
+            dnd::set_dnd_schedule,
+            dnd::set_dnd_schedule_enabled,
+            dnd::should_allow_notification,
+            dnd::check_notification_allowed,
+            dnd::get_dnd_presets,
+            dnd::apply_dnd_preset,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

@@ -38,6 +38,7 @@ export interface PinnedPanel {
 	minWidth: number;
 	maxWidth: number;
 	isCollapsed: boolean;
+	isLocked?: boolean;
 	createdAt: number;
 }
 
@@ -510,6 +511,48 @@ function createSplitViewStore() {
 				...state,
 				panels: state.panels.map(p =>
 					p.threadId === threadId ? { ...p, thread } : p
+				)
+			}));
+		},
+
+		/**
+		 * Handle channel deletion - remove any panels associated with the channel
+		 */
+		handleChannelDelete(channelId: string) {
+			update(state => ({
+				...state,
+				panels: state.panels.filter(p => p.channelId !== channelId)
+			}));
+		},
+
+		/**
+		 * Handle thread deletion - remove any panels associated with the thread
+		 */
+		handleThreadDelete(threadId: string) {
+			update(state => ({
+				...state,
+				panels: state.panels.filter(p => p.threadId !== threadId)
+			}));
+		},
+
+		/**
+		 * Handle server removal - remove all panels associated with the server
+		 */
+		handleServerRemove(serverId: string) {
+			update(state => ({
+				...state,
+				panels: state.panels.filter(p => p.serverId !== serverId)
+			}));
+		},
+
+		/**
+		 * Set locked state for a panel (prevents closing)
+		 */
+		setLocked(panelId: string, locked: boolean) {
+			update(state => ({
+				...state,
+				panels: state.panels.map(p =>
+					p.id === panelId ? { ...p, isLocked: locked } : p
 				)
 			}));
 		}
