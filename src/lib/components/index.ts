@@ -116,3 +116,4 @@ export { default as VoiceMiniPlayer } from './VoiceMiniPlayer.svelte';
 export { default as VoiceConnectedBar } from './VoiceConnectedBar.svelte';
 export { default as VoiceParticipant } from './VoiceParticipant.svelte';
 export { default as FileUpload } from './FileUpload.svelte';
+export { default as QuickActionsPanel } from './QuickActionsPanel.svelte';
