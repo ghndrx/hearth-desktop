@@ -109,6 +109,7 @@ export { default as Tooltip } from './Tooltip.svelte';
 export { default as LoadingSpinner } from './LoadingSpinner.svelte';
 export { default as LazyImage } from './LazyImage.svelte';
 export { default as NetworkStatus } from './NetworkStatus.svelte';
+export { default as BatteryIndicator } from './BatteryIndicator.svelte';
 
 // Voice components
 export { default as VoiceCallOverlay } from './VoiceCallOverlay.svelte';
