@@ -199,6 +199,9 @@ fn main() {
             commands::clipboard_read_text,
             commands::clipboard_has_text,
             commands::clipboard_clear,
+            commands::clipboard_read_image,
+            commands::clipboard_has_image,
+            commands::clipboard_write_image,
             // Quick Mute commands
             commands::toggle_mute,
             commands::is_muted,

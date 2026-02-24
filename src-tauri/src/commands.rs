@@ -153,6 +153,87 @@ pub async fn clipboard_clear(app: AppHandle) -> Result<(), String> {
         .map_err(|e| e.to_string())
 }
 
+/// Read image from clipboard as base64-encoded PNG
+/// Returns None if no image is available
+#[tauri::command]
+pub async fn clipboard_read_image(app: AppHandle) -> Result<Option<ClipboardImageData>, String> {
+    use tauri_plugin_clipboard_manager::ClipImage;
+    
+    match app.clipboard().read_image() {
+        Ok(image) => {
+            let bytes = image.rgba().to_vec();
+            let width = image.width();
+            let height = image.height();
+            
+            // Encode RGBA bytes to PNG
+            let mut png_bytes = Vec::new();
+            {
+                let mut encoder = png::Encoder::new(&mut png_bytes, width, height);
+                encoder.set_color(png::ColorType::Rgba);
+                encoder.set_depth(png::BitDepth::Eight);
+                let mut writer = encoder.write_header().map_err(|e| e.to_string())?;
+                writer.write_image_data(&bytes).map_err(|e| e.to_string())?;
+            }
+            
+            // Encode to base64
+            use base64::{Engine as _, engine::general_purpose::STANDARD};
+            let base64_data = STANDARD.encode(&png_bytes);
+            
+            Ok(Some(ClipboardImageData {
+                data: base64_data,
+                width,
+                height,
+                mime_type: "image/png".to_string(),
+            }))
+        }
+        Err(_) => Ok(None),
+    }
+}
+
+/// Check if clipboard has image content
+#[tauri::command]
+pub async fn clipboard_has_image(app: AppHandle) -> Result<bool, String> {
+    match app.clipboard().read_image() {
+        Ok(_) => Ok(true),
+        Err(_) => Ok(false),
+    }
+}
+
+/// Write image to clipboard from base64-encoded data
+#[tauri::command]
+pub async fn clipboard_write_image(
+    app: AppHandle,
+    data: String,
+    width: u32,
+    height: u32,
+) -> Result<(), String> {
+    use tauri_plugin_clipboard_manager::ClipImage;
+    use base64::{Engine as _, engine::general_purpose::STANDARD};
+    
+    // Decode base64 to bytes
+    let bytes = STANDARD.decode(&data).map_err(|e| format!("Invalid base64: {}", e))?;
+    
+    // Create ClipImage from RGBA bytes
+    let image = ClipImage::new(&bytes, width, height);
+    
+    app.clipboard()
+        .write_image(&image)
+        .map_err(|e| e.to_string())
+}
+
+/// Clipboard image data structure
+#[derive(serde::Serialize, serde::Deserialize, Clone)]
+pub struct ClipboardImageData {
+    /// Base64-encoded PNG image data
+    pub data: String,
+    /// Image width in pixels
+    pub width: u32,
+    /// Image height in pixels  
+    pub height: u32,
+    /// MIME type (always "image/png")
+    pub mime_type: String,
+}
+
 // ============================================================================
 // Quick Mute Commands
 // ============================================================================
