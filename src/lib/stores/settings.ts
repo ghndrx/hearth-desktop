@@ -50,6 +50,7 @@ export interface AppSettings {
 	fontSize: number;
 	developerMode: boolean;
 	notifications: NotificationSettings;
+	windowOpacity?: number;
 }
 
 export interface SettingsState {

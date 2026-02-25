@@ -319,6 +319,9 @@ fn main() {
             commands::restore_window_state,
             commands::get_window_state,
             commands::clear_window_state,
+            // Window opacity commands
+            commands::set_window_opacity,
+            commands::get_window_opacity,
             // Window attention commands
             commands::request_window_attention,
             commands::request_urgent_attention,
