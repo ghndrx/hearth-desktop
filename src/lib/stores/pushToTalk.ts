@@ -168,7 +168,7 @@ function createPushToTalkStore() {
 			
 			// Unmute while key is held
 			const currentState = get(voiceCall);
-			if (currentState.muted) {
+			if (currentState.localMuted) {
 				voiceCall.toggleMute();
 			}
 			voiceCall.setSpeaking(true);
@@ -197,7 +197,7 @@ function createPushToTalkStore() {
 			
 			// Mute when key is released
 			const currentState = get(voiceCall);
-			if (!currentState.muted) {
+			if (!currentState.localMuted) {
 				voiceCall.toggleMute();
 			}
 			voiceCall.setSpeaking(false);
@@ -213,7 +213,7 @@ function createPushToTalkStore() {
 			update(s => ({ ...s, isKeyPressed: false, isRecording: false }));
 			
 			const currentState = get(voiceCall);
-			if (!currentState.muted) {
+			if (!currentState.localMuted) {
 				voiceCall.toggleMute();
 			}
 			voiceCall.setSpeaking(false);

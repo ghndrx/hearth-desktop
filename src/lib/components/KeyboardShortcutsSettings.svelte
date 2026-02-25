@@ -220,19 +220,20 @@
   {/if}
   
   <div class="categories">
-    {#each Object.entries(filteredCategories) as [category, shortcuts]}
+    {#each Object.entries(filteredCategories) as [category, shortcuts] (category)}
+      {@const cat = category as ShortcutCategory}
       <div class="category">
         <button
           class="category-header"
-          on:click={() => toggleCategory(category)}
-          aria-expanded={expandedCategories.has(category)}
+          on:click={() => toggleCategory(cat)}
+          aria-expanded={expandedCategories.has(cat)}
         >
-          <span class="category-icon">{getCategoryIcon(category)}</span>
-          <span class="category-name">{getCategoryLabel(category)}</span>
+          <span class="category-icon">{getCategoryIcon(cat)}</span>
+          <span class="category-name">{getCategoryLabel(cat)}</span>
           <span class="category-count">{shortcuts.length}</span>
           <svg
             class="expand-icon"
-            class:expanded={expandedCategories.has(category)}
+            class:expanded={expandedCategories.has(cat)}
             viewBox="0 0 24 24"
             fill="none"
             stroke="currentColor"
@@ -242,7 +243,7 @@
           </svg>
         </button>
         
-        {#if expandedCategories.has(category)}
+        {#if expandedCategories.has(cat)}
           <div class="shortcuts-list">
             {#each shortcuts as shortcut}
               {@const conflict = getConflictForShortcut(shortcut.id)}

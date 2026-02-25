@@ -12,7 +12,7 @@
 -->
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { shortcuts, isShortcutPressed, shortcutsByCategory, formatKeys, getCategoryLabel, getCategoryIcon } from '$lib/stores/shortcuts';
+  import { shortcuts, isShortcutPressed, shortcutsByCategory, formatKeys, getCategoryLabel, getCategoryIcon, type ShortcutCategory } from '$lib/stores/shortcuts';
   import { announce } from '$lib/utils/keyboard';
 
   /** Focus regions in tab order */
@@ -268,12 +268,13 @@
         </section>
 
         <!-- Categories from shortcuts store -->
-        {#each Object.entries($shortcutsByCategory) as [category, categoryShortcuts]}
+        {#each Object.entries($shortcutsByCategory) as [category, categoryShortcuts] (category)}
+          {@const cat = category as ShortcutCategory}
           {#if categoryShortcuts.length > 0}
             <section class="shortcuts-category">
               <h3>
-                <span class="category-icon">{getCategoryIcon(category)}</span>
-                {getCategoryLabel(category)}
+                <span class="category-icon">{getCategoryIcon(cat)}</span>
+                {getCategoryLabel(cat)}
               </h3>
               {#each categoryShortcuts as shortcut}
                 <div class="shortcut-row" class:disabled={!shortcut.enabled}>

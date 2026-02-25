@@ -22,6 +22,7 @@ export interface VoiceCallState {
 	participants: VoiceParticipant[];
 	localMuted: boolean;
 	localDeafened: boolean;
+	screenSharing: boolean;
 	startedAt: Date | null;
 	connectionState: 'disconnected' | 'connecting' | 'connected' | 'reconnecting';
 }
@@ -35,6 +36,7 @@ const initialState: VoiceCallState = {
 	participants: [],
 	localMuted: false,
 	localDeafened: false,
+	screenSharing: false,
 	startedAt: null,
 	connectionState: 'disconnected'
 };
@@ -150,6 +152,16 @@ function createVoiceCallStore() {
 			}));
 		},
 
+		// Toggle screen sharing
+		toggleScreenShare() {
+			update(state => ({ ...state, screenSharing: !state.screenSharing }));
+		},
+
+		// Set screen sharing state explicitly
+		setScreenSharing(sharing: boolean) {
+			update(state => ({ ...state, screenSharing: sharing }));
+		},
+
 		// Reset store
 		reset() {
 			set(initialState);
@@ -180,7 +192,9 @@ export const voiceCall = {
 	// Alias for setSpeaking to match pushToTalk usage
 	setSpeaking(speaking: boolean) {
 		// No-op for now - would emit to voice server
-	}
+	},
+	// Screen sharing toggle
+	toggleScreenShare: voiceCallStore.toggleScreenShare
 };
 
 // Helper to format call duration

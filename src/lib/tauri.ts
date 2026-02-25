@@ -691,6 +691,123 @@ export const idle = {
   getStatusWithThreshold: getIdleStatusWithThreshold,
 };
 
+// ============================================================================
+// Spell Check Functions
+// ============================================================================
+
+export interface SpellCheckResult {
+  word: string;
+  start: number;
+  end: number;
+  suggestions: string[];
+}
+
+export interface SpellCheckLanguage {
+  code: string;
+  name: string;
+}
+
+export async function checkSpelling(
+  text: string,
+  language?: string,
+): Promise<SpellCheckResult[]> {
+  return invoke("check_spelling", { text, language });
+}
+
+export async function getSpellingSuggestions(
+  word: string,
+  language?: string,
+): Promise<string[]> {
+  return invoke("get_spelling_suggestions", { word, language });
+}
+
+export async function addToDictionary(word: string): Promise<void> {
+  return invoke("add_to_dictionary", { word });
+}
+
+export async function removeFromDictionary(word: string): Promise<void> {
+  return invoke("remove_from_dictionary", { word });
+}
+
+export async function getCustomDictionary(): Promise<string[]> {
+  return invoke("get_custom_dictionary");
+}
+
+export async function getSpellCheckLanguages(): Promise<SpellCheckLanguage[]> {
+  return invoke("get_spell_check_languages");
+}
+
+// Combined spell check API
+export const spellCheck = {
+  check: checkSpelling,
+  getSuggestions: getSpellingSuggestions,
+  addToDictionary,
+  removeFromDictionary,
+  getCustomDictionary,
+  getLanguages: getSpellCheckLanguages,
+};
+
+// ============================================================================
+// File Association Functions
+// ============================================================================
+
+export interface AssociatedFile {
+  path: string;
+  name: string;
+  extension: string | null;
+  mime_type: string | null;
+  size: number;
+}
+
+export interface FileAssociation {
+  extension: string;
+  mime_type: string;
+  description: string;
+  registered: boolean;
+}
+
+export interface ChatExportInfo {
+  path: string;
+  channel_name: string;
+  server_name: string | null;
+  message_count: number;
+  exported_at: string;
+}
+
+export async function getSupportedFileAssociations(): Promise<
+  FileAssociation[]
+> {
+  return invoke("get_supported_file_associations");
+}
+
+export async function handleAssociatedFile(
+  path: string,
+): Promise<AssociatedFile> {
+  return invoke("handle_associated_file", { path });
+}
+
+export async function importChatExport(
+  path: string,
+): Promise<ChatExportInfo> {
+  return invoke("import_chat_export", { path });
+}
+
+export function onFileAssociationOpen(
+  callback: (file: AssociatedFile) => void,
+): Promise<UnlistenFn> {
+  return listen<AssociatedFile>("file-association-open", (event) => {
+    callback(event.payload);
+  });
+}
+
+// Combined file association API
+export const fileAssociation = {
+  getSupportedTypes: getSupportedFileAssociations,
+  handleFile: handleAssociatedFile,
+  importExport: importChatExport,
+  onOpen: onFileAssociationOpen,
+};
+
 // Default export
 export default {
   window,
@@ -709,6 +826,8 @@ export default {
   screenshot,
   audio,
   idle,
+  spellCheck,
+  fileAssociation,
   onMenuEvent,
   onDeepLink,
 };

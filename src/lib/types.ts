@@ -328,8 +328,21 @@ export interface RetentionDataPoint {
 export interface RetentionResponse {
 	server_id: string;
 	period: string;
-	data: RetentionDataPoint[];
-	overall_retention: number;
+	data: RetentionMetrics;
+	overall_retention?: number;
+}
+
+export interface DailyActiveUserPoint {
+	date: string;
+	count: number;
+}
+
+export interface RetentionMetrics {
+	average_dau: number;
+	mau: number;
+	stickiness: number;
+	total_members: number;
+	daily_active_users: DailyActiveUserPoint[];
 }
 
 // Auth types

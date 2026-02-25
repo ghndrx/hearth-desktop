@@ -1,7 +1,7 @@
 import { writable } from 'svelte/store';
 import { gateway } from './gateway';
 
-export type PresenceStatus = 'online' | 'idle' | 'dnd' | 'invisible' | 'offline';
+export type PresenceStatus = 'online' | 'idle' | 'away' | 'dnd' | 'invisible' | 'offline';
 
 export interface Presence {
   userId: string;
