@@ -302,6 +302,16 @@ fn main() {
             filedrop::read_file_as_base64,
             filedrop::get_file_thumbnail,
             filedrop::validate_dropped_files,
+            // Window state persistence commands
+            commands::save_window_state,
+            commands::load_window_state,
+            commands::restore_window_state,
+            commands::get_window_state,
+            commands::clear_window_state,
+            // Window attention commands
+            commands::request_window_attention,
+            commands::request_urgent_attention,
+            commands::cancel_window_attention,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
