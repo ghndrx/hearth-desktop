@@ -129,3 +129,4 @@ export { default as BadgeManager } from './BadgeManager.svelte';
 export { default as ClipboardManager } from './ClipboardManager.svelte';
 export { default as ReadReceiptIndicator } from './ReadReceiptIndicator.svelte';
 export { default as WhatsNewModal } from './WhatsNewModal.svelte';
+export { default as KeyboardShortcutsModal } from './KeyboardShortcutsModal.svelte';
