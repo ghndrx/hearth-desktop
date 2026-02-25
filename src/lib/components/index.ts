@@ -122,3 +122,4 @@ export { default as VoiceParticipant } from './VoiceParticipant.svelte';
 export { default as FileUpload } from './FileUpload.svelte';
 export { default as QuickActionsPanel } from './QuickActionsPanel.svelte';
 export { default as WindowStateManager } from './WindowStateManager.svelte';
+export { default as UpdateManager } from './UpdateManager.svelte';
