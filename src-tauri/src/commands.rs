@@ -689,3 +689,228 @@ pub async fn get_window_opacity(_window: Window) -> Result<f64, String> {
     let bits = WINDOW_OPACITY.load(Ordering::SeqCst);
     Ok(f64::from_bits(bits))
 }
+
+// ============================================================================
+// Mini Mode / Picture-in-Picture Commands
+// ============================================================================
+
+use std::sync::RwLock;
+use once_cell::sync::Lazy;
+
+/// Stored mini mode state including previous window dimensions
+#[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
+pub struct MiniModeState {
+    pub is_active: bool,
+    pub previous_x: i32,
+    pub previous_y: i32,
+    pub previous_width: u32,
+    pub previous_height: u32,
+    pub previous_always_on_top: bool,
+    pub mini_width: u32,
+    pub mini_height: u32,
+    pub corner: String, // "top-left", "top-right", "bottom-left", "bottom-right"
+}
+
+impl Default for MiniModeState {
+    fn default() -> Self {
+        Self {
+            is_active: false,
+            previous_x: 0,
+            previous_y: 0,
+            previous_width: 1200,
+            previous_height: 800,
+            previous_always_on_top: false,
+            mini_width: 320,
+            mini_height: 480,
+            corner: "bottom-right".to_string(),
+        }
+    }
+}
+
+static MINI_MODE_STATE: Lazy<RwLock<MiniModeState>> = Lazy::new(|| {
+    RwLock::new(MiniModeState::default())
+});
+
+/// Enter mini mode (Picture-in-Picture)
+/// Shrinks the window to a compact size and pins it on top
+#[tauri::command]
+pub async fn enter_mini_mode(window: Window, corner: Option<String>) -> Result<MiniModeState, String> {
+    use tauri::{LogicalPosition, LogicalSize};
+    
+    // Get current window state to restore later
+    let position = window.outer_position().map_err(|e| e.to_string())?;
+    let size = window.outer_size().map_err(|e| e.to_string())?;
+    let was_always_on_top = window.is_always_on_top().unwrap_or(false);
+    
+    let selected_corner = corner.unwrap_or_else(|| "bottom-right".to_string());
+    
+    // Update state
+    let mut state = MINI_MODE_STATE.write().map_err(|e| e.to_string())?;
+    state.is_active = true;
+    state.previous_x = position.x;
+    state.previous_y = position.y;
+    state.previous_width = size.width;
+    state.previous_height = size.height;
+    state.previous_always_on_top = was_always_on_top;
+    state.corner = selected_corner.clone();
+    
+    // Calculate position based on corner
+    // We'll get the monitor size to position correctly
+    let monitor = window.current_monitor()
+        .map_err(|e| e.to_string())?
+        .ok_or("No monitor found")?;
+    let monitor_size = monitor.size();
+    let monitor_pos = monitor.position();
+    let scale_factor = monitor.scale_factor();
+    
+    // Convert to logical units
+    let screen_width = (monitor_size.width as f64 / scale_factor) as i32;
+    let screen_height = (monitor_size.height as f64 / scale_factor) as i32;
+    let screen_x = (monitor_pos.x as f64 / scale_factor) as i32;
+    let screen_y = (monitor_pos.y as f64 / scale_factor) as i32;
+    
+    let padding = 20i32;
+    let mini_w = state.mini_width as i32;
+    let mini_h = state.mini_height as i32;
+    
+    let (new_x, new_y) = match selected_corner.as_str() {
+        "top-left" => (screen_x + padding, screen_y + padding + 30), // +30 for menubar
+        "top-right" => (screen_x + screen_width - mini_w - padding, screen_y + padding + 30),
+        "bottom-left" => (screen_x + padding, screen_y + screen_height - mini_h - padding - 40), // -40 for dock
+        "bottom-right" | _ => (screen_x + screen_width - mini_w - padding, screen_y + screen_height - mini_h - padding - 40),
+    };
+    
+    // Resize and reposition window
+    window.set_size(LogicalSize::new(state.mini_width as f64, state.mini_height as f64))
+        .map_err(|e| e.to_string())?;
+    window.set_position(LogicalPosition::new(new_x as f64, new_y as f64))
+        .map_err(|e| e.to_string())?;
+    
+    // Always on top for mini mode
+    window.set_always_on_top(true).map_err(|e| e.to_string())?;
+    
+    // Set minimum size for mini mode (prevent too small)
+    window.set_min_size(Some(LogicalSize::new(280.0, 400.0)))
+        .map_err(|e| e.to_string())?;
+    
+    log::info!("Entered mini mode - corner: {}, size: {}x{}", selected_corner, state.mini_width, state.mini_height);
+    
+    Ok(state.clone())
+}
+
+/// Exit mini mode and restore previous window state
+#[tauri::command]
+pub async fn exit_mini_mode(window: Window) -> Result<MiniModeState, String> {
+    use tauri::{LogicalPosition, LogicalSize};
+    
+    let mut state = MINI_MODE_STATE.write().map_err(|e| e.to_string())?;
+    
+    if !state.is_active {
+        return Ok(state.clone());
+    }
+    
+    // Restore previous size and position
+    window.set_size(LogicalSize::new(state.previous_width as f64, state.previous_height as f64))
+        .map_err(|e| e.to_string())?;
+    window.set_position(LogicalPosition::new(state.previous_x as f64, state.previous_y as f64))
+        .map_err(|e| e.to_string())?;
+    
+    // Restore always-on-top state
+    window.set_always_on_top(state.previous_always_on_top).map_err(|e| e.to_string())?;
+    
+    // Reset minimum size
+    window.set_min_size(Some(LogicalSize::new(800.0, 600.0)))
+        .map_err(|e| e.to_string())?;
+    
+    state.is_active = false;
+    
+    log::info!("Exited mini mode - restored to {}x{}", state.previous_width, state.previous_height);
+    
+    Ok(state.clone())
+}
+
+/// Toggle mini mode on/off
+#[tauri::command]
+pub async fn toggle_mini_mode(window: Window, corner: Option<String>) -> Result<MiniModeState, String> {
+    let is_active = {
+        let state = MINI_MODE_STATE.read().map_err(|e| e.to_string())?;
+        state.is_active
+    };
+    
+    if is_active {
+        exit_mini_mode(window).await
+    } else {
+        enter_mini_mode(window, corner).await
+    }
+}
+
+/// Get current mini mode state
+#[tauri::command]
+pub async fn get_mini_mode_state() -> Result<MiniModeState, String> {
+    let state = MINI_MODE_STATE.read().map_err(|e| e.to_string())?;
+    Ok(state.clone())
+}
+
+/// Set mini mode dimensions (customize the PiP window size)
+#[tauri::command]
+pub async fn set_mini_mode_size(width: u32, height: u32) -> Result<(), String> {
+    // Validate dimensions
+    if width < 280 || height < 400 {
+        return Err("Mini mode dimensions too small (min: 280x400)".to_string());
+    }
+    if width > 600 || height > 800 {
+        return Err("Mini mode dimensions too large (max: 600x800)".to_string());
+    }
+    
+    let mut state = MINI_MODE_STATE.write().map_err(|e| e.to_string())?;
+    state.mini_width = width;
+    state.mini_height = height;
+    
+    log::info!("Mini mode size set to {}x{}", width, height);
+    Ok(())
+}
+
+/// Move mini mode window to a different corner
+#[tauri::command]
+pub async fn move_mini_mode_corner(window: Window, corner: String) -> Result<MiniModeState, String> {
+    use tauri::LogicalPosition;
+    
+    let mut state = MINI_MODE_STATE.write().map_err(|e| e.to_string())?;
+    
+    if !state.is_active {
+        state.corner = corner;
+        return Ok(state.clone());
+    }
+    
+    // Calculate new position
+    let monitor = window.current_monitor()
+        .map_err(|e| e.to_string())?
+        .ok_or("No monitor found")?;
+    let monitor_size = monitor.size();
+    let monitor_pos = monitor.position();
+    let scale_factor = monitor.scale_factor();
+    
+    let screen_width = (monitor_size.width as f64 / scale_factor) as i32;
+    let screen_height = (monitor_size.height as f64 / scale_factor) as i32;
+    let screen_x = (monitor_pos.x as f64 / scale_factor) as i32;
+    let screen_y = (monitor_pos.y as f64 / scale_factor) as i32;
+    
+    let padding = 20i32;
+    let mini_w = state.mini_width as i32;
+    let mini_h = state.mini_height as i32;
+    
+    let (new_x, new_y) = match corner.as_str() {
+        "top-left" => (screen_x + padding, screen_y + padding + 30),
+        "top-right" => (screen_x + screen_width - mini_w - padding, screen_y + padding + 30),
+        "bottom-left" => (screen_x + padding, screen_y + screen_height - mini_h - padding - 40),
+        "bottom-right" | _ => (screen_x + screen_width - mini_w - padding, screen_y + screen_height - mini_h - padding - 40),
+    };
+    
+    window.set_position(LogicalPosition::new(new_x as f64, new_y as f64))
+        .map_err(|e| e.to_string())?;
+    
+    state.corner = corner.clone();
+    
+    log::info!("Mini mode moved to corner: {}", corner);
+    Ok(state.clone())
+}

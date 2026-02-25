@@ -37,3 +37,4 @@ This file tracks pending tasks and improvements for the Hearth Desktop applicati
 - [x] Sound notification manager (Feb 25, 2026)
 - [x] Onboarding flow - multi-step wizard for first-time users (Feb 25, 2026)
 - [x] Keyboard navigation manager - F6 region cycling, skip links, shortcuts help modal (Feb 25, 2026)
+- [x] Mini Mode / Picture-in-Picture - compact floating window with corner positioning (Feb 25, 2026)
