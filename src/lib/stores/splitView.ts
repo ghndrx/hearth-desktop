@@ -555,6 +555,18 @@ function createSplitViewStore() {
 					p.id === panelId ? { ...p, isLocked: locked } : p
 				)
 			}));
+		},
+
+		/**
+		 * Toggle locked state for a panel
+		 */
+		toggleLock(panelId: string) {
+			update(state => ({
+				...state,
+				panels: state.panels.map(p =>
+					p.id === panelId ? { ...p, isLocked: !p.isLocked } : p
+				)
+			}));
 		}
 	};
 }

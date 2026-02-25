@@ -7,12 +7,14 @@ mod clipboard;
 mod commands;
 mod deeplink;
 mod dnd;
+mod fileassoc;
 mod filedrop;
 mod globalshortcut;
 mod menu;
 mod performance;
 mod power;
 mod screenshot;
+mod spellcheck;
 mod theme;
 mod tray;
 mod updater;
@@ -215,6 +217,9 @@ fn main() {
             // Initialize clipboard state with history (max 100 entries)
             app.manage(clipboard::init_clipboard_state(100));
 
+            // Load custom spell check dictionary
+            spellcheck::load_custom_dictionary(app.handle());
+
             Ok(())
         })
         .on_menu_event(|app, event| {
@@ -337,6 +342,17 @@ fn main() {
             globalshortcut::unregister_all_global_shortcuts,
             globalshortcut::list_global_shortcuts,
             globalshortcut::is_global_shortcut_registered,
+            // Spell check commands
+            spellcheck::check_spelling,
+            spellcheck::get_spelling_suggestions,
+            spellcheck::add_to_dictionary,
+            spellcheck::remove_from_dictionary,
+            spellcheck::get_custom_dictionary,
+            spellcheck::get_spell_check_languages,
+            // File association commands
+            fileassoc::get_supported_file_associations,
+            fileassoc::handle_associated_file,
+            fileassoc::import_chat_export,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

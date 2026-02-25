@@ -55,3 +55,6 @@ export {
 	type ThemeInfo,
 	type ThemePreferences,
 } from './systemTheme';
+export { aiChatOpen, aiChatMinimized, openAIChat, closeAIChat, toggleAIChat, minimizeAIChat, restoreAIChat, aiChatVisible } from './aiChatUI';
+export { mentions, unreadMentions, unreadMentionCount, mentionsByChannel, mentionsByServer } from './mentions';
+export { digest, digestEnabled, digestFrequency, digestPendingCount, digestLoading, formatDigestFrequency, formatDigestStatus, getNextDigestText } from './digest';
