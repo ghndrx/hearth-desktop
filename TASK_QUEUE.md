@@ -38,3 +38,4 @@ This file tracks pending tasks and improvements for the Hearth Desktop applicati
 - [x] Onboarding flow - multi-step wizard for first-time users (Feb 25, 2026)
 - [x] Keyboard navigation manager - F6 region cycling, skip links, shortcuts help modal (Feb 25, 2026)
 - [x] Mini Mode / Picture-in-Picture - compact floating window with corner positioning (Feb 25, 2026)
+- [x] Session Manager - view, filter, search, and switch between chat sessions (Feb 25, 2026)
