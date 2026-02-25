@@ -189,6 +189,37 @@ fn main() {
                 })
                 .ok();
 
+            // Toggle mini mode (PiP) with Cmd/Ctrl+Shift+P
+            shortcut_manager
+                .register("CommandOrControl+Shift+P", {
+                    let app_handle = app.handle().clone();
+                    move || {
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            let window_clone = window.clone();
+                            tauri::async_runtime::spawn(async move {
+                                match crate::commands::toggle_mini_mode(window_clone, None).await {
+                                    Ok(state) => {
+                                        let message = if state.is_active {
+                                            "Mini mode enabled"
+                                        } else {
+                                            "Mini mode disabled"
+                                        };
+                                        let _ = window.emit("mini-mode-changed", serde_json::json!({
+                                            "active": state.is_active,
+                                            "message": message,
+                                            "corner": state.corner
+                                        }));
+                                    }
+                                    Err(e) => {
+                                        log::error!("Failed to toggle mini mode: {}", e);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                })
+                .ok();
+
             // Register deep link handler
             let handle = app.handle().clone();
             app.listen("deep-link://new-url", move |event| {
@@ -356,6 +387,13 @@ fn main() {
             fileassoc::get_supported_file_associations,
             fileassoc::handle_associated_file,
             fileassoc::import_chat_export,
+            // Mini Mode / Picture-in-Picture commands
+            commands::enter_mini_mode,
+            commands::exit_mini_mode,
+            commands::toggle_mini_mode,
+            commands::get_mini_mode_state,
+            commands::set_mini_mode_size,
+            commands::move_mini_mode_corner,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
