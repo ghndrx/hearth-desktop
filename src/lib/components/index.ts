@@ -40,6 +40,7 @@ export { default as MentionsPanel } from './MentionsPanel.svelte';
 export { default as MediaPlayer } from './MediaPlayer.svelte';
 export { default as FileUploadZone } from './FileUploadZone.svelte';
 export { default as NativeFileDrop } from './NativeFileDrop.svelte';
+export { default as NativeNotificationManager } from './NativeNotificationManager.svelte';
 export { default as UploadProgress } from './UploadProgress.svelte';
 export { default as CustomEmojiManager } from './CustomEmojiManager.svelte';
 // FEAT-001: Thread components
