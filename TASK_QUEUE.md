@@ -19,9 +19,9 @@ This file tracks pending tasks and improvements for the Hearth Desktop applicati
 ## Low Priority
 
 - [ ] **Add keyboard navigation** - Full keyboard accessibility support
-- [ ] **Implement dark/light theme toggle** - Theme switching in settings
+- [x] **Implement dark/light theme toggle** - Theme switching in settings (ThemeSettings.svelte)
 - [x] **Add sound notifications** - Optional audio alerts for new messages
-- [ ] **Create onboarding flow** - First-time user experience
+- [x] **Create onboarding flow** - First-time user experience
 
 ## Completed
 
@@ -35,3 +35,4 @@ This file tracks pending tasks and improvements for the Hearth Desktop applicati
 - [x] Settings/preferences UI (UserSettings.svelte)
 - [x] Error boundary component
 - [x] Sound notification manager (Feb 25, 2026)
+- [x] Onboarding flow - multi-step wizard for first-time users (Feb 25, 2026)
