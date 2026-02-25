@@ -3,6 +3,7 @@
 
 mod activity;
 mod audio;
+mod clipboard;
 mod commands;
 mod deeplink;
 mod dnd;
@@ -210,6 +211,9 @@ fn main() {
             // Start system theme watcher
             theme::start_theme_watcher(app.handle().clone());
 
+            // Initialize clipboard state with history (max 100 entries)
+            app.manage(clipboard::init_clipboard_state(100));
+
             Ok(())
         })
         .on_menu_event(|app, event| {
@@ -317,6 +321,15 @@ fn main() {
             performance::get_performance_metrics,
             performance::get_memory_info,
             performance::get_app_uptime,
+            // Rich clipboard commands
+            clipboard::clipboard_copy_text,
+            clipboard::clipboard_copy_html,
+            clipboard::clipboard_copy_image,
+            clipboard::clipboard_read,
+            clipboard::clipboard_get_history,
+            clipboard::clipboard_clear_history,
+            clipboard::clipboard_remove_entry,
+            clipboard::clipboard_paste_entry,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
