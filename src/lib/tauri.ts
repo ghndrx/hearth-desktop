@@ -656,6 +656,41 @@ export const fileDrop = {
   onDrop: onNativeFileDrop,
 };
 
+// ============================================================================
+// Idle Detection Functions
+// ============================================================================
+
+export interface IdleStatus {
+  idle_seconds: number;
+  is_idle: boolean;
+  screen_locked: boolean;
+}
+
+/**
+ * Get current idle status with default threshold (5 minutes)
+ */
+export async function getIdleStatus(): Promise<IdleStatus> {
+  return invoke("get_idle_status");
+}
+
+/**
+ * Get idle status with custom threshold
+ * @param thresholdSeconds Seconds of inactivity to consider user idle
+ */
+export async function getIdleStatusWithThreshold(
+  thresholdSeconds: number
+): Promise<IdleStatus> {
+  return invoke("get_idle_status_with_threshold", {
+    threshold_seconds: thresholdSeconds,
+  });
+}
+
+// Combined idle detection API
+export const idle = {
+  getStatus: getIdleStatus,
+  getStatusWithThreshold: getIdleStatusWithThreshold,
+};
+
 // Default export
 export default {
   window,
@@ -673,6 +708,7 @@ export default {
   power,
   screenshot,
   audio,
+  idle,
   onMenuEvent,
   onDeepLink,
 };
