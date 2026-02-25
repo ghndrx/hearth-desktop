@@ -6,6 +6,7 @@ mod audio;
 mod commands;
 mod deeplink;
 mod dnd;
+mod filedrop;
 mod menu;
 mod power;
 mod screenshot;
@@ -13,7 +14,7 @@ mod theme;
 mod tray;
 mod updater;
 
-use tauri::{GlobalShortcutBuilder, Manager, WindowEvent};
+use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 fn main() {
@@ -43,14 +44,47 @@ fn main() {
             }
         }))
         .on_window_event(|window, event| {
-            // Minimize to tray on close instead of quitting
-            if let WindowEvent::CloseRequested { api, .. } = event {
-                // Save window state before hiding
-                let _ = window.app_handle().save_window_state(StateFlags::all());
-                // Hide the window instead of closing
-                let _ = window.hide();
-                // Prevent the window from being destroyed
-                api.prevent_close();
+            match event {
+                // Minimize to tray on close instead of quitting
+                WindowEvent::CloseRequested { api, .. } => {
+                    // Save window state before hiding
+                    let _ = window.app_handle().save_window_state(StateFlags::all());
+                    // Hide the window instead of closing
+                    let _ = window.hide();
+                    // Prevent the window from being destroyed
+                    api.prevent_close();
+                }
+                // Handle native file drag-and-drop
+                WindowEvent::DragDrop(drag_event) => {
+                    match drag_event {
+                        DragDropEvent::Enter { paths, position } => {
+                            // Files being dragged over window
+                            filedrop::handle_file_hover(
+                                window.app_handle(),
+                                paths.clone(),
+                                Some((position.x as i32, position.y as i32)),
+                            );
+                        }
+                        DragDropEvent::Over { position } => {
+                            // Continue dragging (position update)
+                            // Could emit position updates if needed
+                        }
+                        DragDropEvent::Drop { paths, position } => {
+                            // Files dropped
+                            filedrop::handle_file_drop(
+                                window.app_handle(),
+                                paths.clone(),
+                                Some((position.x as i32, position.y as i32)),
+                            );
+                        }
+                        DragDropEvent::Leave => {
+                            // Drag canceled
+                            filedrop::handle_file_cancel(window.app_handle());
+                        }
+                        _ => {}
+                    }
+                }
+                _ => {}
             }
         })
         .setup(|app| {
@@ -264,6 +298,10 @@ fn main() {
             theme::get_system_theme,
             theme::get_theme_info,
             theme::is_dark_mode,
+            // File drop commands
+            filedrop::read_file_as_base64,
+            filedrop::get_file_thumbnail,
+            filedrop::validate_dropped_files,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
