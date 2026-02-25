@@ -914,3 +914,44 @@ pub async fn move_mini_mode_corner(window: Window, corner: String) -> Result<Min
     log::info!("Mini mode moved to corner: {}", corner);
     Ok(state.clone())
 }
+
+// ============================================================================
+// Version Tracking (What's New)
+// ============================================================================
+
+use std::fs;
+use std::path::PathBuf;
+
+fn get_version_file_path(app: &AppHandle) -> Result<PathBuf, String> {
+    let app_data_dir = app.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+    
+    // Ensure the directory exists
+    fs::create_dir_all(&app_data_dir)
+        .map_err(|e| format!("Failed to create app data dir: {}", e))?;
+    
+    Ok(app_data_dir.join("last_seen_version.txt"))
+}
+
+/// Get the last version the user acknowledged in What's New
+#[tauri::command]
+pub async fn get_last_seen_version(app: AppHandle) -> Result<String, String> {
+    let version_file = get_version_file_path(&app)?;
+    
+    match fs::read_to_string(&version_file) {
+        Ok(version) => Ok(version.trim().to_string()),
+        Err(_) => Ok(String::new()) // No version seen yet
+    }
+}
+
+/// Set the last version the user acknowledged in What's New
+#[tauri::command]
+pub async fn set_last_seen_version(app: AppHandle, version: String) -> Result<(), String> {
+    let version_file = get_version_file_path(&app)?;
+    
+    fs::write(&version_file, version.trim())
+        .map_err(|e| format!("Failed to save version: {}", e))?;
+    
+    log::info!("Last seen version set to: {}", version.trim());
+    Ok(())
+}
