@@ -655,3 +655,37 @@ pub async fn clear_window_state(app: AppHandle) -> Result<(), String> {
     
     Ok(())
 }
+
+// ============================================================================
+// Window Opacity Commands
+// ============================================================================
+
+use std::sync::atomic::{AtomicU64, Ordering};
+
+/// Stored opacity value (as bits, since AtomicF64 doesn't exist)
+static WINDOW_OPACITY: AtomicU64 = AtomicU64::new(0x3FF0000000000000); // 1.0 as f64 bits
+
+/// Set window opacity (transparency level)
+/// Opacity value should be between 0.0 (fully transparent) and 1.0 (fully opaque)
+/// Note: Actual window transparency requires platform-specific implementations.
+/// This stores the preference for the frontend to use with CSS opacity fallback.
+#[tauri::command]
+pub async fn set_window_opacity(_window: Window, opacity: f64) -> Result<(), String> {
+    // Clamp opacity to valid range
+    let clamped = opacity.clamp(0.1, 1.0); // Minimum 10% to prevent invisible window
+    
+    // Store the opacity value
+    WINDOW_OPACITY.store(clamped.to_bits(), Ordering::SeqCst);
+    
+    // Log for debugging
+    log::info!("Window opacity set to: {:.0}%", clamped * 100.0);
+    
+    Ok(())
+}
+
+/// Get current window opacity
+#[tauri::command]
+pub async fn get_window_opacity(_window: Window) -> Result<f64, String> {
+    let bits = WINDOW_OPACITY.load(Ordering::SeqCst);
+    Ok(f64::from_bits(bits))
+}

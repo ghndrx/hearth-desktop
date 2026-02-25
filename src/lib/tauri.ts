@@ -55,6 +55,15 @@ export async function toggleFullscreen(): Promise<void> {
   return invoke("toggle_fullscreen");
 }
 
+// Window Opacity
+export async function setWindowOpacity(opacity: number): Promise<void> {
+  return invoke("set_window_opacity", { opacity });
+}
+
+export async function getWindowOpacity(): Promise<number> {
+  return invoke("get_window_opacity");
+}
+
 // App Information
 export async function getAppVersion(): Promise<string> {
   return invoke("get_app_version");
