@@ -15,6 +15,7 @@ mod performance;
 mod power;
 mod screenshot;
 mod spellcheck;
+mod sysinfo;
 mod theme;
 mod tray;
 mod updater;
@@ -397,6 +398,12 @@ fn main() {
             // Version tracking (What's New) commands
             commands::get_last_seen_version,
             commands::set_last_seen_version,
+            // System information commands
+            sysinfo::get_system_info,
+            sysinfo::get_os_info,
+            sysinfo::get_cpu_info,
+            sysinfo::get_memory_info,
+            sysinfo::get_runtime_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
