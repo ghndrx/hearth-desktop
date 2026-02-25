@@ -480,3 +480,178 @@ pub async fn cancel_window_attention(window: Window) -> Result<(), String> {
     window.request_user_attention(None)
         .map_err(|e| e.to_string())
 }
+
+// ============================================================================
+// Window State Persistence Commands
+// ============================================================================
+
+use std::sync::RwLock;
+use std::fs;
+
+/// Window state for persistence
+#[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
+pub struct WindowState {
+    /// X position of the window
+    pub x: i32,
+    /// Y position of the window
+    pub y: i32,
+    /// Width of the window
+    pub width: u32,
+    /// Height of the window
+    pub height: u32,
+    /// Whether the window is maximized
+    pub is_maximized: bool,
+    /// Whether the window is fullscreen
+    pub is_fullscreen: bool,
+}
+
+impl Default for WindowState {
+    fn default() -> Self {
+        Self {
+            x: 100,
+            y: 100,
+            width: 1280,
+            height: 800,
+            is_maximized: false,
+            is_fullscreen: false,
+        }
+    }
+}
+
+static WINDOW_STATE: RwLock<Option<WindowState>> = RwLock::new(None);
+
+fn get_state_file_path(app: &AppHandle) -> Result<PathBuf, String> {
+    let app_dir = app.path().app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+    fs::create_dir_all(&app_dir).map_err(|e| format!("Failed to create app data dir: {}", e))?;
+    Ok(app_dir.join("window-state.json"))
+}
+
+/// Save the current window state to disk
+#[tauri::command]
+pub async fn save_window_state(app: AppHandle, window: Window) -> Result<(), String> {
+    let position = window.outer_position().map_err(|e| e.to_string())?;
+    let size = window.outer_size().map_err(|e| e.to_string())?;
+    let is_maximized = window.is_maximized().map_err(|e| e.to_string())?;
+    let is_fullscreen = window.is_fullscreen().map_err(|e| e.to_string())?;
+    
+    let state = WindowState {
+        x: position.x,
+        y: position.y,
+        width: size.width,
+        height: size.height,
+        is_maximized,
+        is_fullscreen,
+    };
+    
+    // Update in-memory state
+    {
+        let mut cached = WINDOW_STATE.write().map_err(|e| e.to_string())?;
+        *cached = Some(state.clone());
+    }
+    
+    // Persist to disk
+    let state_file = get_state_file_path(&app)?;
+    let json = serde_json::to_string_pretty(&state)
+        .map_err(|e| format!("Failed to serialize window state: {}", e))?;
+    fs::write(&state_file, json)
+        .map_err(|e| format!("Failed to write window state: {}", e))?;
+    
+    Ok(())
+}
+
+/// Load window state from disk
+#[tauri::command]
+pub async fn load_window_state(app: AppHandle) -> Result<WindowState, String> {
+    // Check cache first
+    {
+        let cached = WINDOW_STATE.read().map_err(|e| e.to_string())?;
+        if let Some(state) = cached.as_ref() {
+            return Ok(state.clone());
+        }
+    }
+    
+    // Load from disk
+    let state_file = get_state_file_path(&app)?;
+    
+    if !state_file.exists() {
+        return Ok(WindowState::default());
+    }
+    
+    let json = fs::read_to_string(&state_file)
+        .map_err(|e| format!("Failed to read window state: {}", e))?;
+    let state: WindowState = serde_json::from_str(&json)
+        .map_err(|e| format!("Failed to parse window state: {}", e))?;
+    
+    // Cache for future reads
+    {
+        let mut cached = WINDOW_STATE.write().map_err(|e| e.to_string())?;
+        *cached = Some(state.clone());
+    }
+    
+    Ok(state)
+}
+
+/// Restore window to saved state
+#[tauri::command]
+pub async fn restore_window_state(app: AppHandle, window: Window) -> Result<bool, String> {
+    let state = load_window_state(app).await?;
+    
+    // Don't restore if maximized or fullscreen - just restore those flags
+    if state.is_fullscreen {
+        window.set_fullscreen(true).map_err(|e| e.to_string())?;
+        return Ok(true);
+    }
+    
+    if state.is_maximized {
+        window.maximize().map_err(|e| e.to_string())?;
+        return Ok(true);
+    }
+    
+    // Restore position and size
+    use tauri::{LogicalPosition, LogicalSize};
+    
+    window.set_position(LogicalPosition::new(state.x as f64, state.y as f64))
+        .map_err(|e| e.to_string())?;
+    window.set_size(LogicalSize::new(state.width as f64, state.height as f64))
+        .map_err(|e| e.to_string())?;
+    
+    Ok(true)
+}
+
+/// Get current window state without saving
+#[tauri::command]
+pub async fn get_window_state(window: Window) -> Result<WindowState, String> {
+    let position = window.outer_position().map_err(|e| e.to_string())?;
+    let size = window.outer_size().map_err(|e| e.to_string())?;
+    let is_maximized = window.is_maximized().map_err(|e| e.to_string())?;
+    let is_fullscreen = window.is_fullscreen().map_err(|e| e.to_string())?;
+    
+    Ok(WindowState {
+        x: position.x,
+        y: position.y,
+        width: size.width,
+        height: size.height,
+        is_maximized,
+        is_fullscreen,
+    })
+}
+
+/// Clear saved window state (reset to defaults)
+#[tauri::command]
+pub async fn clear_window_state(app: AppHandle) -> Result<(), String> {
+    // Clear cache
+    {
+        let mut cached = WINDOW_STATE.write().map_err(|e| e.to_string())?;
+        *cached = None;
+    }
+    
+    // Remove file
+    let state_file = get_state_file_path(&app)?;
+    if state_file.exists() {
+        fs::remove_file(&state_file)
+            .map_err(|e| format!("Failed to remove window state file: {}", e))?;
+    }
+    
+    Ok(())
+}
