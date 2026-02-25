@@ -78,6 +78,7 @@ export { default as AuditLogViewer } from './AuditLogViewer.svelte';
 export { default as ThemeSettings } from './ThemeSettings.svelte';
 export { default as AutoLaunchSettings } from './AutoLaunchSettings.svelte';
 export { default as KeyboardShortcutsSettings } from './KeyboardShortcutsSettings.svelte';
+export { default as SpellcheckSettings } from './SpellcheckSettings.svelte';
 
 // Channel management components
 export { default as SortableChannelList } from './SortableChannelList.svelte';
