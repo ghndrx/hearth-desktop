@@ -394,6 +394,9 @@ fn main() {
             commands::get_mini_mode_state,
             commands::set_mini_mode_size,
             commands::move_mini_mode_corner,
+            // Version tracking (What's New) commands
+            commands::get_last_seen_version,
+            commands::set_last_seen_version,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
