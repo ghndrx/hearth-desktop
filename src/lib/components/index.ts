@@ -123,3 +123,4 @@ export { default as FileUpload } from './FileUpload.svelte';
 export { default as QuickActionsPanel } from './QuickActionsPanel.svelte';
 export { default as WindowStateManager } from './WindowStateManager.svelte';
 export { default as UpdateManager } from './UpdateManager.svelte';
+export { default as BadgeManager } from './BadgeManager.svelte';
