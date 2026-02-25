@@ -8,6 +8,7 @@ mod commands;
 mod deeplink;
 mod dnd;
 mod filedrop;
+mod globalshortcut;
 mod menu;
 mod performance;
 mod power;
@@ -330,6 +331,12 @@ fn main() {
             clipboard::clipboard_clear_history,
             clipboard::clipboard_remove_entry,
             clipboard::clipboard_paste_entry,
+            // Global shortcut commands
+            globalshortcut::register_global_shortcut,
+            globalshortcut::unregister_global_shortcut,
+            globalshortcut::unregister_all_global_shortcuts,
+            globalshortcut::list_global_shortcuts,
+            globalshortcut::is_global_shortcut_registered,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
