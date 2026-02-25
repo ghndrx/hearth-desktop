@@ -562,6 +562,100 @@ export const audio = {
   toggleOutputMute,
 };
 
+// ============================================================================
+// Native File Drop Functions
+// ============================================================================
+
+export interface DroppedFile {
+  path: string;
+  name: string;
+  size: number;
+  extension: string | null;
+  mime_type: string | null;
+  is_image: boolean;
+  is_video: boolean;
+  is_audio: boolean;
+  is_document: boolean;
+  modified: number | null;
+  thumbnail: string | null;
+}
+
+export interface FileDropEvent {
+  event_type: "hover" | "drop" | "cancel";
+  files: DroppedFile[];
+  position: [number, number] | null;
+}
+
+export interface FileValidationResult {
+  valid_files: DroppedFile[];
+  errors: string[];
+}
+
+/**
+ * Read a file as base64 data URL
+ * @param path Path to the file
+ * @param maxSizeMb Maximum file size in MB (default: 10)
+ * @returns Base64 data URL (e.g., "data:image/png;base64,...")
+ */
+export async function readFileAsBase64(
+  path: string,
+  maxSizeMb = 10
+): Promise<string> {
+  return invoke("read_file_as_base64", { path, maxSizeMb });
+}
+
+/**
+ * Get a thumbnail for an image file
+ * @param path Path to the image file
+ * @returns Base64 data URL or null if not available
+ */
+export async function getFileThumbnail(path: string): Promise<string | null> {
+  return invoke("get_file_thumbnail", { path });
+}
+
+/**
+ * Validate dropped files against criteria
+ * @param paths Array of file paths to validate
+ * @param maxFileSize Maximum file size in bytes
+ * @param maxFiles Maximum number of files
+ * @param allowedTypes Optional array of allowed extensions (e.g., ["png", "jpg"])
+ * @returns Validation result with valid files and errors
+ */
+export async function validateDroppedFiles(
+  paths: string[],
+  maxFileSize?: number,
+  maxFiles?: number,
+  allowedTypes?: string[]
+): Promise<FileValidationResult> {
+  return invoke("validate_dropped_files", {
+    paths,
+    maxFileSize,
+    maxFiles,
+    allowedTypes,
+  });
+}
+
+/**
+ * Listen for native file drop events
+ * @param callback Called when files are dragged over, dropped, or drag is cancelled
+ * @returns Unlisten function
+ */
+export function onNativeFileDrop(
+  callback: (event: FileDropEvent) => void
+): Promise<UnlistenFn> {
+  return listen<FileDropEvent>("native-file-drop", (event) => {
+    callback(event.payload);
+  });
+}
+
+// Combined native file drop API
+export const fileDrop = {
+  readAsBase64: readFileAsBase64,
+  getThumbnail: getFileThumbnail,
+  validate: validateDroppedFiles,
+  onDrop: onNativeFileDrop,
+};
+
 // Default export
 export default {
   window,
@@ -573,6 +667,7 @@ export default {
   focusMode,
   mute,
   file,
+  fileDrop,
   windowAttention,
   trayBadge,
   power,
