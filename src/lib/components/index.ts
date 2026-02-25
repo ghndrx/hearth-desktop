@@ -114,6 +114,7 @@ export { default as LazyImage } from './LazyImage.svelte';
 export { default as NetworkStatus } from './NetworkStatus.svelte';
 export { default as BatteryIndicator } from './BatteryIndicator.svelte';
 export { default as PerformanceMonitor } from './PerformanceMonitor.svelte';
+export { default as ZoomControl } from './ZoomControl.svelte';
 
 // Voice components
 export { default as VoiceCallOverlay } from './VoiceCallOverlay.svelte';
