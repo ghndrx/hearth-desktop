@@ -125,3 +125,5 @@ export { default as QuickActionsPanel } from './QuickActionsPanel.svelte';
 export { default as WindowStateManager } from './WindowStateManager.svelte';
 export { default as UpdateManager } from './UpdateManager.svelte';
 export { default as BadgeManager } from './BadgeManager.svelte';
+export { default as ClipboardManager } from './ClipboardManager.svelte';
+export { default as ReadReceiptIndicator } from './ReadReceiptIndicator.svelte';
