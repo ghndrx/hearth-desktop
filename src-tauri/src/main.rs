@@ -8,6 +8,7 @@ mod deeplink;
 mod dnd;
 mod filedrop;
 mod menu;
+mod performance;
 mod power;
 mod screenshot;
 mod theme;
@@ -312,6 +313,10 @@ fn main() {
             commands::request_window_attention,
             commands::request_urgent_attention,
             commands::cancel_window_attention,
+            // Performance monitoring commands
+            performance::get_performance_metrics,
+            performance::get_memory_info,
+            performance::get_app_uptime,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
