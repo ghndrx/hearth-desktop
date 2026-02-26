@@ -78,6 +78,10 @@ pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::er
                         .body(message)
                         .show();
                 }
+                "toggle_privacy" => {
+                    // Toggle privacy mode (boss key)
+                    crate::privacy::emit_privacy_toggle(app);
+                }
                 "check_updates" => {
                     // Trigger update check
                     let app_handle = app.clone();
@@ -168,13 +172,16 @@ fn create_tray_menu<R: Runtime>(
     };
     let toggle_focus_i = MenuItem::with_id(app, "toggle_focus", focus_text, true, None::<&str>)?;
     
+    // Privacy mode toggle (boss key)
+    let toggle_privacy_i = MenuItem::with_id(app, "toggle_privacy", "Privacy Mode (⇧⌘L)", true, None::<&str>)?;
+    
     // Check for updates
     let check_updates_i = MenuItem::with_id(app, "check_updates", "Check for Updates...", true, None::<&str>)?;
     
     let separator2 = PredefinedMenuItem::separator(app)?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
-    let menu = Menu::with_items(app, &[&show_i, &hide_i, &separator, &toggle_mute_i, &toggle_focus_i, &check_updates_i, &separator2, &quit_i])?;
+    let menu = Menu::with_items(app, &[&show_i, &hide_i, &separator, &toggle_mute_i, &toggle_focus_i, &toggle_privacy_i, &check_updates_i, &separator2, &quit_i])?;
     Ok(menu)
 }
 

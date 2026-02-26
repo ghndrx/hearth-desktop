@@ -15,6 +15,7 @@ mod mediasession;
 mod menu;
 mod performance;
 mod power;
+mod privacy;
 mod screenshot;
 mod spellcheck;
 mod sysinfo;
@@ -220,6 +221,16 @@ fn main() {
                                 }
                             });
                         }
+                    }
+                })
+                .ok();
+
+            // Toggle privacy mode with Cmd/Ctrl+Shift+L
+            shortcut_manager
+                .register("CommandOrControl+Shift+L", {
+                    let app_handle = app.handle().clone();
+                    move || {
+                        privacy::emit_privacy_toggle(&app_handle);
                     }
                 })
                 .ok();
@@ -476,6 +487,10 @@ fn main() {
             mediasession::media_session_set_playback_state,
             mediasession::media_session_get_state,
             mediasession::media_session_simulate_action,
+            // Privacy mode commands
+            privacy::is_privacy_mode_active,
+            privacy::set_privacy_mode,
+            privacy::toggle_privacy_mode,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
