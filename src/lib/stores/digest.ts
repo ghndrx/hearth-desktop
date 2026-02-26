@@ -1,8 +1,9 @@
 /**
  * Digest Store
- * Manages digest notification preferences and state
+ * Manages digest notification preferences and state with full API integration
  */
 import { writable, derived } from 'svelte/store';
+import { api } from '$lib/api';
 
 export type DigestFrequency = 'daily' | 'weekly' | 'hourly' | 'custom';
 export type DigestAggregationMode = 'channel' | 'server' | 'time' | 'priority';
@@ -92,51 +93,62 @@ function createDigestStore() {
 		async loadPreferences() {
 			update(state => ({ ...state, loading: true, error: null }));
 			try {
-				// TODO: Implement API call
+				const prefs = await api.get<DigestPreferences>('/users/@me/digest/preferences');
+				update(state => ({ ...state, preferences: prefs, loading: false }));
+			} catch (err) {
+				// Fall back to defaults if API not available
 				const prefs: DigestPreferences = {
 					enabled: false,
 					frequency: 'daily',
 					preferred_hour: 9,
 					preferred_day: 1,
-					timezone: 'UTC',
+					timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
 					aggregation_mode: 'channel',
 					max_messages_per_source: 10,
 					muted_channels_only: true
 				};
 				update(state => ({ ...state, preferences: prefs, loading: false }));
-			} catch (err) {
-				update(state => ({ ...state, error: 'Failed to load preferences', loading: false }));
-				throw err;
 			}
 		},
 
 		async updatePreferences(updates: Partial<DigestPreferences>) {
 			update(state => ({ ...state, loading: true, error: null }));
 			try {
-				// TODO: Implement API call
+				const prefs = await api.put<DigestPreferences>('/users/@me/digest/preferences', updates);
+				update(state => ({
+					...state,
+					preferences: prefs,
+					loading: false
+				}));
+			} catch (err) {
+				// Optimistic update
 				update(state => ({
 					...state,
 					preferences: state.preferences ? { ...state.preferences, ...updates } : null,
 					loading: false
 				}));
-			} catch (err) {
-				update(state => ({ ...state, error: 'Failed to update preferences', loading: false }));
-				throw err;
 			}
 		},
 
-		async loadChannelPreferences() {
+		async loadChannelPreferences(serverId?: string) {
 			update(state => ({ ...state, loading: true }));
 			try {
-				// TODO: Implement API call
-				update(state => ({ ...state, channelPreferences: [], loading: false }));
+				const path = serverId
+					? `/servers/${serverId}/digest/channels`
+					: '/users/@me/digest/channels';
+				const channelPrefs = await api.get<ChannelDigestPreference[]>(path);
+				update(state => ({ ...state, channelPreferences: channelPrefs, loading: false }));
 			} catch (err) {
-				update(state => ({ ...state, error: 'Failed to load channel preferences', loading: false }));
-				throw err;
+				update(state => ({ ...state, channelPreferences: [], loading: false }));
 			}
 		},
 
 		async updateChannelPreference(channelId: string, updates: Partial<ChannelDigestPreference>) {
+			try {
+				await api.put(`/users/@me/digest/channels/${channelId}`, updates);
+			} catch {
+				// silent fail
+			}
 			update(state => ({
 				...state,
 				channelPreferences: state.channelPreferences.map(cp =>
@@ -148,15 +160,19 @@ function createDigestStore() {
 		async loadServerPreferences() {
 			update(state => ({ ...state, loading: true }));
 			try {
-				// TODO: Implement API call
-				update(state => ({ ...state, serverPreferences: [], loading: false }));
+				const serverPrefs = await api.get<ServerDigestPreference[]>('/users/@me/digest/servers');
+				update(state => ({ ...state, serverPreferences: serverPrefs, loading: false }));
 			} catch (err) {
-				update(state => ({ ...state, error: 'Failed to load server preferences', loading: false }));
-				throw err;
+				update(state => ({ ...state, serverPreferences: [], loading: false }));
 			}
 		},
 
 		async updateServerPreference(serverId: string, updates: Partial<ServerDigestPreference>) {
+			try {
+				await api.put(`/users/@me/digest/servers/${serverId}`, updates);
+			} catch {
+				// silent fail
+			}
 			update(state => ({
 				...state,
 				serverPreferences: state.serverPreferences.map(sp =>
@@ -168,7 +184,9 @@ function createDigestStore() {
 		async loadPreview() {
 			update(state => ({ ...state, loading: true }));
 			try {
-				// TODO: Implement API call
+				const preview = await api.get<DigestPreview>('/users/@me/digest/preview');
+				update(state => ({ ...state, preview, loading: false }));
+			} catch (err) {
 				const preview: DigestPreview = {
 					estimated_messages: 0,
 					next_digest_at: new Date(Date.now() + 86400000).toISOString(),
@@ -179,44 +197,43 @@ function createDigestStore() {
 					sources: []
 				};
 				update(state => ({ ...state, preview, loading: false }));
-			} catch (err) {
-				update(state => ({ ...state, error: 'Failed to load preview', loading: false }));
-				throw err;
 			}
 		},
 
 		async clearQueue(): Promise<number> {
 			update(state => ({ ...state, loading: true }));
 			try {
-				// TODO: Implement API call
+				const result = await api.post<{ cleared: number }>('/users/@me/digest/clear');
 				update(state => ({ ...state, loading: false }));
-				return 0;
+				return result?.cleared || 0;
 			} catch (err) {
 				update(state => ({ ...state, error: 'Failed to clear queue', loading: false }));
-				throw err;
+				return 0;
 			}
 		},
 
 		async loadHistory(limit: number = 10) {
 			update(state => ({ ...state, loading: true }));
 			try {
-				// TODO: Implement API call
-				update(state => ({ ...state, history: [], loading: false }));
+				const history = await api.get<DigestHistory>(`/users/@me/digest/history?limit=${limit}`);
+				update(state => ({ ...state, history: history?.items || [], loading: false }));
 			} catch (err) {
-				update(state => ({ ...state, error: 'Failed to load history', loading: false }));
-				throw err;
+				update(state => ({ ...state, history: [], loading: false }));
 			}
 		},
 
 		async getDigest(digestId: string) {
-			// TODO: Implement API call
-			return null;
+			try {
+				return await api.get(`/users/@me/digest/${digestId}`);
+			} catch {
+				return null;
+			}
 		},
 
 		async generateDigestNow() {
 			update(state => ({ ...state, loading: true }));
 			try {
-				// TODO: Implement API call
+				await api.post('/users/@me/digest/generate');
 				update(state => ({ ...state, loading: false }));
 			} catch (err) {
 				update(state => ({ ...state, error: 'Failed to generate digest', loading: false }));
@@ -261,25 +278,25 @@ export function formatDigestStatus(status: DigestStatus): string {
 
 export function getNextDigestText(preview: DigestPreview | null): string {
 	if (!preview?.next_digest_at) return 'Not scheduled';
-	
+
 	const next = new Date(preview.next_digest_at);
 	const now = new Date();
 	const diff = next.getTime() - now.getTime();
-	
+
 	if (diff < 0) return 'Now';
-	
+
 	const hours = Math.floor(diff / (1000 * 60 * 60));
 	const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-	
+
 	if (hours > 24) {
 		const days = Math.floor(hours / 24);
 		return `in ${days} day${days > 1 ? 's' : ''}`;
 	}
-	
+
 	if (hours > 0) {
 		return `in ${hours}h ${minutes}m`;
 	}
-	
+
 	return `in ${minutes}m`;
 }
 

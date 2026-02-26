@@ -304,6 +304,68 @@ function createAuthStore() {
 		
 		setUser(user: User) {
 			update(s => ({ ...s, user }));
+		},
+
+		async getOAuthProviders() {
+			try {
+				return await api.get<{ providers: string[] }>('/auth/oauth/providers');
+			} catch {
+				return { providers: [] };
+			}
+		},
+
+		async startOAuthLogin(provider: string) {
+			if (browser) {
+				localStorage.setItem('oauth_pending_provider', provider);
+			}
+			const response = await api.get<{ url: string }>(`/auth/oauth/${provider}/authorize`);
+			if (browser && response?.url) {
+				window.location.href = response.url;
+			}
+			return response;
+		},
+
+		async handleOAuthCallback(provider: string, code: string, state: string) {
+			update(s => ({ ...s, loading: true }));
+			authDebug('Handling OAuth callback', { provider });
+
+			try {
+				const response = await api.post<{ access_token: string; refresh_token: string }>(
+					`/auth/oauth/${provider}/callback`,
+					{ code, state }
+				);
+
+				const access_token = response?.access_token;
+				const refresh_token = response?.refresh_token;
+
+				if (!access_token || typeof access_token !== 'string') {
+					throw new Error('Invalid response from OAuth provider');
+				}
+
+				localStorage.setItem('hearth_token', access_token);
+				localStorage.setItem('hearth_refresh_token', refresh_token || '');
+				setAuthToken(access_token);
+
+				const backendUser = await api.get<BackendUser>('/users/@me');
+				const user = normalizeUser(backendUser);
+				setCurrentUserId(user.id);
+
+				authDebug('OAuth login complete', { userId: user.id });
+
+				update(s => ({
+					...s,
+					user,
+					token: access_token,
+					loading: false
+				}));
+
+				await new Promise(resolve => setTimeout(resolve, 50));
+				goto('/channels/@me');
+			} catch (error: unknown) {
+				authDebug('OAuth callback failed', { error });
+				update(s => ({ ...s, loading: false }));
+				throw error;
+			}
 		}
 	};
 }

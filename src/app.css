@@ -27,24 +27,36 @@
 		@apply font-sans antialiased;
 	}
 
-	h1,
-	h2,
-	h3,
-	h4,
-	h5,
-	h6 {
+	h1, h2, h3, h4, h5, h6 {
 		@apply font-semibold;
 	}
 }
 
 /* Component utilities */
 @layer components {
-	.btn {
-		@apply px-4 py-2 rounded-md font-medium transition-colors duration-200;
+	/* A11Y: Global keyboard focus indicators */
+	a:focus-visible,
+	button:focus-visible,
+	[role="button"]:focus-visible,
+	[tabindex]:focus-visible {
+		@apply outline-none ring-2 ring-hearth-500 ring-offset-2 ring-offset-dark-800;
 	}
 
+	/* A11Y: Skip link for keyboard users */
+	.skip-link {
+		@apply absolute -top-10 left-0 bg-hearth-500 text-black px-4 py-2 z-[10000] transition-all duration-200;
+	}
+	.skip-link:focus {
+		@apply top-0;
+	}
+
+	.btn {
+		@apply px-4 py-2 rounded-md font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hearth-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-800;
+	}
+
+	/* A11Y-003: Use black text on hearth orange for WCAG 4.5:1 contrast */
 	.btn-primary {
-		@apply bg-hearth-500 hover:bg-hearth-600 text-white;
+		@apply bg-hearth-500 hover:bg-hearth-600 hover:brightness-110 text-black;
 	}
 
 	.btn-secondary {
@@ -52,14 +64,39 @@
 	}
 
 	.input {
-		@apply w-full px-3 py-2 bg-dark-900 border border-dark-700 rounded-md text-gray-100 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-hearth-500 focus:border-transparent;
+		@apply w-full px-3 py-2 bg-dark-900 border border-dark-700 rounded-md
+		       text-gray-100 placeholder-gray-500
+		       focus:outline-none focus:ring-2 focus:ring-hearth-500 focus:border-transparent
+		       focus-visible:ring-2 focus-visible:ring-hearth-500 focus-visible:border-transparent;
 	}
 
 	.sidebar-item {
-		@apply flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer hover:bg-dark-700 transition-colors duration-150;
+		@apply flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer
+		       hover:bg-dark-700 transition-colors duration-150
+		       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hearth-500
+		       focus-visible:ring-inset;
 	}
 
 	.sidebar-item-active {
 		@apply bg-dark-600 text-white;
+	}
+
+	.channel-item {
+		@apply flex items-center gap-2 px-2 py-1.5 rounded-md cursor-pointer
+		       hover:bg-dark-700 transition-colors duration-150
+		       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hearth-500
+		       focus-visible:ring-inset;
+	}
+
+	.channel-item-active {
+		@apply bg-dark-600 text-white font-medium;
+	}
+
+	.focus-ring {
+		@apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hearth-500 focus-visible:ring-offset-2 focus-visible:ring-offset-dark-800;
+	}
+
+	.focus-ring-inset {
+		@apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hearth-500 focus-visible:ring-inset;
 	}
 }

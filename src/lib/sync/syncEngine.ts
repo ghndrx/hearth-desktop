@@ -77,9 +77,10 @@ export const hasSyncErrors: Readable<boolean> = derived(
 );
 
 // Sync handlers for each action type
-type SyncHandler<T> = (item: QueueItem<T>) => Promise<{ success: boolean; error?: string; data?: unknown }>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type SyncHandler = (item: QueueItem<any>) => Promise<{ success: boolean; error?: string; data?: unknown }>;
 
-const syncHandlers: Partial<Record<QueueActionType, SyncHandler<unknown>>> = {
+const syncHandlers: Partial<Record<QueueActionType, SyncHandler>> = {
   SEND_MESSAGE: async (item: QueueItem<SendMessagePayload>) => {
     const payload = item.data;
     
@@ -345,8 +346,8 @@ async function syncOfflineMessages(): Promise<void> {
 /**
  * Handle service worker sync completion
  */
-function handleServiceWorkerSync(data: { id?: string; tag?: string }): void {
-  console.log('[SyncEngine] Service worker sync complete:', data);
+function handleServiceWorkerSync(_data: unknown): void {
+  console.log('[SyncEngine] Service worker sync complete:', _data);
   
   // Refresh our queue state
   processQueue();
@@ -450,11 +451,11 @@ export function forcSync(): void {
 /**
  * Register a custom sync handler
  */
-export function registerSyncHandler<T>(
+export function registerSyncHandler(
   type: QueueActionType,
-  handler: SyncHandler<T>
+  handler: SyncHandler
 ): void {
-  syncHandlers[type] = handler as SyncHandler<unknown>;
+  syncHandlers[type] = handler;
 }
 
 /**

@@ -78,7 +78,6 @@ export interface TypingPayload {
 }
 
 // Queue configuration
-const QUEUE_STORAGE_KEY = 'hearth-sync-queue';
 const MAX_QUEUE_SIZE = 1000;
 const DEFAULT_MAX_RETRIES = 5;
 const PRIORITY_LEVELS = {
@@ -429,13 +428,14 @@ export async function markCompleted(id: string): Promise<void> {
  * Mark item as failed
  */
 export async function markFailed(id: string, error: string): Promise<void> {
-  let currentItem: QueueItem | null = null;
-  
+  let foundItem: QueueItem | undefined;
+
   queueStore.subscribe(queue => {
-    currentItem = queue.find(i => i.id === id) || null;
+    foundItem = queue.find(i => i.id === id);
   })();
-  
-  if (currentItem) {
+
+  if (foundItem) {
+    const currentItem = foundItem;
     const newRetryCount = currentItem.retryCount + 1;
     const shouldFail = newRetryCount >= currentItem.maxRetries;
     
@@ -586,6 +586,26 @@ export function getQueueStats(): {
   })();
   
   return stats;
+}
+
+/**
+ * Clear all items from the queue
+ */
+export async function clearAllItems(): Promise<number> {
+	let count = 0;
+	let allIds: string[] = [];
+
+	queueStore.update(queue => {
+		allIds = queue.map(i => i.id);
+		count = allIds.length;
+		return [];
+	});
+
+	for (const id of allIds) {
+		await removePersistedItem(id);
+	}
+
+	return count;
 }
 
 // Export store for direct subscription
