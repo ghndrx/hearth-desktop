@@ -1,4 +1,4 @@
-use tauri::{Manager, Window, AppHandle};
+use tauri::{Manager, Window, AppHandle, LogicalPosition, LogicalSize};
 use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_clipboard_manager::ClipboardExt;
 
@@ -954,4 +954,146 @@ pub async fn set_last_seen_version(app: AppHandle, version: String) -> Result<()
     
     log::info!("Last seen version set to: {}", version.trim());
     Ok(())
+}
+
+// ============================================================================
+// Window Manager Commands
+// ============================================================================
+
+use serde::Serialize;
+
+#[derive(Debug, Clone, Serialize)]
+pub struct MonitorInfo {
+    pub name: Option<String>,
+    pub position: LogicalPosition<i32>,
+    pub size: LogicalSize<u32>,
+    pub scale_factor: f64,
+}
+
+/// Get information about all available monitors
+#[tauri::command]
+pub async fn get_monitors(window: Window) -> Result<Vec<MonitorInfo>, String> {
+    let monitors = window.available_monitors()
+        .map_err(|e| e.to_string())?;
+    
+    let mut result = Vec::new();
+    for monitor in monitors {
+        let pos = monitor.position();
+        let size = monitor.size();
+        result.push(MonitorInfo {
+            name: monitor.name().map(|s| s.to_string()),
+            position: LogicalPosition::new(pos.x, pos.y),
+            size: LogicalSize::new(size.width, size.height),
+            scale_factor: monitor.scale_factor(),
+        });
+    }
+    
+    Ok(result)
+}
+
+/// Get the always-on-top state of the window
+#[tauri::command]
+pub async fn get_always_on_top(window: Window) -> Result<bool, String> {
+    // Tauri doesn't expose a getter for always-on-top state directly,
+    // so we track it via the window state if needed. For now, return false
+    // as we can't reliably get this state.
+    Ok(false)
+}
+
+/// Minimize the window to the system tray
+#[tauri::command]
+pub async fn minimize_to_tray(window: Window) -> Result<(), String> {
+    window.hide().map_err(|e| e.to_string())?;
+    log::info!("Window minimized to tray");
+    Ok(())
+}
+
+/// Set window size with logical dimensions
+#[tauri::command]
+pub async fn set_window_size(window: Window, width: u32, height: u32) -> Result<(), String> {
+    window.set_size(LogicalSize::new(width, height))
+        .map_err(|e| e.to_string())?;
+    log::debug!("Window size set to {}x{}", width, height);
+    Ok(())
+}
+
+/// Set window position with logical coordinates
+#[tauri::command]
+pub async fn set_window_position(window: Window, x: i32, y: i32) -> Result<(), String> {
+    window.set_position(LogicalPosition::new(x, y))
+        .map_err(|e| e.to_string())?;
+    log::debug!("Window position set to ({}, {})", x, y);
+    Ok(())
+}
+
+/// Center the window on the primary monitor
+#[tauri::command]
+pub async fn center_window(window: Window) -> Result<(), String> {
+    window.center().map_err(|e| e.to_string())?;
+    log::debug!("Window centered");
+    Ok(())
+}
+
+/// Toggle window decorations (title bar, borders)
+#[tauri::command]
+pub async fn toggle_decorations(window: Window) -> Result<bool, String> {
+    let is_decorated = window.is_decorated().map_err(|e| e.to_string())?;
+    window.set_decorations(!is_decorated).map_err(|e| e.to_string())?;
+    log::info!("Window decorations toggled to: {}", !is_decorated);
+    Ok(!is_decorated)
+}
+
+/// Request user attention for the window
+#[tauri::command]
+pub async fn request_user_attention(window: Window, critical: bool) -> Result<(), String> {
+    use tauri::window::UserAttentionType;
+    let attention_type = if critical {
+        Some(UserAttentionType::Critical)
+    } else {
+        Some(UserAttentionType::Informational)
+    };
+    window.request_user_attention(attention_type)
+        .map_err(|e| e.to_string())?;
+    log::debug!("Requested user attention (critical: {})", critical);
+    Ok(())
+}
+
+/// Clear user attention request
+#[tauri::command]
+pub async fn clear_user_attention(window: Window) -> Result<(), String> {
+    window.request_user_attention(None)
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub struct WindowState {
+    pub is_maximized: bool,
+    pub is_minimized: bool,
+    pub is_fullscreen: bool,
+    pub is_decorated: bool,
+    pub is_visible: bool,
+    pub is_focused: bool,
+    pub position: LogicalPosition<i32>,
+    pub size: LogicalSize<u32>,
+    pub scale_factor: f64,
+}
+
+/// Get comprehensive window state
+#[tauri::command]
+pub async fn get_window_state(window: Window) -> Result<WindowState, String> {
+    let position = window.outer_position().map_err(|e| e.to_string())?;
+    let size = window.outer_size().map_err(|e| e.to_string())?;
+    
+    Ok(WindowState {
+        is_maximized: window.is_maximized().map_err(|e| e.to_string())?,
+        is_minimized: window.is_minimized().map_err(|e| e.to_string())?,
+        is_fullscreen: window.is_fullscreen().map_err(|e| e.to_string())?,
+        is_decorated: window.is_decorated().map_err(|e| e.to_string())?,
+        is_visible: window.is_visible().map_err(|e| e.to_string())?,
+        is_focused: window.is_focused().map_err(|e| e.to_string())?,
+        position: LogicalPosition::new(position.x, position.y),
+        size: LogicalSize::new(size.width, size.height),
+        scale_factor: window.scale_factor().map_err(|e| e.to_string())?,
+    })
 }
