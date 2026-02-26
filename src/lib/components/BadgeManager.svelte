@@ -1,195 +1,182 @@
 <script lang="ts">
-  /**
-   * BadgeManager - Syncs unread count to native dock/taskbar badge
-   * 
-   * This component runs invisibly and keeps the native badge count
-   * synchronized with the application's unread message count.
-   * 
-   * Features:
-   * - Updates dock badge on macOS
-   * - Updates taskbar badge on Windows
-   * - Updates system tray tooltip
-   * - Flashes window on new messages (when unfocused)
-   */
-  import { onMount, onDestroy } from 'svelte';
-  import { invoke } from '@tauri-apps/api/core';
-  import { unreadCount, hasUnread } from '$lib/stores/notifications';
-  import type { Unsubscriber } from 'svelte/store';
-  
-  /** Whether to flash the taskbar/dock on new messages */
-  export let flashOnNew = true;
-  
-  /** Whether to play a sound on new messages */
-  export let soundEnabled = false;
-  
-  /** Debounce interval for badge updates (ms) */
-  export let debounceMs = 100;
-  
-  let isTauri = false;
-  let isWindowFocused = true;
-  let previousCount = 0;
-  let unsubscribe: Unsubscriber;
-  let debounceTimer: ReturnType<typeof setTimeout> | null = null;
-  
-  onMount(async () => {
-    // Check if running in Tauri
-    if (typeof window !== 'undefined' && '__TAURI_INTERNALS__' in window) {
-      isTauri = true;
-      
-      // Track window focus state
-      window.addEventListener('focus', handleWindowFocus);
-      window.addEventListener('blur', handleWindowBlur);
-      
-      // Subscribe to unread count changes
-      unsubscribe = unreadCount.subscribe(handleUnreadChange);
-      
-      // Load saved preferences
-      await loadPreferences();
-    }
-  });
-  
-  onDestroy(() => {
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-    
-    if (unsubscribe) {
-      unsubscribe();
-    }
-    
-    if (typeof window !== 'undefined') {
-      window.removeEventListener('focus', handleWindowFocus);
-      window.removeEventListener('blur', handleWindowBlur);
-    }
-    
-    // Clear badge on unmount
-    if (isTauri) {
-      clearBadge();
-    }
-  });
-  
-  async function loadPreferences() {
-    try {
-      const Store = (await import('@tauri-apps/plugin-store')).Store;
-      const store = await Store.load('settings.json');
-      
-      const flash = await store.get<boolean>('badge.flashOnNew');
-      if (flash !== null && flash !== undefined) {
-        flashOnNew = flash;
-      }
-      
-      const sound = await store.get<boolean>('badge.soundEnabled');
-      if (sound !== null && sound !== undefined) {
-        soundEnabled = sound;
-      }
-    } catch (e) {
-      console.debug('BadgeManager: Could not load preferences', e);
-    }
-  }
-  
-  function handleWindowFocus() {
-    isWindowFocused = true;
-  }
-  
-  function handleWindowBlur() {
-    isWindowFocused = false;
-  }
-  
-  function handleUnreadChange(count: number) {
-    // Debounce rapid updates
-    if (debounceTimer) {
-      clearTimeout(debounceTimer);
-    }
-    
-    debounceTimer = setTimeout(() => {
-      updateBadge(count);
-    }, debounceMs);
-  }
-  
-  async function updateBadge(count: number) {
-    if (!isTauri) return;
-    
-    try {
-      // Update dock/taskbar badge
-      await invoke('set_badge_count', { count });
-      
-      // Update tray badge
-      await invoke('update_tray_badge', { count });
-      
-      // Flash window if count increased and window is not focused
-      if (flashOnNew && count > previousCount && !isWindowFocused) {
-        await flashWindow();
-      }
-      
-      previousCount = count;
-    } catch (e) {
-      console.error('BadgeManager: Failed to update badge', e);
-    }
-  }
-  
-  async function clearBadge() {
-    if (!isTauri) return;
-    
-    try {
-      await invoke('set_badge_count', { count: 0 });
-      await invoke('update_tray_badge', { count: 0 });
-    } catch (e) {
-      console.debug('BadgeManager: Failed to clear badge', e);
-    }
-  }
-  
-  async function flashWindow() {
-    if (!isTauri) return;
-    
-    try {
-      await invoke('flash_window', { urgent: false });
-    } catch (e) {
-      // flash_window might not exist on all platforms
-      console.debug('BadgeManager: flash_window not available', e);
-    }
-  }
-  
-  /**
-   * Force refresh the badge count
-   */
-  export async function refresh() {
-    if (!isTauri) return;
-    
-    const count = $unreadCount;
-    await updateBadge(count);
-  }
-  
-  /**
-   * Toggle flash on new messages preference
-   */
-  export async function setFlashOnNew(enabled: boolean) {
-    flashOnNew = enabled;
-    
-    try {
-      const Store = (await import('@tauri-apps/plugin-store')).Store;
-      const store = await Store.load('settings.json');
-      await store.set('badge.flashOnNew', enabled);
-      await store.save();
-    } catch (e) {
-      console.error('BadgeManager: Failed to save flash preference', e);
-    }
-  }
-  
-  /**
-   * Toggle sound on new messages preference
-   */
-  export async function setSoundEnabled(enabled: boolean) {
-    soundEnabled = enabled;
-    
-    try {
-      const Store = (await import('@tauri-apps/plugin-store')).Store;
-      const store = await Store.load('settings.json');
-      await store.set('badge.soundEnabled', enabled);
-      await store.save();
-    } catch (e) {
-      console.error('BadgeManager: Failed to save sound preference', e);
-    }
-  }
+	import { onMount, onDestroy } from 'svelte';
+	import { invoke } from '@tauri-apps/api/core';
+	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
+
+	/**
+	 * BadgeManager - Application dock/taskbar badge management
+	 *
+	 * Handles unread message count badges on the application icon.
+	 * Supports macOS dock badges, Windows taskbar overlays, and Linux Unity.
+	 *
+	 * Features:
+	 * - Real-time badge updates
+	 * - Badge animation for attention
+	 * - Muted badge states (dimmed indicator)
+	 * - Badge clearing on window focus
+	 * - Configurable maximum display count
+	 */
+
+	interface BadgeConfig {
+		enabled: boolean;
+		showOnMuted: boolean;
+		clearOnFocus: boolean;
+		maxDisplayCount: number;
+		bounceOnNew: boolean;
+	}
+
+	interface BadgeState {
+		count: number;
+		isMuted: boolean;
+		lastUpdated: number;
+	}
+
+	// Props
+	export let config: BadgeConfig = {
+		enabled: true,
+		showOnMuted: true,
+		clearOnFocus: true,
+		maxDisplayCount: 99,
+		bounceOnNew: true
+	};
+
+	// State
+	let badgeState: BadgeState = {
+		count: 0,
+		isMuted: false,
+		lastUpdated: 0
+	};
+
+	let previousCount = 0;
+	let isSupported = false;
+	let unlistenFns: UnlistenFn[] = [];
+
+	// Update badge count
+	async function updateBadge(count: number): Promise<void> {
+		if (!config.enabled) return;
+		if (!isSupported) return;
+
+		const displayCount = Math.min(count, config.maxDisplayCount);
+		const displayText = count > config.maxDisplayCount ? `${config.maxDisplayCount}+` : String(count);
+
+		try {
+			await invoke('set_badge_count', {
+				count: displayCount,
+				text: count > 0 ? displayText : null,
+				urgent: config.bounceOnNew && count > previousCount
+			});
+
+			badgeState = {
+				count,
+				isMuted: badgeState.isMuted,
+				lastUpdated: Date.now()
+			};
+			previousCount = count;
+		} catch (err) {
+			console.error('Failed to update badge:', err);
+		}
+	}
+
+	// Clear badge
+	async function clearBadge(): Promise<void> {
+		if (!isSupported) return;
+
+		try {
+			await invoke('clear_badge');
+			badgeState = {
+				count: 0,
+				isMuted: badgeState.isMuted,
+				lastUpdated: Date.now()
+			};
+			previousCount = 0;
+		} catch (err) {
+			console.error('Failed to clear badge:', err);
+		}
+	}
+
+	// Set muted state (shows dimmed badge indicator)
+	async function setMuted(muted: boolean): Promise<void> {
+		if (!isSupported) return;
+
+		try {
+			await invoke('set_badge_muted', { muted });
+			badgeState.isMuted = muted;
+
+			if (!config.showOnMuted && muted && badgeState.count > 0) {
+				await clearBadge();
+			}
+		} catch (err) {
+			console.error('Failed to set badge muted state:', err);
+		}
+	}
+
+	// Request attention (bounce/flash)
+	async function requestAttention(critical: boolean = false): Promise<void> {
+		if (!isSupported) return;
+
+		try {
+			await invoke('request_attention', { critical });
+		} catch (err) {
+			console.error('Failed to request attention:', err);
+		}
+	}
+
+	// Check platform support
+	async function checkSupport(): Promise<boolean> {
+		try {
+			const supported = await invoke<boolean>('is_badge_supported');
+			return supported;
+		} catch {
+			return false;
+		}
+	}
+
+	// Handle window focus
+	async function handleWindowFocus(): Promise<void> {
+		if (config.clearOnFocus && badgeState.count > 0) {
+			await clearBadge();
+		}
+	}
+
+	onMount(async () => {
+		isSupported = await checkSupport();
+
+		if (isSupported) {
+			// Listen for unread count changes
+			const unlistenUnread = await listen<number>('unread-count-changed', (event) => {
+				updateBadge(event.payload);
+			});
+			unlistenFns.push(unlistenUnread);
+
+			// Listen for mute state changes
+			const unlistenMute = await listen<boolean>('mute-state-changed', (event) => {
+				setMuted(event.payload);
+			});
+			unlistenFns.push(unlistenMute);
+
+			// Listen for window focus
+			const unlistenFocus = await listen('tauri://focus', () => {
+				handleWindowFocus();
+			});
+			unlistenFns.push(unlistenFocus);
+
+			// Listen for attention requests
+			const unlistenAttention = await listen<{ critical: boolean }>('request-attention', (event) => {
+				requestAttention(event.payload.critical);
+			});
+			unlistenFns.push(unlistenAttention);
+		}
+	});
+
+	onDestroy(() => {
+		unlistenFns.forEach((unlisten) => unlisten());
+	});
+
+	// Exported functions for parent components
+	export { updateBadge, clearBadge, setMuted, requestAttention };
 </script>
 
-<!-- BadgeManager is invisible - it only manages the native badge -->
+<!-- BadgeManager is a headless component, no visual output -->
+<!-- It manages the native app badge/overlay in the background -->
+
+<slot {badgeState} {isSupported} {updateBadge} {clearBadge} {setMuted} {requestAttention} />
