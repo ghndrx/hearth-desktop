@@ -11,6 +11,7 @@ mod dnd;
 mod fileassoc;
 mod filedrop;
 mod globalshortcut;
+mod mediasession;
 mod menu;
 mod performance;
 mod power;
@@ -223,6 +224,43 @@ fn main() {
                 })
                 .ok();
 
+            // Register media key shortcuts
+            shortcut_manager
+                .register("MediaPlayPause", {
+                    let app_handle = app.handle().clone();
+                    move || {
+                        mediasession::emit_media_action(&app_handle, "pause");
+                    }
+                })
+                .ok();
+
+            shortcut_manager
+                .register("MediaStop", {
+                    let app_handle = app.handle().clone();
+                    move || {
+                        mediasession::emit_media_action(&app_handle, "stop");
+                    }
+                })
+                .ok();
+
+            shortcut_manager
+                .register("MediaTrackNext", {
+                    let app_handle = app.handle().clone();
+                    move || {
+                        mediasession::emit_media_action(&app_handle, "next");
+                    }
+                })
+                .ok();
+
+            shortcut_manager
+                .register("MediaTrackPrevious", {
+                    let app_handle = app.handle().clone();
+                    move || {
+                        mediasession::emit_media_action(&app_handle, "previous");
+                    }
+                })
+                .ok();
+
             // Register deep link handler
             let handle = app.handle().clone();
             app.listen("deep-link://new-url", move |event| {
@@ -431,6 +469,13 @@ fn main() {
             taskbar::update_operation,
             taskbar::complete_operation,
             taskbar::get_operations,
+            // Media session commands
+            mediasession::media_session_register,
+            mediasession::media_session_unregister,
+            mediasession::media_session_set_metadata,
+            mediasession::media_session_set_playback_state,
+            mediasession::media_session_get_state,
+            mediasession::media_session_simulate_action,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
