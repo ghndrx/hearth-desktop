@@ -142,3 +142,4 @@ export { default as ToastManager } from './ToastManager.svelte';
 export { default as PrintManager } from './PrintManager.svelte';
 export { default as BookmarksManager } from './BookmarksManager.svelte';
 export { default as TaskbarProgressManager } from './TaskbarProgressManager.svelte';
+export { default as StartupLoadingScreen } from './StartupLoadingScreen.svelte';
