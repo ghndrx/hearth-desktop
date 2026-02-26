@@ -817,6 +817,63 @@ export const fileAssociation = {
   onOpen: onFileAssociationOpen,
 };
 
+// ============================================================================
+// Storage Management Functions
+// ============================================================================
+
+export interface StorageStats {
+  path: string;
+  name: string;
+  size_bytes: number;
+  size_formatted: string;
+  file_count: number;
+  exists: boolean;
+}
+
+export interface StorageInfo {
+  app_data: StorageStats;
+  app_cache: StorageStats;
+  app_config: StorageStats;
+  app_log: StorageStats;
+  total_size_bytes: number;
+  total_size_formatted: string;
+  total_files: number;
+}
+
+export interface CleanupResult {
+  success: boolean;
+  freed_bytes: number;
+  freed_formatted: string;
+  deleted_files: number;
+  errors: string[];
+}
+
+export type StorageCategory = "cache" | "logs" | "temp_files" | "all";
+
+export async function getStorageInfo(): Promise<StorageInfo> {
+  return invoke("get_storage_info");
+}
+
+export async function clearStorage(category: StorageCategory): Promise<CleanupResult> {
+  return invoke("clear_storage", { category });
+}
+
+export async function getStoragePath(category: StorageCategory): Promise<string> {
+  return invoke("get_storage_path", { category });
+}
+
+export async function openStorageLocation(category: StorageCategory): Promise<void> {
+  return invoke("open_storage_location", { category });
+}
+
+// Combined storage API
+export const storage = {
+  getInfo: getStorageInfo,
+  clear: clearStorage,
+  getPath: getStoragePath,
+  openLocation: openStorageLocation,
+};
+
 // Default export
 export default {
   window,
@@ -837,6 +894,7 @@ export default {
   idle,
   spellCheck,
   fileAssociation,
+  storage,
   onMenuEvent,
   onDeepLink,
 };

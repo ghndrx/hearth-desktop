@@ -21,6 +21,7 @@ mod spellcheck;
 mod sysinfo;
 mod taskbar;
 mod theme;
+mod storage;
 mod tray;
 mod updater;
 
@@ -491,6 +492,11 @@ fn main() {
             privacy::is_privacy_mode_active,
             privacy::set_privacy_mode,
             privacy::toggle_privacy_mode,
+            // Storage management commands
+            storage::get_storage_info,
+            storage::clear_storage,
+            storage::get_storage_path,
+            storage::open_storage_location,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
