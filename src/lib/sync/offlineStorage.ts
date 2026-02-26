@@ -28,7 +28,14 @@ export interface StorageMetadata {
   updatedAt: number;
 }
 
-// Stored message with additional offline fields
+// Internal stored message type - uses numeric _synced for IndexedDB indexing
+// (IndexedDB cannot index boolean values)
+interface InternalStoredMessage extends Message {
+  _stored_at: number;
+  _synced: 0 | 1;
+}
+
+// Public interface retains boolean semantics
 export interface StoredMessage extends Message {
   _stored_at: number;
   _synced: boolean;
@@ -168,11 +175,11 @@ async function getStore(storeName: StoreName, mode: IDBTransactionMode = 'readon
  */
 export async function storeMessage(message: Message, synced = true): Promise<void> {
   const store = await getStore(STORES.MESSAGES, 'readwrite');
-  
-  const storedMessage: StoredMessage = {
+
+  const storedMessage: InternalStoredMessage = {
     ...message,
     _stored_at: Date.now(),
-    _synced: synced
+    _synced: synced ? 1 : 0
   };
   
   return new Promise((resolve, reject) => {
@@ -193,10 +200,10 @@ export async function storeMessages(messages: Message[], synced = true): Promise
   const now = Date.now();
   
   for (const message of messages) {
-    const storedMessage: StoredMessage = {
+    const storedMessage: InternalStoredMessage = {
       ...message,
       _stored_at: now,
-      _synced: synced
+      _synced: synced ? 1 : 0
     };
     store.put(storedMessage);
   }
@@ -270,10 +277,13 @@ export async function getChannelMessages(
 export async function getUnsyncedMessages(): Promise<StoredMessage[]> {
   const store = await getStore(STORES.MESSAGES);
   const index = store.index('_synced');
-  
+
   return new Promise((resolve, reject) => {
-    const request = index.getAll(false);
-    request.onsuccess = () => resolve(request.result || []);
+    const request = index.getAll(0);
+    request.onsuccess = () => {
+      const results = (request.result || []) as InternalStoredMessage[];
+      resolve(results.map(m => ({ ...m, _synced: m._synced === 1 })) as unknown as StoredMessage[]);
+    };
     request.onerror = () => reject(request.error);
   });
 }
@@ -289,8 +299,8 @@ export async function markMessageSynced(id: string): Promise<void> {
     
     getRequest.onsuccess = () => {
       if (getRequest.result) {
-        const message = getRequest.result as StoredMessage;
-        message._synced = true;
+        const message = getRequest.result as InternalStoredMessage;
+        message._synced = 1;
         const putRequest = store.put(message);
         putRequest.onsuccess = () => resolve();
         putRequest.onerror = () => reject(putRequest.error);

@@ -45,3 +45,4 @@ This file tracks pending tasks and improvements for the Hearth Desktop applicati
 - [x] Screen Record Manager - native screen recording with region selection, quality settings, and countdown (Feb 26, 2026)
 - [x] Bookmarks Manager - save, organize, tag, and search bookmarked messages with folders (Feb 26, 2026)
 - [x] Media Session Backend - Rust backend for MediaSessionManager with media key shortcuts (Feb 26, 2026)
+- [x] Focus Timer - Pomodoro-style productivity timer with native notifications, tray integration, DND mode, and session statistics (Feb 26, 2026)

@@ -12,7 +12,8 @@ export default {
 					300: '#f3b87a',
 					400: '#ed9344',
 					500: '#e87620',
-					600: '#d95e16',
+					// A11Y-003: Brightened for 4.74:1 contrast with dark text (#1e1f22)
+				600: '#e06518',
 					700: '#b44614',
 					800: '#903918',
 					900: '#743116',
@@ -35,5 +36,5 @@ export default {
 			}
 		}
 	},
-	plugins: []
+	plugins: [require('@tailwindcss/forms')]
 };

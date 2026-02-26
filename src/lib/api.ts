@@ -155,3 +155,16 @@ export const api = {
 };
 
 export { ApiError };
+
+// MessageQueueHandler for offline sync integration
+export type MessageQueueHandler = (channelId: string, content: string, options?: { replyTo?: string; attachments?: string[] }) => Promise<void>;
+
+let messageQueueHandler: MessageQueueHandler | null = null;
+
+export function registerMessageQueueHandler(handler: MessageQueueHandler) {
+	messageQueueHandler = handler;
+}
+
+export function getMessageQueueHandler(): MessageQueueHandler | null {
+	return messageQueueHandler;
+}
