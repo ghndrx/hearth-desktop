@@ -138,3 +138,4 @@ export { default as KeyboardShortcutsModal } from './KeyboardShortcutsModal.svel
 export { default as WindowBehaviorSettings } from './WindowBehaviorSettings.svelte';
 export { default as TrayMenuManager } from './TrayMenuManager.svelte';
 export { default as ToastManager } from './ToastManager.svelte';
+export { default as PrintManager } from './PrintManager.svelte';
