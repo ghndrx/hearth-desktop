@@ -412,6 +412,16 @@ fn main() {
             badge::request_attention,
             badge::is_badge_supported,
             badge::get_badge_count,
+            // Window Manager commands
+            commands::get_monitors,
+            commands::get_always_on_top,
+            commands::minimize_to_tray,
+            commands::set_window_size,
+            commands::set_window_position,
+            commands::center_window,
+            commands::toggle_decorations,
+            commands::request_user_attention,
+            commands::clear_user_attention,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
