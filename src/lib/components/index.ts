@@ -151,3 +151,4 @@ export { default as DesktopIntegration } from './DesktopIntegration.svelte';
 export { default as FocusTimer } from './FocusTimer.svelte';
 export { default as ScreenDimmingManager } from './ScreenDimmingManager.svelte';
 export { default as MultiMonitorManager } from './MultiMonitorManager.svelte';
+export { default as LocaleManager } from './LocaleManager.svelte';
