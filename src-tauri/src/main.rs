@@ -25,6 +25,7 @@ mod taskbar;
 mod theme;
 mod storage;
 mod tray;
+mod tts;
 mod updater;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
@@ -520,6 +521,19 @@ fn main() {
             backup::run_scheduled_backup,
             backup::get_app_version,
             backup::get_platform,
+            // Text-to-Speech commands
+            tts::tts_init,
+            tts::tts_get_voices,
+            tts::tts_get_settings,
+            tts::tts_set_settings,
+            tts::tts_speak,
+            tts::tts_stop,
+            tts::tts_pause,
+            tts::tts_resume,
+            tts::tts_get_status,
+            tts::tts_skip,
+            tts::tts_remove_from_queue,
+            tts::tts_get_queue,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

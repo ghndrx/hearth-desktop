@@ -153,3 +153,5 @@ export { default as ScreenDimmingManager } from './ScreenDimmingManager.svelte';
 export { default as MultiMonitorManager } from './MultiMonitorManager.svelte';
 export { default as LocaleManager } from './LocaleManager.svelte';
 export { default as BackupManager } from './BackupManager.svelte';
+export { default as TTSManager } from './TTSManager.svelte';
+export { default as WindowArrangement } from './WindowArrangement.svelte';
