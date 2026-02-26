@@ -3,6 +3,7 @@
 
 mod activity;
 mod audio;
+mod badge;
 mod clipboard;
 mod commands;
 mod deeplink;
@@ -404,6 +405,13 @@ fn main() {
             sysinfo::get_cpu_info,
             sysinfo::get_memory_info,
             sysinfo::get_runtime_info,
+            // Badge commands
+            badge::set_badge_count,
+            badge::clear_badge,
+            badge::set_badge_muted,
+            badge::request_attention,
+            badge::is_badge_supported,
+            badge::get_badge_count,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
