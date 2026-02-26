@@ -137,3 +137,4 @@ export { default as WhatsNewModal } from './WhatsNewModal.svelte';
 export { default as KeyboardShortcutsModal } from './KeyboardShortcutsModal.svelte';
 export { default as WindowBehaviorSettings } from './WindowBehaviorSettings.svelte';
 export { default as TrayMenuManager } from './TrayMenuManager.svelte';
+export { default as ToastManager } from './ToastManager.svelte';
