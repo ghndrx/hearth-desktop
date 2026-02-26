@@ -40,3 +40,5 @@ This file tracks pending tasks and improvements for the Hearth Desktop applicati
 - [x] Mini Mode / Picture-in-Picture - compact floating window with corner positioning (Feb 25, 2026)
 - [x] Session Manager - view, filter, search, and switch between chat sessions (Feb 25, 2026)
 - [x] Badge Manager - dock/taskbar badge for unread counts, cross-platform support (Feb 26, 2026)
+- [x] Quick Notes - floating notes panel with persistent storage, color coding, search, and pinning (Feb 26, 2026)
+- [x] Screen Record Manager - native screen recording with region selection, quality settings, and countdown (Feb 26, 2026)
