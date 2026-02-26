@@ -136,6 +136,7 @@ export { default as BadgeManager } from './BadgeManager.svelte';
 export { default as DeepLinkHandler } from './DeepLinkHandler.svelte';
 export { default as ClipboardManager } from './ClipboardManager.svelte';
 export { default as ReadReceiptIndicator } from './ReadReceiptIndicator.svelte';
+export { default as RecentFilesManager } from './RecentFilesManager.svelte';
 export { default as WhatsNewModal } from './WhatsNewModal.svelte';
 export { default as KeyboardShortcutsModal } from './KeyboardShortcutsModal.svelte';
 export { default as WindowBehaviorSettings } from './WindowBehaviorSettings.svelte';
