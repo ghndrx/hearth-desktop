@@ -1,6 +1,7 @@
 // Prevents additional console window on Windows in release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod accessibility;
 mod activity;
 mod audio;
 mod badge;
@@ -497,6 +498,10 @@ fn main() {
             storage::clear_storage,
             storage::get_storage_path,
             storage::open_storage_location,
+            // Accessibility commands
+            accessibility::get_accessibility_settings,
+            accessibility::save_accessibility_settings,
+            accessibility::get_system_accessibility_state,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
