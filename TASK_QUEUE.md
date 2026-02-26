@@ -43,3 +43,4 @@ This file tracks pending tasks and improvements for the Hearth Desktop applicati
 - [x] Badge Manager - dock/taskbar badge for unread counts, cross-platform support (Feb 26, 2026)
 - [x] Quick Notes - floating notes panel with persistent storage, color coding, search, and pinning (Feb 26, 2026)
 - [x] Screen Record Manager - native screen recording with region selection, quality settings, and countdown (Feb 26, 2026)
+- [x] Bookmarks Manager - save, organize, tag, and search bookmarked messages with folders (Feb 26, 2026)
