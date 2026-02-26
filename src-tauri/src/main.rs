@@ -17,6 +17,7 @@ mod power;
 mod screenshot;
 mod spellcheck;
 mod sysinfo;
+mod taskbar;
 mod theme;
 mod tray;
 mod updater;
@@ -422,6 +423,14 @@ fn main() {
             commands::toggle_decorations,
             commands::request_user_attention,
             commands::clear_user_attention,
+            // Taskbar progress commands
+            taskbar::set_taskbar_progress,
+            taskbar::clear_taskbar_progress,
+            taskbar::get_taskbar_progress,
+            taskbar::start_operation,
+            taskbar::update_operation,
+            taskbar::complete_operation,
+            taskbar::get_operations,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
