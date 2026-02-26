@@ -4,6 +4,7 @@
 mod accessibility;
 mod activity;
 mod audio;
+mod backup;
 mod badge;
 mod clipboard;
 mod commands;
@@ -502,6 +503,23 @@ fn main() {
             accessibility::get_accessibility_settings,
             accessibility::save_accessibility_settings,
             accessibility::get_system_accessibility_state,
+            // Backup & Restore commands
+            backup::get_backup_history,
+            backup::get_backup_schedule,
+            backup::set_backup_schedule,
+            backup::register_backup,
+            backup::delete_backup,
+            backup::export_settings,
+            backup::import_settings,
+            backup::export_themes,
+            backup::import_themes,
+            backup::export_shortcuts,
+            backup::import_shortcuts,
+            backup::export_layouts,
+            backup::import_layouts,
+            backup::run_scheduled_backup,
+            backup::get_app_version,
+            backup::get_platform,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
