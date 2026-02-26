@@ -98,6 +98,7 @@ export { default as MemberBanModal } from './MemberBanModal.svelte';
 export { default as MemberRolesModal } from './MemberRolesModal.svelte';
 export { default as ImagePreviewModal } from './ImagePreviewModal.svelte';
 export { default as NewDMModal } from './NewDMModal.svelte';
+export { default as KeyboardShortcutsModal } from './KeyboardShortcutsModal.svelte';
 
 // Search components
 export { default as QuickSwitcher } from './QuickSwitcher.svelte';
