@@ -121,6 +121,7 @@ export { default as BatteryIndicator } from './BatteryIndicator.svelte';
 export { default as PerformanceMonitor } from './PerformanceMonitor.svelte';
 export { default as ZoomControl } from './ZoomControl.svelte';
 export { default as SystemInfoPanel } from './SystemInfoPanel.svelte';
+export { default as PowerManager } from './PowerManager.svelte';
 
 // Voice components
 export { default as VoiceCallOverlay } from './VoiceCallOverlay.svelte';
