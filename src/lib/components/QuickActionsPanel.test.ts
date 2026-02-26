@@ -1,109 +1,274 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, fireEvent } from '@testing-library/svelte';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/svelte';
 import QuickActionsPanel from './QuickActionsPanel.svelte';
-
-// Mock Tauri APIs
-vi.mock('@tauri-apps/api/core', () => ({
-  invoke: vi.fn()
-}));
-
-vi.mock('@tauri-apps/api/event', () => ({
-  listen: vi.fn(() => Promise.resolve(() => {}))
-}));
 
 describe('QuickActionsPanel', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it('renders when isOpen is true', () => {
-    const { container } = render(QuickActionsPanel, { props: { isOpen: true } });
-    expect(container.querySelector('.panel')).toBeTruthy();
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
-  it('does not render when isOpen is false', () => {
-    const { container } = render(QuickActionsPanel, { props: { isOpen: false } });
-    expect(container.querySelector('.panel')).toBeFalsy();
+  describe('rendering', () => {
+    it('should not render panel when closed', () => {
+      render(QuickActionsPanel);
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('should render panel when opened via method', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      await vi.waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+    });
+
+    it('should display search input when open', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      await vi.waitFor(() => {
+        expect(screen.getByPlaceholderText(/type a command/i)).toBeInTheDocument();
+      });
+    });
+
+    it('should display all action categories', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      await vi.waitFor(() => {
+        expect(screen.getByText('Navigation')).toBeInTheDocument();
+        expect(screen.getByText('Window')).toBeInTheDocument();
+        expect(screen.getByText('Settings')).toBeInTheDocument();
+        expect(screen.getByText('Tools')).toBeInTheDocument();
+        expect(screen.getByText('Help')).toBeInTheDocument();
+      });
+    });
   });
 
-  it('shows search input when open', () => {
-    const { container } = render(QuickActionsPanel, { props: { isOpen: true } });
-    const input = container.querySelector('.search-input');
-    expect(input).toBeTruthy();
-    expect(input?.getAttribute('placeholder')).toContain('command');
+  describe('search functionality', () => {
+    it('should filter actions based on search query', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      
+      await vi.waitFor(() => {
+        const input = screen.getByPlaceholderText(/type a command/i);
+        fireEvent.input(input, { target: { value: 'settings' } });
+      });
+
+      await vi.waitFor(() => {
+        expect(screen.getByText('Open Settings')).toBeInTheDocument();
+      });
+    });
+
+    it('should show no results message for invalid search', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      
+      await vi.waitFor(() => {
+        const input = screen.getByPlaceholderText(/type a command/i);
+        fireEvent.input(input, { target: { value: 'xyznonexistent123' } });
+      });
+
+      await vi.waitFor(() => {
+        expect(screen.getByText(/no actions found/i)).toBeInTheDocument();
+      });
+    });
   });
 
-  it('displays quick actions', () => {
-    const { container } = render(QuickActionsPanel, { props: { isOpen: true } });
-    const items = container.querySelectorAll('.item');
-    expect(items.length).toBeGreaterThan(0);
+  describe('keyboard navigation', () => {
+    it('should open panel with Ctrl+K', async () => {
+      render(QuickActionsPanel);
+      
+      fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
+      
+      await vi.waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+    });
+
+    it('should close panel with Escape', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      
+      await vi.waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      fireEvent.keyDown(window, { key: 'Escape' });
+      
+      await vi.waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should navigate down with ArrowDown', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      
+      await vi.waitFor(() => {
+        const firstItem = screen.getAllByRole('option')[0];
+        expect(firstItem).toHaveClass('selected');
+      });
+
+      fireEvent.keyDown(window, { key: 'ArrowDown' });
+      
+      await vi.waitFor(() => {
+        const secondItem = screen.getAllByRole('option')[1];
+        expect(secondItem).toHaveClass('selected');
+      });
+    });
+
+    it('should navigate up with ArrowUp', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      
+      // First navigate down
+      fireEvent.keyDown(window, { key: 'ArrowDown' });
+      fireEvent.keyDown(window, { key: 'ArrowDown' });
+      
+      // Then navigate up
+      fireEvent.keyDown(window, { key: 'ArrowUp' });
+      
+      await vi.waitFor(() => {
+        const secondItem = screen.getAllByRole('option')[1];
+        expect(secondItem).toHaveClass('selected');
+      });
+    });
   });
 
-  it('filters actions based on search query', async () => {
-    const { container, component } = render(QuickActionsPanel, { props: { isOpen: true } });
-    
-    const input = container.querySelector('.search-input') as HTMLInputElement;
-    await fireEvent.input(input, { target: { value: 'message' } });
-    
-    const items = container.querySelectorAll('.item-label');
-    const labels = Array.from(items).map(el => el.textContent?.toLowerCase());
-    expect(labels.some(l => l?.includes('message'))).toBe(true);
+  describe('action execution', () => {
+    it('should dispatch action event when item is clicked', async () => {
+      const mockHandler = vi.fn();
+      const { component } = render(QuickActionsPanel);
+      component.$on('action', mockHandler);
+      component.open();
+      
+      await vi.waitFor(() => {
+        const settingsAction = screen.getByText('Open Settings');
+        fireEvent.click(settingsAction.closest('button')!);
+      });
+
+      expect(mockHandler).toHaveBeenCalled();
+    });
+
+    it('should dispatch action event when Enter is pressed', async () => {
+      const mockHandler = vi.fn();
+      const { component } = render(QuickActionsPanel);
+      component.$on('action', mockHandler);
+      component.open();
+      
+      await vi.waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      fireEvent.keyDown(window, { key: 'Enter' });
+
+      expect(mockHandler).toHaveBeenCalled();
+    });
+
+    it('should close panel after action execution', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      
+      await vi.waitFor(() => {
+        const firstAction = screen.getAllByRole('option')[0];
+        fireEvent.click(firstAction);
+      });
+
+      await vi.waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+    });
   });
 
-  it('closes on Escape key', async () => {
-    const { component } = render(QuickActionsPanel, { props: { isOpen: true } });
-    
-    let closeCalled = false;
-    component.$on('close', () => { closeCalled = true; });
-    
-    await fireEvent.keyDown(window, { key: 'Escape' });
-    expect(closeCalled).toBe(true);
+  describe('panel controls', () => {
+    it('should toggle panel state', async () => {
+      const { component } = render(QuickActionsPanel);
+      
+      // Open
+      component.toggle();
+      await vi.waitFor(() => {
+        expect(screen.getByRole('dialog')).toBeInTheDocument();
+      });
+
+      // Close
+      component.toggle();
+      await vi.waitFor(() => {
+        expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+      });
+    });
+
+    it('should focus input when opened', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      
+      await vi.waitFor(() => {
+        const input = screen.getByPlaceholderText(/type a command/i);
+        expect(document.activeElement).toBe(input);
+      }, { timeout: 100 });
+    });
+
+    it('should clear search when closed and reopened', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      
+      await vi.waitFor(() => {
+        const input = screen.getByPlaceholderText(/type a command/i) as HTMLInputElement;
+        fireEvent.input(input, { target: { value: 'test search' } });
+        expect(input.value).toBe('test search');
+      });
+
+      component.close();
+      component.open();
+
+      await vi.waitFor(() => {
+        const input = screen.getByPlaceholderText(/type a command/i) as HTMLInputElement;
+        expect(input.value).toBe('');
+      });
+    });
   });
 
-  it('navigates with arrow keys', async () => {
-    const { container } = render(QuickActionsPanel, { props: { isOpen: true } });
-    
-    await fireEvent.keyDown(window, { key: 'ArrowDown' });
-    
-    const selectedItems = container.querySelectorAll('.item.selected');
-    expect(selectedItems.length).toBe(1);
-  });
+  describe('accessibility', () => {
+    it('should have proper ARIA attributes', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      
+      await vi.waitFor(() => {
+        const dialog = screen.getByRole('dialog');
+        expect(dialog).toHaveAttribute('aria-label', 'Quick Actions');
+      });
+    });
 
-  it('shows keyboard hints in footer', () => {
-    const { container } = render(QuickActionsPanel, { props: { isOpen: true } });
-    const footer = container.querySelector('.footer');
-    expect(footer?.textContent).toContain('Navigate');
-    expect(footer?.textContent).toContain('Select');
-    expect(footer?.textContent).toContain('Close');
-  });
+    it('should have listbox role for actions', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      
+      await vi.waitFor(() => {
+        expect(screen.getByRole('listbox')).toBeInTheDocument();
+      });
+    });
 
-  it('shows empty state when no results match', async () => {
-    const { container } = render(QuickActionsPanel, { props: { isOpen: true } });
-    
-    const input = container.querySelector('.search-input') as HTMLInputElement;
-    await fireEvent.input(input, { target: { value: 'xyznonexistent' } });
-    
-    const emptyState = container.querySelector('.empty-state');
-    expect(emptyState).toBeTruthy();
-  });
+    it('should have option role for action items', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      
+      await vi.waitFor(() => {
+        const options = screen.getAllByRole('option');
+        expect(options.length).toBeGreaterThan(0);
+      });
+    });
 
-  it('dispatches action event when item selected', async () => {
-    const { container, component } = render(QuickActionsPanel, { props: { isOpen: true } });
-    
-    let actionFired = false;
-    component.$on('action', () => { actionFired = true; });
-    
-    const firstItem = container.querySelector('.item');
-    if (firstItem) {
-      await fireEvent.click(firstItem);
-    }
-    
-    expect(actionFired).toBe(true);
-  });
-
-  it('shows shortcuts for applicable actions', () => {
-    const { container } = render(QuickActionsPanel, { props: { isOpen: true } });
-    const shortcuts = container.querySelectorAll('.item-shortcut');
-    expect(shortcuts.length).toBeGreaterThan(0);
+    it('should mark selected option with aria-selected', async () => {
+      const { component } = render(QuickActionsPanel);
+      component.open();
+      
+      await vi.waitFor(() => {
+        const selectedOption = screen.getAllByRole('option').find(
+          opt => opt.getAttribute('aria-selected') === 'true'
+        );
+        expect(selectedOption).toBeInTheDocument();
+      });
+    });
   });
 });

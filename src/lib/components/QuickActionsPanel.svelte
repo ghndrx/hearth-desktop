@@ -1,493 +1,621 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount, onDestroy, createEventDispatcher } from 'svelte';
   import { fade, fly } from 'svelte/transition';
-  import { invoke } from '@tauri-apps/api/core';
-  import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-  
-  export let isOpen = false;
-  
+
+  const dispatch = createEventDispatcher();
+
+  // Panel state
+  let isOpen = false;
+  let searchQuery = '';
+  let selectedIndex = 0;
+  let inputElement: HTMLInputElement;
+
+  // Action categories
   interface QuickAction {
     id: string;
     label: string;
+    description?: string;
     icon: string;
+    category: 'navigation' | 'window' | 'settings' | 'tools' | 'help';
     shortcut?: string;
-    action: () => void | Promise<void>;
+    action: () => void;
   }
-  
-  interface RecentChat {
-    id: string;
-    name: string;
-    avatar?: string;
-    lastMessage?: string;
-  }
-  
-  let searchQuery = '';
-  let selectedIndex = 0;
-  let searchInput: HTMLInputElement;
-  let recentChats: RecentChat[] = [];
-  let unlisteners: UnlistenFn[] = [];
-  
-  const quickActions: QuickAction[] = [
+
+  // Define all available actions
+  const allActions: QuickAction[] = [
+    // Navigation
     {
-      id: 'new-message',
-      label: 'New Message',
-      icon: '✉️',
-      shortcut: '⌘N',
-      action: () => dispatch('action', { type: 'new-message' })
+      id: 'nav-home',
+      label: 'Go to Home',
+      description: 'Navigate to the home screen',
+      icon: '🏠',
+      category: 'navigation',
+      shortcut: 'Ctrl+H',
+      action: () => dispatch('action', { type: 'navigate', target: 'home' })
     },
     {
-      id: 'search',
-      label: 'Search Messages',
-      icon: '🔍',
-      shortcut: '⌘F',
-      action: () => dispatch('action', { type: 'search' })
+      id: 'nav-sessions',
+      label: 'Open Sessions',
+      description: 'View and manage chat sessions',
+      icon: '💬',
+      category: 'navigation',
+      action: () => dispatch('action', { type: 'navigate', target: 'sessions' })
     },
     {
-      id: 'toggle-dnd',
-      label: 'Toggle Do Not Disturb',
-      icon: '🔕',
-      shortcut: '⌘D',
-      action: async () => {
-        try {
-          await invoke('toggle_dnd');
-          dispatch('action', { type: 'dnd-toggled' });
-        } catch (e) {
-          console.error('Failed to toggle DND:', e);
-        }
-      }
-    },
-    {
-      id: 'mark-all-read',
-      label: 'Mark All as Read',
-      icon: '✓',
-      shortcut: '⌘⇧R',
-      action: () => dispatch('action', { type: 'mark-all-read' })
-    },
-    {
-      id: 'settings',
+      id: 'nav-settings',
       label: 'Open Settings',
+      description: 'Configure app preferences',
       icon: '⚙️',
-      shortcut: '⌘,',
-      action: () => dispatch('action', { type: 'settings' })
+      category: 'navigation',
+      shortcut: 'Ctrl+,',
+      action: () => dispatch('action', { type: 'navigate', target: 'settings' })
+    },
+
+    // Window actions
+    {
+      id: 'window-minimize',
+      label: 'Minimize Window',
+      description: 'Minimize to system tray',
+      icon: '➖',
+      category: 'window',
+      action: () => dispatch('action', { type: 'window', command: 'minimize' })
     },
     {
-      id: 'voice-call',
-      label: 'Start Voice Call',
-      icon: '📞',
-      action: () => dispatch('action', { type: 'voice-call' })
+      id: 'window-maximize',
+      label: 'Toggle Maximize',
+      description: 'Maximize or restore window',
+      icon: '⬜',
+      category: 'window',
+      action: () => dispatch('action', { type: 'window', command: 'maximize' })
     },
     {
-      id: 'share-screen',
-      label: 'Share Screen',
-      icon: '🖥️',
-      action: () => dispatch('action', { type: 'share-screen' })
+      id: 'window-minimode',
+      label: 'Toggle Mini Mode',
+      description: 'Switch to compact floating window',
+      icon: '📌',
+      category: 'window',
+      shortcut: 'Ctrl+M',
+      action: () => dispatch('action', { type: 'window', command: 'minimode' })
     },
     {
-      id: 'upload-file',
-      label: 'Upload File',
-      icon: '📎',
-      shortcut: '⌘U',
-      action: () => dispatch('action', { type: 'upload-file' })
+      id: 'window-fullscreen',
+      label: 'Toggle Fullscreen',
+      description: 'Enter or exit fullscreen mode',
+      icon: '📺',
+      category: 'window',
+      shortcut: 'F11',
+      action: () => dispatch('action', { type: 'window', command: 'fullscreen' })
+    },
+    {
+      id: 'window-snap-left',
+      label: 'Snap Window Left',
+      description: 'Snap window to left half of screen',
+      icon: '⬅️',
+      category: 'window',
+      action: () => dispatch('action', { type: 'window', command: 'snap-left' })
+    },
+    {
+      id: 'window-snap-right',
+      label: 'Snap Window Right',
+      description: 'Snap window to right half of screen',
+      icon: '➡️',
+      category: 'window',
+      action: () => dispatch('action', { type: 'window', command: 'snap-right' })
+    },
+
+    // Tools
+    {
+      id: 'tools-notes',
+      label: 'Open Quick Notes',
+      description: 'Open floating notes panel',
+      icon: '📝',
+      category: 'tools',
+      shortcut: 'Ctrl+N',
+      action: () => dispatch('action', { type: 'tools', command: 'notes' })
+    },
+    {
+      id: 'tools-record',
+      label: 'Start Screen Recording',
+      description: 'Record screen or window',
+      icon: '🔴',
+      category: 'tools',
+      action: () => dispatch('action', { type: 'tools', command: 'record' })
+    },
+    {
+      id: 'tools-print',
+      label: 'Print Chat',
+      description: 'Print or export current chat',
+      icon: '🖨️',
+      category: 'tools',
+      shortcut: 'Ctrl+P',
+      action: () => dispatch('action', { type: 'tools', command: 'print' })
+    },
+    {
+      id: 'tools-search',
+      label: 'Search Messages',
+      description: 'Search through chat history',
+      icon: '🔍',
+      category: 'tools',
+      shortcut: 'Ctrl+F',
+      action: () => dispatch('action', { type: 'tools', command: 'search' })
+    },
+    {
+      id: 'tools-clear-cache',
+      label: 'Clear Cache',
+      description: 'Clear app cache and temporary data',
+      icon: '🧹',
+      category: 'tools',
+      action: () => dispatch('action', { type: 'tools', command: 'clear-cache' })
+    },
+
+    // Settings shortcuts
+    {
+      id: 'settings-theme',
+      label: 'Toggle Dark Mode',
+      description: 'Switch between light and dark theme',
+      icon: '🌙',
+      category: 'settings',
+      shortcut: 'Ctrl+Shift+T',
+      action: () => dispatch('action', { type: 'settings', command: 'toggle-theme' })
+    },
+    {
+      id: 'settings-notifications',
+      label: 'Toggle Notifications',
+      description: 'Enable or disable notifications',
+      icon: '🔔',
+      category: 'settings',
+      action: () => dispatch('action', { type: 'settings', command: 'toggle-notifications' })
+    },
+    {
+      id: 'settings-sounds',
+      label: 'Toggle Sounds',
+      description: 'Enable or disable sound alerts',
+      icon: '🔊',
+      category: 'settings',
+      action: () => dispatch('action', { type: 'settings', command: 'toggle-sounds' })
+    },
+    {
+      id: 'settings-focus',
+      label: 'Toggle Focus Mode',
+      description: 'Enter distraction-free mode',
+      icon: '🎯',
+      category: 'settings',
+      shortcut: 'Ctrl+Shift+F',
+      action: () => dispatch('action', { type: 'settings', command: 'focus-mode' })
+    },
+
+    // Help
+    {
+      id: 'help-shortcuts',
+      label: 'Keyboard Shortcuts',
+      description: 'View all keyboard shortcuts',
+      icon: '⌨️',
+      category: 'help',
+      shortcut: 'Ctrl+/',
+      action: () => dispatch('action', { type: 'help', command: 'shortcuts' })
+    },
+    {
+      id: 'help-docs',
+      label: 'View Documentation',
+      description: 'Open Hearth documentation',
+      icon: '📚',
+      category: 'help',
+      action: () => dispatch('action', { type: 'help', command: 'docs' })
+    },
+    {
+      id: 'help-about',
+      label: 'About Hearth',
+      description: 'View version and app info',
+      icon: 'ℹ️',
+      category: 'help',
+      action: () => dispatch('action', { type: 'help', command: 'about' })
+    },
+    {
+      id: 'help-updates',
+      label: 'Check for Updates',
+      description: 'Check if updates are available',
+      icon: '🔄',
+      category: 'help',
+      action: () => dispatch('action', { type: 'help', command: 'updates' })
     }
   ];
-  
-  import { createEventDispatcher } from 'svelte';
-  const dispatch = createEventDispatcher();
-  
-  $: filteredActions = searchQuery
-    ? quickActions.filter(a => 
-        a.label.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : quickActions;
-  
-  $: filteredChats = searchQuery
-    ? recentChats.filter(c =>
-        c.name.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    : recentChats.slice(0, 5);
-  
-  $: allItems = [...filteredActions.map(a => ({ type: 'action' as const, data: a })), 
-                  ...filteredChats.map(c => ({ type: 'chat' as const, data: c }))];
-  
-  $: if (selectedIndex >= allItems.length) {
-    selectedIndex = Math.max(0, allItems.length - 1);
+
+  // Filter actions based on search query
+  $: filteredActions = searchQuery.trim() === ''
+    ? allActions
+    : allActions.filter(action => {
+        const query = searchQuery.toLowerCase();
+        return (
+          action.label.toLowerCase().includes(query) ||
+          action.description?.toLowerCase().includes(query) ||
+          action.category.toLowerCase().includes(query)
+        );
+      });
+
+  // Group actions by category
+  $: groupedActions = filteredActions.reduce((groups, action) => {
+    if (!groups[action.category]) {
+      groups[action.category] = [];
+    }
+    groups[action.category].push(action);
+    return groups;
+  }, {} as Record<string, QuickAction[]>);
+
+  // Get flat list for keyboard navigation
+  $: flatActions = filteredActions;
+
+  // Reset selection when filtered actions change
+  $: if (filteredActions) {
+    selectedIndex = Math.min(selectedIndex, filteredActions.length - 1);
+    if (selectedIndex < 0) selectedIndex = 0;
   }
-  
+
+  // Category labels
+  const categoryLabels: Record<string, string> = {
+    navigation: 'Navigation',
+    window: 'Window',
+    settings: 'Settings',
+    tools: 'Tools',
+    help: 'Help'
+  };
+
+  // Open the panel
+  export function open() {
+    isOpen = true;
+    searchQuery = '';
+    selectedIndex = 0;
+    setTimeout(() => inputElement?.focus(), 50);
+  }
+
+  // Close the panel
+  export function close() {
+    isOpen = false;
+    searchQuery = '';
+  }
+
+  // Toggle the panel
+  export function toggle() {
+    if (isOpen) {
+      close();
+    } else {
+      open();
+    }
+  }
+
+  // Execute selected action
+  function executeAction(action: QuickAction) {
+    action.action();
+    close();
+  }
+
+  // Handle keyboard navigation
   function handleKeydown(event: KeyboardEvent) {
-    if (!isOpen) return;
-    
+    if (!isOpen) {
+      // Global shortcut to open: Ctrl/Cmd + K
+      if ((event.ctrlKey || event.metaKey) && event.key === 'k') {
+        event.preventDefault();
+        open();
+      }
+      return;
+    }
+
     switch (event.key) {
-      case 'ArrowDown':
-        event.preventDefault();
-        selectedIndex = Math.min(selectedIndex + 1, allItems.length - 1);
-        break;
-      case 'ArrowUp':
-        event.preventDefault();
-        selectedIndex = Math.max(selectedIndex - 1, 0);
-        break;
-      case 'Enter':
-        event.preventDefault();
-        executeSelected();
-        break;
       case 'Escape':
         event.preventDefault();
         close();
         break;
+
+      case 'ArrowDown':
+        event.preventDefault();
+        selectedIndex = Math.min(selectedIndex + 1, flatActions.length - 1);
+        scrollToSelected();
+        break;
+
+      case 'ArrowUp':
+        event.preventDefault();
+        selectedIndex = Math.max(selectedIndex - 1, 0);
+        scrollToSelected();
+        break;
+
+      case 'Enter':
+        event.preventDefault();
+        if (flatActions[selectedIndex]) {
+          executeAction(flatActions[selectedIndex]);
+        }
+        break;
+
+      case 'Tab':
+        event.preventDefault();
+        if (event.shiftKey) {
+          selectedIndex = Math.max(selectedIndex - 1, 0);
+        } else {
+          selectedIndex = Math.min(selectedIndex + 1, flatActions.length - 1);
+        }
+        scrollToSelected();
+        break;
     }
   }
-  
-  function executeSelected() {
-    const item = allItems[selectedIndex];
-    if (!item) return;
-    
-    if (item.type === 'action') {
-      item.data.action();
-    } else {
-      dispatch('action', { type: 'open-chat', chatId: item.data.id });
-    }
-    close();
+
+  // Scroll to keep selected item visible
+  function scrollToSelected() {
+    const selected = document.querySelector('.quick-action-item.selected');
+    selected?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   }
-  
-  function close() {
-    isOpen = false;
-    searchQuery = '';
-    selectedIndex = 0;
-    dispatch('close');
-  }
-  
-  function handleBackdropClick(event: MouseEvent) {
-    if (event.target === event.currentTarget) {
+
+  // Click outside to close
+  function handleClickOutside(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    if (isOpen && !target.closest('.quick-actions-panel')) {
       close();
     }
   }
-  
-  async function loadRecentChats() {
-    try {
-      // This would be replaced with actual API call
-      recentChats = [
-        { id: '1', name: 'General', lastMessage: 'Hey everyone!' },
-        { id: '2', name: 'Team Updates', lastMessage: 'New release coming...' },
-        { id: '3', name: 'Random', lastMessage: 'Anyone seen the...' }
-      ];
-    } catch (e) {
-      console.error('Failed to load recent chats:', e);
-    }
-  }
-  
-  onMount(async () => {
-    await loadRecentChats();
-    
-    // Listen for tray quick action trigger
-    const unlisten = await listen('quick-actions-open', () => {
-      isOpen = true;
-    });
-    unlisteners.push(unlisten);
+
+  onMount(() => {
+    window.addEventListener('keydown', handleKeydown);
+    window.addEventListener('click', handleClickOutside);
   });
-  
+
   onDestroy(() => {
-    unlisteners.forEach(fn => fn());
+    window.removeEventListener('keydown', handleKeydown);
+    window.removeEventListener('click', handleClickOutside);
   });
-  
-  $: if (isOpen && searchInput) {
-    setTimeout(() => searchInput?.focus(), 50);
-  }
 </script>
 
-<svelte:window on:keydown={handleKeydown} />
-
 {#if isOpen}
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div 
-    class="backdrop"
-    on:click={handleBackdropClick}
-    transition:fade={{ duration: 150 }}
-  >
+  <div class="quick-actions-overlay" transition:fade={{ duration: 150 }}>
     <div 
-      class="panel"
+      class="quick-actions-panel"
       transition:fly={{ y: -20, duration: 200 }}
+      role="dialog"
+      aria-label="Quick Actions"
     >
+      <!-- Search input -->
       <div class="search-container">
         <span class="search-icon">🔍</span>
         <input
-          bind:this={searchInput}
+          bind:this={inputElement}
           bind:value={searchQuery}
           type="text"
           placeholder="Type a command or search..."
           class="search-input"
+          aria-label="Search actions"
+          autocomplete="off"
+          spellcheck="false"
         />
         <kbd class="escape-hint">ESC</kbd>
       </div>
-      
-      <div class="results">
-        {#if filteredActions.length > 0}
-          <div class="section">
-            <div class="section-header">Quick Actions</div>
-            {#each filteredActions as action, i}
-              <!-- svelte-ignore a11y-click-events-have-key-events -->
-              <!-- svelte-ignore a11y-no-static-element-interactions -->
-              <div 
-                class="item"
-                class:selected={selectedIndex === i}
-                on:click={() => { selectedIndex = i; executeSelected(); }}
-                on:mouseenter={() => selectedIndex = i}
-              >
-                <span class="item-icon">{action.icon}</span>
-                <span class="item-label">{action.label}</span>
-                {#if action.shortcut}
-                  <kbd class="item-shortcut">{action.shortcut}</kbd>
-                {/if}
-              </div>
-            {/each}
+
+      <!-- Actions list -->
+      <div class="actions-list" role="listbox">
+        {#if flatActions.length === 0}
+          <div class="no-results">
+            <span class="no-results-icon">🔍</span>
+            <p>No actions found for "{searchQuery}"</p>
           </div>
-        {/if}
-        
-        {#if filteredChats.length > 0}
-          <div class="section">
-            <div class="section-header">Recent Chats</div>
-            {#each filteredChats as chat, i}
-              {@const itemIndex = filteredActions.length + i}
-              <!-- svelte-ignore a11y-click-events-have-key-events -->
-              <!-- svelte-ignore a11y-no-static-element-interactions -->
-              <div 
-                class="item"
-                class:selected={selectedIndex === itemIndex}
-                on:click={() => { selectedIndex = itemIndex; executeSelected(); }}
-                on:mouseenter={() => selectedIndex = itemIndex}
-              >
-                <span class="item-avatar">
-                  {#if chat.avatar}
-                    <img src={chat.avatar} alt={chat.name} />
-                  {:else}
-                    <span class="avatar-placeholder">{chat.name[0]}</span>
+        {:else}
+          {#each Object.entries(groupedActions) as [category, actions], categoryIndex}
+            <div class="category-group">
+              <div class="category-label">{categoryLabels[category] || category}</div>
+              {#each actions as action, actionIndex}
+                {@const globalIndex = flatActions.findIndex(a => a.id === action.id)}
+                <button
+                  class="quick-action-item"
+                  class:selected={globalIndex === selectedIndex}
+                  role="option"
+                  aria-selected={globalIndex === selectedIndex}
+                  on:click={() => executeAction(action)}
+                  on:mouseenter={() => selectedIndex = globalIndex}
+                >
+                  <span class="action-icon">{action.icon}</span>
+                  <div class="action-content">
+                    <span class="action-label">{action.label}</span>
+                    {#if action.description}
+                      <span class="action-description">{action.description}</span>
+                    {/if}
+                  </div>
+                  {#if action.shortcut}
+                    <kbd class="action-shortcut">{action.shortcut}</kbd>
                   {/if}
-                </span>
-                <div class="item-content">
-                  <span class="item-label">{chat.name}</span>
-                  {#if chat.lastMessage}
-                    <span class="item-preview">{chat.lastMessage}</span>
-                  {/if}
-                </div>
-              </div>
-            {/each}
-          </div>
-        {/if}
-        
-        {#if allItems.length === 0}
-          <div class="empty-state">
-            <span class="empty-icon">🔍</span>
-            <span class="empty-text">No results found</span>
-          </div>
+                </button>
+              {/each}
+            </div>
+          {/each}
         {/if}
       </div>
-      
-      <div class="footer">
-        <span class="hint"><kbd>↑↓</kbd> Navigate</span>
-        <span class="hint"><kbd>↵</kbd> Select</span>
-        <span class="hint"><kbd>ESC</kbd> Close</span>
+
+      <!-- Footer hint -->
+      <div class="panel-footer">
+        <span class="hint">
+          <kbd>↑</kbd><kbd>↓</kbd> to navigate
+          <kbd>↵</kbd> to select
+          <kbd>esc</kbd> to close
+        </span>
       </div>
     </div>
   </div>
 {/if}
 
 <style>
-  .backdrop {
+  .quick-actions-overlay {
     position: fixed;
     inset: 0;
     background: rgba(0, 0, 0, 0.5);
     display: flex;
-    align-items: flex-start;
     justify-content: center;
     padding-top: 15vh;
     z-index: 9999;
-    backdrop-filter: blur(4px);
   }
-  
-  .panel {
+
+  .quick-actions-panel {
     width: 100%;
     max-width: 560px;
-    background: var(--bg-primary, #1e1e1e);
+    max-height: 70vh;
+    background: var(--panel-bg, #1e1e2e);
     border-radius: 12px;
-    box-shadow: 0 24px 48px rgba(0, 0, 0, 0.4);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    display: flex;
+    flex-direction: column;
     overflow: hidden;
-    border: 1px solid var(--border-color, #333);
+    border: 1px solid var(--border-color, #313244);
   }
-  
+
   .search-container {
     display: flex;
     align-items: center;
     padding: 16px;
-    border-bottom: 1px solid var(--border-color, #333);
+    border-bottom: 1px solid var(--border-color, #313244);
     gap: 12px;
   }
-  
+
   .search-icon {
     font-size: 18px;
     opacity: 0.6;
   }
-  
+
   .search-input {
     flex: 1;
     background: transparent;
     border: none;
     outline: none;
     font-size: 16px;
-    color: var(--text-primary, #fff);
+    color: var(--text-color, #cdd6f4);
   }
-  
+
   .search-input::placeholder {
-    color: var(--text-muted, #888);
+    color: var(--text-muted, #6c7086);
   }
-  
+
   .escape-hint {
     padding: 4px 8px;
-    background: var(--bg-secondary, #2a2a2a);
+    background: var(--kbd-bg, #313244);
     border-radius: 4px;
     font-size: 11px;
-    color: var(--text-muted, #888);
+    color: var(--text-muted, #6c7086);
   }
-  
-  .results {
-    max-height: 400px;
+
+  .actions-list {
+    flex: 1;
     overflow-y: auto;
+    padding: 8px;
   }
-  
-  .section {
-    padding: 8px 0;
+
+  .category-group {
+    margin-bottom: 8px;
   }
-  
-  .section-header {
-    padding: 8px 16px;
+
+  .category-label {
+    padding: 8px 12px 4px;
     font-size: 11px;
     font-weight: 600;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-muted, #888);
+    color: var(--text-muted, #6c7086);
+    letter-spacing: 0.05em;
   }
-  
-  .item {
+
+  .quick-action-item {
+    width: 100%;
     display: flex;
     align-items: center;
-    padding: 10px 16px;
-    cursor: pointer;
     gap: 12px;
-    transition: background 0.1s;
+    padding: 10px 12px;
+    border: none;
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    text-align: left;
+    transition: background-color 0.1s ease;
   }
-  
-  .item:hover,
-  .item.selected {
-    background: var(--bg-hover, #2a2a2a);
+
+  .quick-action-item:hover,
+  .quick-action-item.selected {
+    background: var(--hover-bg, #313244);
   }
-  
-  .item.selected {
-    background: var(--accent-color, #5865f2);
-  }
-  
-  .item-icon {
-    font-size: 18px;
-    width: 24px;
+
+  .action-icon {
+    font-size: 20px;
+    width: 32px;
     text-align: center;
   }
-  
-  .item-avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    overflow: hidden;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: var(--bg-secondary, #2a2a2a);
-  }
-  
-  .item-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-  
-  .avatar-placeholder {
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--text-primary, #fff);
-  }
-  
-  .item-content {
+
+  .action-content {
     flex: 1;
     display: flex;
     flex-direction: column;
     gap: 2px;
-    min-width: 0;
   }
-  
-  .item-label {
-    flex: 1;
+
+  .action-label {
     font-size: 14px;
-    color: var(--text-primary, #fff);
+    font-weight: 500;
+    color: var(--text-color, #cdd6f4);
   }
-  
-  .item-preview {
+
+  .action-description {
     font-size: 12px;
-    color: var(--text-muted, #888);
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    color: var(--text-muted, #6c7086);
   }
-  
-  .item-shortcut {
+
+  .action-shortcut {
     padding: 4px 8px;
-    background: var(--bg-secondary, #2a2a2a);
+    background: var(--kbd-bg, #313244);
     border-radius: 4px;
     font-size: 11px;
-    color: var(--text-muted, #888);
+    color: var(--text-muted, #6c7086);
+    font-family: monospace;
   }
-  
-  .selected .item-shortcut {
-    background: rgba(255, 255, 255, 0.2);
-    color: var(--text-primary, #fff);
-  }
-  
-  .empty-state {
+
+  .no-results {
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 48px;
-    gap: 12px;
+    padding: 32px;
+    color: var(--text-muted, #6c7086);
+    gap: 8px;
   }
-  
-  .empty-icon {
+
+  .no-results-icon {
     font-size: 32px;
     opacity: 0.5;
   }
-  
-  .empty-text {
-    color: var(--text-muted, #888);
-    font-size: 14px;
-  }
-  
-  .footer {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 24px;
+
+  .panel-footer {
     padding: 12px 16px;
-    border-top: 1px solid var(--border-color, #333);
-    background: var(--bg-secondary, #1a1a1a);
+    border-top: 1px solid var(--border-color, #313244);
+    background: var(--footer-bg, #181825);
   }
-  
+
   .hint {
     display: flex;
     align-items: center;
-    gap: 6px;
+    gap: 8px;
     font-size: 12px;
-    color: var(--text-muted, #888);
+    color: var(--text-muted, #6c7086);
   }
-  
+
   .hint kbd {
     padding: 2px 6px;
-    background: var(--bg-primary, #2a2a2a);
+    background: var(--kbd-bg, #313244);
     border-radius: 4px;
     font-size: 10px;
+    font-family: monospace;
+  }
+
+  /* Scrollbar styling */
+  .actions-list::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .actions-list::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .actions-list::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb, #45475a);
+    border-radius: 3px;
+  }
+
+  .actions-list::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover, #585b70);
   }
 </style>

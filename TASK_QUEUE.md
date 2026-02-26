@@ -25,6 +25,7 @@ This file tracks pending tasks and improvements for the Hearth Desktop applicati
 
 ## Completed
 
+- [x] Quick Actions Panel - command palette with Ctrl+K, categorized actions, search, keyboard nav (Feb 26, 2026)
 - [x] Initial project setup
 - [x] System tray with context menu (show/hide, mute, focus mode, updates, quit)
 - [x] Global keyboard shortcuts (Cmd/Ctrl+Shift+H/S/M/F)
