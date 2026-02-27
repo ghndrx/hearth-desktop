@@ -41,6 +41,7 @@ export { default as MentionsPanel } from './MentionsPanel.svelte';
 export { default as MediaPlayer } from './MediaPlayer.svelte';
 export { default as MediaSessionManager } from './MediaSessionManager.svelte';
 export { default as FileUploadZone } from './FileUploadZone.svelte';
+export { default as FileQuickPreview } from './FileQuickPreview.svelte';
 export { default as NativeFileDrop } from './NativeFileDrop.svelte';
 export { default as NativeNotificationManager } from './NativeNotificationManager.svelte';
 export { default as UploadProgress } from './UploadProgress.svelte';
