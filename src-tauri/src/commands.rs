@@ -1278,3 +1278,116 @@ pub fn get_cursor_position() -> Result<CursorPosition, String> {
         Err("Cursor position not supported on this platform".to_string())
     }
 }
+
+/// Check if screen sharing is active (for streamer mode auto-detection)
+#[tauri::command]
+pub fn check_screen_sharing() -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        // On macOS, check for screen recording using SCStream API indicators
+        use std::process::Command;
+        
+        // Check for common screen sharing/recording processes
+        let output = Command::new("pgrep")
+            .args(["-x", "ScreenCaptureKit|screencaptureui|QuickTime Player|OBS|Zoom|Google Chrome Helper \\(GPU\\)|zoom.us"])
+            .output();
+        
+        if let Ok(output) = output {
+            if output.status.success() && !output.stdout.is_empty() {
+                return true;
+            }
+        }
+        
+        // Check if screen recording permission is being actively used
+        let script = r#"
+            tell application "System Events"
+                set screenRecordingApps to {}
+                try
+                    set runningApps to name of every process whose background only is false
+                    repeat with appName in runningApps
+                        if appName contains "OBS" or appName contains "Zoom" or appName contains "Discord" or appName contains "Teams" or appName contains "Loom" then
+                            return true
+                        end if
+                    end repeat
+                end try
+            end tell
+            return false
+        "#;
+        
+        let output = Command::new("osascript")
+            .args(["-e", script])
+            .output();
+        
+        if let Ok(output) = output {
+            let stdout = String::from_utf8_lossy(&output.stdout).trim().to_lowercase();
+            if stdout == "true" {
+                return true;
+            }
+        }
+        
+        false
+    }
+    
+    #[cfg(target_os = "linux")]
+    {
+        use std::process::Command;
+        
+        // Check for common screen sharing processes on Linux
+        let processes = ["obs", "simplescreenrecorder", "kazam", "peek", "recordmydesktop"];
+        
+        for process in &processes {
+            let output = Command::new("pgrep")
+                .args(["-x", process])
+                .output();
+            
+            if let Ok(output) = output {
+                if output.status.success() && !output.stdout.is_empty() {
+                    return true;
+                }
+            }
+        }
+        
+        // Check for PipeWire screen cast sessions
+        let output = Command::new("busctl")
+            .args(["--user", "introspect", "org.freedesktop.portal.Desktop", 
+                   "/org/freedesktop/portal/desktop", "org.freedesktop.portal.ScreenCast"])
+            .output();
+        
+        if let Ok(output) = output {
+            let stdout = String::from_utf8_lossy(&output.stdout);
+            if stdout.contains("active") {
+                return true;
+            }
+        }
+        
+        false
+    }
+    
+    #[cfg(target_os = "windows")]
+    {
+        use std::process::Command;
+        
+        // Check for common screen sharing processes on Windows
+        let output = Command::new("tasklist")
+            .output();
+        
+        if let Ok(output) = output {
+            let stdout = String::from_utf8_lossy(&output.stdout).to_lowercase();
+            let streaming_apps = ["obs64.exe", "obs32.exe", "streamlabs", "xsplit", 
+                                  "nvcontainer.exe", "zoom.exe", "teams.exe"];
+            
+            for app in &streaming_apps {
+                if stdout.contains(app) {
+                    return true;
+                }
+            }
+        }
+        
+        false
+    }
+    
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        false
+    }
+}

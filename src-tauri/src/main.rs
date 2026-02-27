@@ -15,6 +15,7 @@ mod filedrop;
 mod globalshortcut;
 mod mediasession;
 mod menu;
+mod notification_center;
 mod performance;
 mod power;
 mod privacy;
@@ -310,6 +311,9 @@ fn main() {
             // Initialize window tabs state
             app.manage(tabs::init_tabs_state(app.handle()));
 
+            // Initialize notification center state
+            app.manage(notification_center::NotificationCenterState::default());
+
             // Load custom spell check dictionary
             spellcheck::load_custom_dictionary(app.handle());
 
@@ -399,6 +403,18 @@ fn main() {
             dnd::check_notification_allowed,
             dnd::get_dnd_presets,
             dnd::apply_dnd_preset,
+            // Notification Center commands
+            notification_center::send_notification,
+            notification_center::schedule_notification,
+            notification_center::cancel_scheduled_notification,
+            notification_center::get_scheduled_notifications,
+            notification_center::get_notification_history,
+            notification_center::mark_notification_read,
+            notification_center::mark_all_notifications_read,
+            notification_center::clear_notification_history,
+            notification_center::get_unread_notification_count,
+            notification_center::set_notification_dnd,
+            notification_center::get_grouped_notifications,
             // System theme commands
             theme::get_system_theme,
             theme::get_theme_info,
