@@ -60,3 +60,4 @@ export { mentions, unreadMentions, unreadMentionCount, mentionsByChannel, mentio
 export { digest, digestEnabled, digestFrequency, digestPendingCount, digestLoading, formatDigestFrequency, formatDigestStatus, getNextDigestText } from './digest';
 export { windowBehavior, minimizeToTray, closeToTray, startMinimized, alwaysOnTop, rememberWindowState, showInTaskbar, singleClickTrayToggle, type WindowBehaviorSettings } from './windowBehavior';
 export { secureKeychain, keychainAvailable, keychainLoading } from './secureKeychain';
+export { sessionTimer, elapsedFormatted, elapsedHuman, type SessionTimerState } from './sessionTimer';
