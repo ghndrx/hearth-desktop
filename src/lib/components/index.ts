@@ -158,3 +158,4 @@ export { default as TTSManager } from './TTSManager.svelte';
 export { default as WindowArrangement } from './WindowArrangement.svelte';
 export { default as ProxySettingsManager } from './ProxySettingsManager.svelte';
 export { default as SessionStatsPanel } from './SessionStatsPanel.svelte';
+export { default as LogViewer } from './LogViewer.svelte';
