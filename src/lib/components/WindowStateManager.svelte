@@ -1,41 +1,34 @@
 <script lang="ts">
 	import { onMount, onDestroy } from 'svelte';
-	import { invoke } from '@tauri-apps/api/core';
-	import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-
-	/**
-	 * WindowStateManager - Automatically saves and restores window position/size
-	 * 
-	 * Usage: Simply include <WindowStateManager /> in your root layout.
-	 * The component will:
-	 * - Restore window state on app start
-	 * - Auto-save state when window moves, resizes, or closes
-	 * - Debounce saves to prevent excessive disk writes
-	 */
-
-	interface WindowState {
-		x: number;
-		y: number;
-		width: number;
-		height: number;
-		is_maximized: boolean;
-		is_fullscreen: boolean;
-	}
-
-	// Configuration
+	import { browser } from '$app/environment';
+	import { windowState, type WindowState } from '$lib/tauri';
+	import { rememberWindowState } from '$lib/stores/windowBehavior';
+	
+	/** Debounce delay for saving window state (ms) */
 	export let saveDebounceMs: number = 500;
-	export let autoRestore: boolean = true;
-	export let autoSave: boolean = true;
-
-	// State
-	let isInitialized = false;
+	
+	/** Whether to restore window state on mount */
+	export let restoreOnMount: boolean = true;
+	
+	/** Callback when window state is restored */
+	export let onRestored: ((state: WindowState | null) => void) | undefined = undefined;
+	
+	/** Callback when window state is saved */
+	export let onSaved: ((state: WindowState) => void) | undefined = undefined;
+	
+	let mounted = false;
 	let saveTimeout: ReturnType<typeof setTimeout> | null = null;
-	let currentState: WindowState | null = null;
-	let unlisteners: UnlistenFn[] = [];
-
-	// Debounced save function
-	function scheduleSave() {
-		if (!autoSave) return;
+	let unlistenMove: (() => void) | null = null;
+	let unlistenResize: (() => void) | null = null;
+	let enabled = true;
+	
+	// Subscribe to the remember window state setting
+	const unsubscribe = rememberWindowState.subscribe((value) => {
+		enabled = value;
+	});
+	
+	function debouncedSave() {
+		if (!enabled || !mounted) return;
 		
 		if (saveTimeout) {
 			clearTimeout(saveTimeout);
@@ -43,111 +36,100 @@
 		
 		saveTimeout = setTimeout(async () => {
 			try {
-				await invoke('save_window_state');
-			} catch (err) {
-				console.warn('[WindowStateManager] Failed to save state:', err);
+				await windowState.save();
+				if (onSaved) {
+					const state = await windowState.get();
+					onSaved(state);
+				}
+			} catch (error) {
+				console.error('Failed to save window state:', error);
 			}
 		}, saveDebounceMs);
 	}
-
-	// Force immediate save (e.g., on window close)
-	async function saveNow() {
-		if (saveTimeout) {
-			clearTimeout(saveTimeout);
-			saveTimeout = null;
-		}
+	
+	async function setupListeners() {
+		if (!browser) return;
 		
 		try {
-			await invoke('save_window_state');
-		} catch (err) {
-			console.warn('[WindowStateManager] Failed to save state on close:', err);
+			unlistenMove = await windowState.onMove(() => {
+				debouncedSave();
+			});
+			
+			unlistenResize = await windowState.onResize(() => {
+				debouncedSave();
+			});
+		} catch (error) {
+			console.error('Failed to setup window state listeners:', error);
 		}
 	}
-
-	// Restore window state on mount
+	
 	async function restoreState() {
-		if (!autoRestore) {
-			isInitialized = true;
-			return;
-		}
-
-		try {
-			const restored = await invoke<boolean>('restore_window_state');
-			if (restored) {
-				console.log('[WindowStateManager] Window state restored');
-			}
-		} catch (err) {
-			console.warn('[WindowStateManager] Failed to restore state:', err);
-		}
+		if (!browser || !enabled || !restoreOnMount) return;
 		
-		isInitialized = true;
-	}
-
-	// Get current state for external use
-	export async function getState(): Promise<WindowState> {
-		return invoke<WindowState>('get_window_state');
-	}
-
-	// Manually trigger a save
-	export async function save(): Promise<void> {
-		await saveNow();
-	}
-
-	// Clear saved state
-	export async function clear(): Promise<void> {
 		try {
-			await invoke('clear_window_state');
-			console.log('[WindowStateManager] Window state cleared');
-		} catch (err) {
-			console.warn('[WindowStateManager] Failed to clear state:', err);
+			const restored = await windowState.restore();
+			if (onRestored) {
+				const state = restored ? windowState.load() : null;
+				onRestored(state);
+			}
+		} catch (error) {
+			console.error('Failed to restore window state:', error);
+			if (onRestored) {
+				onRestored(null);
+			}
 		}
 	}
-
+	
 	onMount(async () => {
-		// Restore state first
+		mounted = true;
+		
+		// First restore state, then setup listeners
 		await restoreState();
-
-		// Listen for window events to trigger auto-save
-		try {
-			// Window move events
-			const unlistenMove = await listen('tauri://move', () => {
-				scheduleSave();
+		await setupListeners();
+		
+		// Save state before window unload
+		if (browser) {
+			window.addEventListener('beforeunload', () => {
+				if (enabled) {
+					// Synchronous save before unload
+					const state = windowState.load();
+					if (state) {
+						localStorage.setItem('hearth_window_state', JSON.stringify(state));
+					}
+				}
 			});
-			unlisteners.push(unlistenMove);
-
-			// Window resize events
-			const unlistenResize = await listen('tauri://resize', () => {
-				scheduleSave();
-			});
-			unlisteners.push(unlistenResize);
-
-			// Window close - save immediately
-			const unlistenClose = await listen('tauri://close-requested', async () => {
-				await saveNow();
-			});
-			unlisteners.push(unlistenClose);
-
-			// Focus gained - refresh state (window might have been moved externally)
-			const unlistenFocus = await listen('tauri://focus', () => {
-				scheduleSave();
-			});
-			unlisteners.push(unlistenFocus);
-
-		} catch (err) {
-			console.warn('[WindowStateManager] Failed to set up event listeners:', err);
 		}
 	});
-
+	
 	onDestroy(() => {
-		// Clean up timeout
+		mounted = false;
+		unsubscribe();
+		
 		if (saveTimeout) {
 			clearTimeout(saveTimeout);
 		}
-
-		// Clean up listeners
-		unlisteners.forEach(unlisten => unlisten());
-		unlisteners = [];
+		
+		if (unlistenMove) {
+			unlistenMove();
+		}
+		
+		if (unlistenResize) {
+			unlistenResize();
+		}
 	});
+	
+	// Public methods exposed via bind:this
+	export function saveNow(): Promise<void> {
+		return windowState.save();
+	}
+	
+	export function clear(): void {
+		windowState.clear();
+	}
+	
+	export function getState(): Promise<WindowState> {
+		return windowState.get();
+	}
 </script>
 
-<!-- This is a headless component - no visible UI -->
+<!-- WindowStateManager is a headless component, no DOM output -->
