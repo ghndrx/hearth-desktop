@@ -1110,3 +1110,72 @@ pub async fn ping_server() -> Result<u64, String> {
         .as_millis() as u64;
     Ok(timestamp)
 }
+
+/// Fetch HTML content from a URL for metadata extraction
+/// Used by ReadingListManager to extract page title, description, and favicon
+#[tauri::command]
+pub async fn fetch_page_html(url: String) -> Result<String, String> {
+    use std::time::Duration;
+    
+    // Create HTTP client with timeout and reasonable limits
+    let client = reqwest::Client::builder()
+        .timeout(Duration::from_secs(10))
+        .user_agent("Mozilla/5.0 (compatible; HearthDesktop/1.0)")
+        .redirect(reqwest::redirect::Policy::limited(5))
+        .build()
+        .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
+    
+    // Validate URL
+    let parsed_url = reqwest::Url::parse(&url)
+        .map_err(|e| format!("Invalid URL: {}", e))?;
+    
+    // Only allow HTTP/HTTPS
+    if parsed_url.scheme() != "http" && parsed_url.scheme() != "https" {
+        return Err("Only HTTP and HTTPS URLs are supported".to_string());
+    }
+    
+    // Fetch the page
+    let response = client
+        .get(&url)
+        .send()
+        .await
+        .map_err(|e| format!("Failed to fetch URL: {}", e))?;
+    
+    // Check status
+    if !response.status().is_success() {
+        return Err(format!("HTTP error: {}", response.status()));
+    }
+    
+    // Check content type - only process HTML
+    let content_type = response
+        .headers()
+        .get("content-type")
+        .and_then(|ct| ct.to_str().ok())
+        .unwrap_or("");
+    
+    if !content_type.contains("text/html") && !content_type.contains("application/xhtml") {
+        return Err("Content is not HTML".to_string());
+    }
+    
+    // Read body with size limit (1MB max)
+    let bytes = response
+        .bytes()
+        .await
+        .map_err(|e| format!("Failed to read response: {}", e))?;
+    
+    if bytes.len() > 1_048_576 {
+        return Err("Response too large".to_string());
+    }
+    
+    // Convert to string (lossy for non-UTF8 content)
+    let html = String::from_utf8_lossy(&bytes).to_string();
+    
+    // Only return the head section to minimize data transfer
+    // This is where title, meta, and link tags are located
+    if let Some(head_end) = html.to_lowercase().find("</head>") {
+        Ok(html[..head_end + 7].to_string())
+    } else {
+        // If no </head>, return first 50KB
+        Ok(html.chars().take(51200).collect())
+    }
+}

@@ -478,6 +478,8 @@ fn main() {
             commands::toggle_decorations,
             commands::request_user_attention,
             commands::clear_user_attention,
+            // Reading list commands
+            commands::fetch_page_html,
             // Taskbar progress commands
             taskbar::set_taskbar_progress,
             taskbar::clear_taskbar_progress,
