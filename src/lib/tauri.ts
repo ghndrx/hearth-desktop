@@ -938,9 +938,187 @@ export const snooze = {
   onEnded: onSnoozeEnded,
 };
 
+// ============================================================================
+// Window State Persistence
+// ============================================================================
+
+export interface WindowState {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  isMaximized: boolean;
+  isFullscreen: boolean;
+}
+
+const WINDOW_STATE_KEY = 'hearth_window_state';
+
+/**
+ * Get current window position and size
+ */
+export async function getWindowState(): Promise<WindowState> {
+  const { getCurrentWindow, LogicalPosition, LogicalSize } = await import('@tauri-apps/api/window');
+  const win = getCurrentWindow();
+  
+  const [position, size, isMaximized, isFullscreen] = await Promise.all([
+    win.outerPosition(),
+    win.outerSize(),
+    win.isMaximized(),
+    win.isFullscreen(),
+  ]);
+  
+  return {
+    x: position.x,
+    y: position.y,
+    width: size.width,
+    height: size.height,
+    isMaximized,
+    isFullscreen,
+  };
+}
+
+/**
+ * Save window state to local storage
+ */
+export async function saveWindowState(): Promise<void> {
+  try {
+    const state = await getWindowState();
+    // Don't save state if maximized or fullscreen - we'll restore the pre-maximized state
+    if (!state.isMaximized && !state.isFullscreen) {
+      localStorage.setItem(WINDOW_STATE_KEY, JSON.stringify(state));
+    }
+  } catch (error) {
+    console.error('Failed to save window state:', error);
+  }
+}
+
+/**
+ * Load saved window state from local storage
+ */
+export function loadSavedWindowState(): WindowState | null {
+  try {
+    const stored = localStorage.getItem(WINDOW_STATE_KEY);
+    if (stored) {
+      const parsed = JSON.parse(stored);
+      // Validate the stored state
+      if (
+        typeof parsed.x === 'number' &&
+        typeof parsed.y === 'number' &&
+        typeof parsed.width === 'number' &&
+        typeof parsed.height === 'number' &&
+        parsed.width > 0 &&
+        parsed.height > 0
+      ) {
+        return {
+          x: parsed.x,
+          y: parsed.y,
+          width: parsed.width,
+          height: parsed.height,
+          isMaximized: parsed.isMaximized ?? false,
+          isFullscreen: parsed.isFullscreen ?? false,
+        };
+      }
+    }
+  } catch (error) {
+    console.error('Failed to load window state:', error);
+  }
+  return null;
+}
+
+/**
+ * Restore window to saved state
+ */
+export async function restoreWindowState(): Promise<boolean> {
+  const savedState = loadSavedWindowState();
+  if (!savedState) return false;
+  
+  try {
+    const { getCurrentWindow, LogicalPosition, LogicalSize } = await import('@tauri-apps/api/window');
+    const win = getCurrentWindow();
+    
+    // Check if the saved position is within visible screen bounds
+    const { availableMonitors, currentMonitor } = await import('@tauri-apps/api/window');
+    const monitors = await availableMonitors();
+    
+    let isOnScreen = false;
+    for (const monitor of monitors) {
+      const pos = monitor.position;
+      const size = monitor.size;
+      // Check if the window's top-left corner would be visible on this monitor
+      if (
+        savedState.x >= pos.x &&
+        savedState.x < pos.x + size.width &&
+        savedState.y >= pos.y &&
+        savedState.y < pos.y + size.height
+      ) {
+        isOnScreen = true;
+        break;
+      }
+    }
+    
+    if (!isOnScreen) {
+      console.warn('Saved window position is off-screen, not restoring position');
+      // Still restore size even if position is invalid
+      await win.setSize(new LogicalSize(savedState.width, savedState.height));
+      return true;
+    }
+    
+    // Restore position and size
+    await win.setPosition(new LogicalPosition(savedState.x, savedState.y));
+    await win.setSize(new LogicalSize(savedState.width, savedState.height));
+    
+    // Restore maximized state if it was saved
+    if (savedState.isMaximized) {
+      await win.maximize();
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Failed to restore window state:', error);
+    return false;
+  }
+}
+
+/**
+ * Clear saved window state
+ */
+export function clearWindowState(): void {
+  localStorage.removeItem(WINDOW_STATE_KEY);
+}
+
+/**
+ * Listen for window move events
+ */
+export async function onWindowMove(callback: () => void): Promise<UnlistenFn> {
+  const { getCurrentWindow } = await import('@tauri-apps/api/window');
+  const win = getCurrentWindow();
+  return win.onMoved(() => callback());
+}
+
+/**
+ * Listen for window resize events
+ */
+export async function onWindowResize(callback: () => void): Promise<UnlistenFn> {
+  const { getCurrentWindow } = await import('@tauri-apps/api/window');
+  const win = getCurrentWindow();
+  return win.onResized(() => callback());
+}
+
+// Combined window state API
+export const windowState = {
+  get: getWindowState,
+  save: saveWindowState,
+  load: loadSavedWindowState,
+  restore: restoreWindowState,
+  clear: clearWindowState,
+  onMove: onWindowMove,
+  onResize: onWindowResize,
+};
+
 // Default export
 export default {
   window,
+  windowState,
   notification,
   autoStart,
   app,
