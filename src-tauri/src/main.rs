@@ -29,6 +29,7 @@ mod tray;
 mod tts;
 mod updater;
 mod workspaceprofiles;
+mod tabs;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -306,6 +307,9 @@ fn main() {
             // Initialize clipboard state with history (max 100 entries)
             app.manage(clipboard::init_clipboard_state(100));
 
+            // Initialize window tabs state
+            app.manage(tabs::init_tabs_state(app.handle()));
+
             // Load custom spell check dictionary
             spellcheck::load_custom_dictionary(app.handle());
 
@@ -556,6 +560,23 @@ fn main() {
             snooze::unsnooze_notifications,
             snooze::get_notification_snooze_status,
             snooze::are_notifications_snoozed,
+            // Window tabs commands
+            tabs::get_window_tabs,
+            tabs::get_tab_groups,
+            tabs::get_active_tab_id,
+            tabs::save_window_tabs,
+            tabs::save_tab_groups,
+            tabs::confirm_close_tab,
+            tabs::create_window_tab,
+            tabs::close_window_tab,
+            tabs::toggle_tab_pinned,
+            tabs::set_tab_modified,
+            tabs::reorder_tabs,
+            tabs::create_tab_group,
+            tabs::add_tab_to_group,
+            tabs::remove_tab_from_groups,
+            tabs::delete_tab_group,
+            tabs::toggle_group_collapsed,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

@@ -175,3 +175,4 @@ export { default as ScreenColorPicker } from './ScreenColorPicker.svelte';
 export { default as SnoozeManager } from './SnoozeManager.svelte';
 export { default as AmbientSoundManager } from './AmbientSoundManager.svelte';
 export { default as DockBadgeManager } from './DockBadgeManager.svelte';
+export { default as WindowTabsManager } from './WindowTabsManager.svelte';
