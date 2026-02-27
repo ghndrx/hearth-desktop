@@ -1,9 +1,10 @@
 use tauri::{
-    menu::{Menu, MenuItem, PredefinedMenuItem},
+    menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Manager, Runtime, AppHandle,
 };
 use std::sync::atomic::{AtomicU32, AtomicBool, Ordering};
+use crate::snooze::{self, SnoozeDuration};
 
 /// Global unread count for tray updates
 static UNREAD_COUNT: AtomicU32 = AtomicU32::new(0);
@@ -119,6 +120,21 @@ pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::er
                         }
                     });
                 }
+                // Snooze menu items
+                "unsnooze" => {
+                    let _ = snooze::end_snooze(app);
+                    let is_muted = crate::commands::is_muted().unwrap_or(false);
+                    let focus_mode = FOCUS_MODE_ENABLED.load(Ordering::Relaxed);
+                    let _ = update_tray_menu(app, is_muted, focus_mode);
+                }
+                id if id.starts_with("snooze_") => {
+                    if let Some(duration) = SnoozeDuration::from_menu_id(id) {
+                        let _ = snooze::start_snooze(app, duration);
+                        let is_muted = crate::commands::is_muted().unwrap_or(false);
+                        let focus_mode = FOCUS_MODE_ENABLED.load(Ordering::Relaxed);
+                        let _ = update_tray_menu(app, is_muted, focus_mode);
+                    }
+                }
                 "quit" => {
                     app.exit(0);
                 }
@@ -172,6 +188,33 @@ fn create_tray_menu<R: Runtime>(
     };
     let toggle_focus_i = MenuItem::with_id(app, "toggle_focus", focus_text, true, None::<&str>)?;
     
+    // Snooze submenu
+    let snooze_status = snooze::get_snooze_status();
+    let snooze_submenu = if snooze_status.active {
+        // Show active snooze status with option to cancel
+        let remaining = snooze::get_snooze_remaining_text().unwrap_or_else(|| "Active".to_string());
+        let status_item = MenuItem::with_id(app, "snooze_status", &format!("⏸ {}", remaining), false, None::<&str>)?;
+        let unsnooze_item = MenuItem::with_id(app, "unsnooze", "End Snooze", true, None::<&str>)?;
+        
+        Submenu::with_items(app, "Snooze Notifications", true, &[&status_item, &unsnooze_item])?
+    } else {
+        // Show snooze duration options
+        let snooze_15m = MenuItem::with_id(app, "snooze_15m", "15 minutes", true, None::<&str>)?;
+        let snooze_30m = MenuItem::with_id(app, "snooze_30m", "30 minutes", true, None::<&str>)?;
+        let snooze_1h = MenuItem::with_id(app, "snooze_1h", "1 hour", true, None::<&str>)?;
+        let snooze_2h = MenuItem::with_id(app, "snooze_2h", "2 hours", true, None::<&str>)?;
+        let snooze_4h = MenuItem::with_id(app, "snooze_4h", "4 hours", true, None::<&str>)?;
+        let snooze_sep = PredefinedMenuItem::separator(app)?;
+        let snooze_tomorrow = MenuItem::with_id(app, "snooze_tomorrow", "Until tomorrow", true, None::<&str>)?;
+        
+        Submenu::with_items(
+            app,
+            "Snooze Notifications",
+            true,
+            &[&snooze_15m, &snooze_30m, &snooze_1h, &snooze_2h, &snooze_4h, &snooze_sep, &snooze_tomorrow],
+        )?
+    };
+    
     // Privacy mode toggle (boss key)
     let toggle_privacy_i = MenuItem::with_id(app, "toggle_privacy", "Privacy Mode (⇧⌘L)", true, None::<&str>)?;
     
@@ -181,7 +224,18 @@ fn create_tray_menu<R: Runtime>(
     let separator2 = PredefinedMenuItem::separator(app)?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
-    let menu = Menu::with_items(app, &[&show_i, &hide_i, &separator, &toggle_mute_i, &toggle_focus_i, &toggle_privacy_i, &check_updates_i, &separator2, &quit_i])?;
+    let menu = Menu::with_items(app, &[
+        &show_i, 
+        &hide_i, 
+        &separator, 
+        &toggle_mute_i, 
+        &toggle_focus_i, 
+        &snooze_submenu, 
+        &toggle_privacy_i, 
+        &check_updates_i, 
+        &separator2, 
+        &quit_i
+    ])?;
     Ok(menu)
 }
 

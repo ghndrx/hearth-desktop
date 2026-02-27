@@ -874,6 +874,70 @@ export const storage = {
   openLocation: openStorageLocation,
 };
 
+// ============================================================================
+// Notification Snooze Functions
+// ============================================================================
+
+export type SnoozeDuration =
+  | "fifteen_minutes"
+  | "thirty_minutes"
+  | "one_hour"
+  | "two_hours"
+  | "four_hours"
+  | "until_tomorrow"
+  | { custom: number };
+
+export interface SnoozeStatus {
+  active: boolean;
+  until_timestamp: number | null;
+  until_formatted: string | null;
+  label: string | null;
+  remaining_minutes: number | null;
+}
+
+export async function snoozeNotifications(duration: SnoozeDuration): Promise<SnoozeStatus> {
+  return invoke("snooze_notifications", { duration });
+}
+
+export async function snoozeNotificationsCustom(minutes: number): Promise<SnoozeStatus> {
+  return invoke("snooze_notifications_custom", { minutes });
+}
+
+export async function unsnoozeNotifications(): Promise<SnoozeStatus> {
+  return invoke("unsnooze_notifications");
+}
+
+export async function getSnoozeStatus(): Promise<SnoozeStatus> {
+  return invoke("get_notification_snooze_status");
+}
+
+export async function areNotificationsSnoozed(): Promise<boolean> {
+  return invoke("are_notifications_snoozed");
+}
+
+export function onSnoozeStarted(callback: (status: SnoozeStatus) => void): Promise<UnlistenFn> {
+  return listen<SnoozeStatus>("snooze-started", (event) => {
+    callback(event.payload);
+  });
+}
+
+export function onSnoozeEnded(callback: (status: SnoozeStatus) => void): Promise<UnlistenFn> {
+  return listen<SnoozeStatus>("snooze-ended", (event) => {
+    callback(event.payload);
+  });
+}
+
+// Combined snooze API
+export const snooze = {
+  start: snoozeNotifications,
+  startCustom: snoozeNotificationsCustom,
+  end: unsnoozeNotifications,
+  getStatus: getSnoozeStatus,
+  isActive: areNotificationsSnoozed,
+  onStarted: onSnoozeStarted,
+  onEnded: onSnoozeEnded,
+};
+
 // Default export
 export default {
   window,
@@ -884,6 +948,7 @@ export default {
   clipboard,
   focusMode,
   mute,
+  snooze,
   file,
   fileDrop,
   windowAttention,

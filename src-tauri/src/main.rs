@@ -19,6 +19,7 @@ mod performance;
 mod power;
 mod privacy;
 mod screenshot;
+mod snooze;
 mod spellcheck;
 mod sysinfo;
 mod taskbar;
@@ -548,6 +549,12 @@ fn main() {
             workspaceprofiles::export_workspace_profile,
             workspaceprofiles::import_workspace_profile,
             workspaceprofiles::get_workspace_profile_stats,
+            // Notification snooze commands
+            snooze::snooze_notifications,
+            snooze::snooze_notifications_custom,
+            snooze::unsnooze_notifications,
+            snooze::get_notification_snooze_status,
+            snooze::are_notifications_snoozed,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
