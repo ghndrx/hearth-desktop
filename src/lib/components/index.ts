@@ -162,3 +162,4 @@ export { default as SessionStatsPanel } from './SessionStatsPanel.svelte';
 export { default as LogViewer } from './LogViewer.svelte';
 export { default as AboutDialog } from './AboutDialog.svelte';
 export { default as ActivityTimeline } from './ActivityTimeline.svelte';
+export { default as WorkspaceProfilesManager } from './WorkspaceProfilesManager.svelte';
