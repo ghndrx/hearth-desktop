@@ -27,6 +27,7 @@ mod storage;
 mod tray;
 mod tts;
 mod updater;
+mod workspaceprofiles;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -535,6 +536,16 @@ fn main() {
             tts::tts_skip,
             tts::tts_remove_from_queue,
             tts::tts_get_queue,
+            // Workspace profiles commands
+            workspaceprofiles::load_workspace_profiles,
+            workspaceprofiles::save_workspace_profile,
+            workspaceprofiles::delete_workspace_profile,
+            workspaceprofiles::set_active_profile_id,
+            workspaceprofiles::capture_workspace_state,
+            workspaceprofiles::apply_workspace_profile,
+            workspaceprofiles::export_workspace_profile,
+            workspaceprofiles::import_workspace_profile,
+            workspaceprofiles::get_workspace_profile_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
