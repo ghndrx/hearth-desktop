@@ -159,3 +159,4 @@ export { default as WindowArrangement } from './WindowArrangement.svelte';
 export { default as ProxySettingsManager } from './ProxySettingsManager.svelte';
 export { default as SessionStatsPanel } from './SessionStatsPanel.svelte';
 export { default as LogViewer } from './LogViewer.svelte';
+export { default as AboutDialog } from './AboutDialog.svelte';
