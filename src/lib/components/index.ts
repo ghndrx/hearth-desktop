@@ -168,3 +168,5 @@ export { default as WindowTitleManager } from './WindowTitleManager.svelte';
 export { default as ReadingListManager } from './ReadingListManager.svelte';
 export { default as CrashReporter } from './CrashReporter.svelte';
 export { default as SystemUsageMonitor } from './SystemUsageMonitor.svelte';
+export { default as NetworkQualityIndicator } from './NetworkQualityIndicator.svelte';
+export { default as DataExporter } from './DataExporter.svelte';
