@@ -1179,3 +1179,102 @@ pub async fn fetch_page_html(url: String) -> Result<String, String> {
         Ok(html.chars().take(51200).collect())
     }
 }
+
+/// Cursor position result
+#[derive(serde::Serialize)]
+pub struct CursorPosition {
+    pub x: i32,
+    pub y: i32,
+}
+
+/// Get the current cursor/mouse position on screen
+/// Used by QuickComposePopup for positioning near cursor
+#[tauri::command]
+pub fn get_cursor_position() -> Result<CursorPosition, String> {
+    #[cfg(target_os = "linux")]
+    {
+        // On Linux, try to get cursor position via xdotool
+        use std::process::Command;
+        
+        let output = Command::new("xdotool")
+            .args(["getmouselocation", "--shell"])
+            .output();
+        
+        match output {
+            Ok(output) if output.status.success() => {
+                let stdout = String::from_utf8_lossy(&output.stdout);
+                let mut x = 0i32;
+                let mut y = 0i32;
+                
+                for line in stdout.lines() {
+                    if let Some(val) = line.strip_prefix("X=") {
+                        x = val.parse().unwrap_or(0);
+                    } else if let Some(val) = line.strip_prefix("Y=") {
+                        y = val.parse().unwrap_or(0);
+                    }
+                }
+                
+                Ok(CursorPosition { x, y })
+            }
+            _ => Err("Could not get cursor position".to_string())
+        }
+    }
+    
+    #[cfg(target_os = "macos")]
+    {
+        // On macOS, use Core Graphics
+        use std::process::Command;
+        
+        // AppleScript method as a simple cross-platform approach
+        let script = r#"
+            use framework "Foundation"
+            use framework "AppKit"
+            set mouseLocation to current application's NSEvent's mouseLocation()
+            set screenFrame to current application's NSScreen's mainScreen()'s frame()
+            set x to mouseLocation's x as integer
+            set y to ((screenFrame's |size|'s height) - (mouseLocation's y)) as integer
+            return (x as text) & "," & (y as text)
+        "#;
+        
+        let output = Command::new("osascript")
+            .args(["-e", script])
+            .output();
+        
+        match output {
+            Ok(output) if output.status.success() => {
+                let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
+                let parts: Vec<&str> = stdout.split(',').collect();
+                if parts.len() == 2 {
+                    let x = parts[0].parse().unwrap_or(0);
+                    let y = parts[1].parse().unwrap_or(0);
+                    Ok(CursorPosition { x, y })
+                } else {
+                    Err("Invalid cursor position format".to_string())
+                }
+            }
+            _ => Err("Could not get cursor position".to_string())
+        }
+    }
+    
+    #[cfg(target_os = "windows")]
+    {
+        // On Windows, use the Windows API
+        use windows_sys::Win32::UI::WindowsAndMessaging::GetCursorPos;
+        use windows_sys::Win32::Foundation::POINT;
+        
+        let mut point = POINT { x: 0, y: 0 };
+        
+        unsafe {
+            if GetCursorPos(&mut point) != 0 {
+                Ok(CursorPosition { x: point.x, y: point.y })
+            } else {
+                Err("Could not get cursor position".to_string())
+            }
+        }
+    }
+    
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    {
+        Err("Cursor position not supported on this platform".to_string())
+    }
+}
