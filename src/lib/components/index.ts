@@ -178,3 +178,4 @@ export { default as DockBadgeManager } from './DockBadgeManager.svelte';
 export { default as WindowTabsManager } from './WindowTabsManager.svelte';
 export { default as PictureInPictureManager } from './PictureInPictureManager.svelte';
 export { default as TextSnippetsManager } from './TextSnippetsManager.svelte';
+export { default as GestureManager } from './GestureManager.svelte';

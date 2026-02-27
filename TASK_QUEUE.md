@@ -51,3 +51,4 @@ This file tracks pending tasks and improvements for the Hearth Desktop applicati
 - [x] Crash Reporter - Global error handling, crash capture with breadcrumbs, memory info, anonymization, and report management panel (Feb 27, 2026)
 - [x] Network Quality Indicator - Real-time network health monitoring with latency, jitter, packet loss, connection type, bandwidth display, and latency history graph (Feb 27, 2026)
 - [x] Ambient Sound Manager - Productivity soundscapes with 19 ambient sounds (nature, urban, white noise, music), preset system, master/per-sound volume, fade effects, auto-stop timer, and call integration (Feb 27, 2026)
+- [x] Gesture Manager - Trackpad/mouse gesture support with 10 configurable gestures (swipe, pinch, tap, hold), multi-finger detection, sensitivity settings, visual feedback, gesture statistics, and persistent storage (Feb 27, 2026)
