@@ -165,3 +165,5 @@ export { default as AboutDialog } from './AboutDialog.svelte';
 export { default as ActivityTimeline } from './ActivityTimeline.svelte';
 export { default as WorkspaceProfilesManager } from './WorkspaceProfilesManager.svelte';
 export { default as WindowTitleManager } from './WindowTitleManager.svelte';
+export { default as ReadingListManager } from './ReadingListManager.svelte';
+export { default as CrashReporter } from './CrashReporter.svelte';

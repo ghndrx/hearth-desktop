@@ -48,3 +48,4 @@ This file tracks pending tasks and improvements for the Hearth Desktop applicati
 - [x] Focus Timer - Pomodoro-style productivity timer with native notifications, tray integration, DND mode, and session statistics (Feb 26, 2026)
 - [x] Workspace Profiles Manager - Save, switch, and manage multiple workspace configurations with auto-save, import/export, and profile icons (Feb 27, 2026)
 - [x] Reading List Manager - Save, organize, and track reading progress on URLs/articles with tags, priorities, metadata extraction, and persistent storage (Feb 27, 2026)
+- [x] Crash Reporter - Global error handling, crash capture with breadcrumbs, memory info, anonymization, and report management panel (Feb 27, 2026)
