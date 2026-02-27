@@ -164,3 +164,4 @@ export { default as LogViewer } from './LogViewer.svelte';
 export { default as AboutDialog } from './AboutDialog.svelte';
 export { default as ActivityTimeline } from './ActivityTimeline.svelte';
 export { default as WorkspaceProfilesManager } from './WorkspaceProfilesManager.svelte';
+export { default as WindowTitleManager } from './WindowTitleManager.svelte';
