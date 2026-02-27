@@ -326,6 +326,7 @@ fn main() {
             commands::is_window_visible,
             commands::set_always_on_top,
             commands::toggle_fullscreen,
+            commands::get_cursor_position,
             commands::is_auto_start_enabled,
             commands::enable_auto_start,
             commands::disable_auto_start,
