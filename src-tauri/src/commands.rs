@@ -1097,3 +1097,16 @@ pub async fn get_window_state(window: Window) -> Result<WindowState, String> {
         scale_factor: window.scale_factor().map_err(|e| e.to_string())?,
     })
 }
+
+/// Ping server for connection health check
+/// Returns immediately - used to measure round-trip latency from frontend
+#[tauri::command]
+pub async fn ping_server() -> Result<u64, String> {
+    // Return timestamp to help calculate latency
+    use std::time::{SystemTime, UNIX_EPOCH};
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| e.to_string())?
+        .as_millis() as u64;
+    Ok(timestamp)
+}

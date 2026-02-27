@@ -406,6 +406,7 @@ fn main() {
             commands::restore_window_state,
             commands::get_window_state,
             commands::clear_window_state,
+            commands::ping_server,
             // Window opacity commands
             commands::set_window_opacity,
             commands::get_window_opacity,
