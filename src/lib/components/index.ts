@@ -187,3 +187,4 @@ export { default as TabSwitcher } from './TabSwitcher.svelte';
 export { default as FloatingToolbar } from './FloatingToolbar.svelte';
 export { default as HotkeyOverlay } from './HotkeyOverlay.svelte';
 export { default as QuickReplyManager } from './QuickReplyManager.svelte';
+export { default as ScreenTimeTracker } from './ScreenTimeTracker.svelte';
