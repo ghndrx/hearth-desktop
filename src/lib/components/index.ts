@@ -150,6 +150,7 @@ export { default as PrintManager } from './PrintManager.svelte';
 export { default as BookmarksManager } from './BookmarksManager.svelte';
 export { default as TaskbarProgressManager } from './TaskbarProgressManager.svelte';
 export { default as StartupLoadingScreen } from './StartupLoadingScreen.svelte';
+export { default as StartupRestoreManager } from './StartupRestoreManager.svelte';
 export { default as NativeFileWatcher } from './NativeFileWatcher.svelte';
 export { default as DesktopIntegration } from './DesktopIntegration.svelte';
 export { default as FocusTimer } from './FocusTimer.svelte';
