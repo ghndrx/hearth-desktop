@@ -183,3 +183,4 @@ export { default as VibrancyManager } from './VibrancyManager.svelte';
 export { default as QuickCaptureWidget } from './QuickCaptureWidget.svelte';
 export { default as DraftsManager } from './DraftsManager.svelte';
 export { default as TouchBarManager } from './TouchBarManager.svelte';
+export { default as TabSwitcher } from './TabSwitcher.svelte';
