@@ -16,7 +16,7 @@ vi.mock('svelte/transition', () => ({
 // Polyfill for Web Animations API (not supported in jsdom)
 // This is needed for Svelte 5 transitions
 if (typeof Element !== 'undefined' && !Element.prototype.animate) {
-  Element.prototype.animate = function(keyframes: Keyframe[] | PropertyIndexedKeyframes | null, options?: number | KeyframeAnimationOptions) {
+  Element.prototype.animate = function(_keyframes: Keyframe[] | PropertyIndexedKeyframes | null, _options?: number | KeyframeAnimationOptions) {
     // Create a deferred animation mock that properly types the Promise properties
     const animationPromise = Promise.resolve() as unknown as Promise<Animation>;
     const animation = {
@@ -116,8 +116,6 @@ vi.mock('$lib/stores/auth', () => ({
   }
 }));
 
-vi.mock('$lib/stores/settings', () => ({
-  settings: {
-    openServerSettings: vi.fn()
-  }
-}));
+// NOTE: $lib/stores/settings is NOT mocked here - tests that need the real
+// implementation (like settings.test.ts) require the actual module.
+// If a test needs a mock settings store, it should mock it locally.

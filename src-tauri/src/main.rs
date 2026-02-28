@@ -46,6 +46,9 @@ mod sessionrestore;
 mod privacylock;
 mod voicerecorder;
 mod localsearch;
+mod bandwidth;
+mod calendar;
+mod nativeauth;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -748,6 +751,24 @@ fn main() {
             localsearch::get_search_stats,
             localsearch::optimize_search_index,
             localsearch::clear_search_index,
+            // Bandwidth monitor commands
+            bandwidth::bandwidth_record_sent,
+            bandwidth::bandwidth_record_received,
+            bandwidth::bandwidth_get_stats,
+            bandwidth::bandwidth_reset,
+            bandwidth::bandwidth_start_monitor,
+            bandwidth::bandwidth_stop_monitor,
+            // Calendar integration commands
+            calendar::calendar_check_in_meeting,
+            calendar::calendar_get_next_event,
+            calendar::calendar_get_current_events,
+            calendar::calendar_get_upcoming_events,
+            // Native auth / keychain commands
+            nativeauth::keychain_set,
+            nativeauth::keychain_get,
+            nativeauth::keychain_delete,
+            nativeauth::keychain_biometric_available,
+            nativeauth::keychain_list,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

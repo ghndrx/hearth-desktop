@@ -6,7 +6,7 @@
  * Due to the complexity of mocking Svelte stores with vitest hoisting,
  * we test what we can and document the component's behavior.
  */
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect } from 'vitest';
 
 // Note: Full integration tests for VoiceMiniPlayer would require mocking
 // the voice stores ($lib/stores/voice) which are imported by the component.
