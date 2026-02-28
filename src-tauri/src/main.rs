@@ -45,6 +45,7 @@ mod quickreply;
 mod sessionrestore;
 mod privacylock;
 mod voicerecorder;
+mod localsearch;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -360,6 +361,12 @@ fn main() {
             // Initialize Touch Bar manager (macOS)
             app.manage(touchbar::TouchBarManager::new());
             quickcapture::init(app.handle());
+
+            // Initialize local search manager with FTS5
+            let app_data_dir = app.path().app_data_dir()
+                .expect("Failed to get app data directory");
+            app.manage(localsearch::SearchManager::new(app_data_dir)
+                .expect("Failed to initialize search index"));
 
             // Load custom spell check dictionary
             spellcheck::load_custom_dictionary(app.handle());
@@ -733,6 +740,14 @@ fn main() {
             sessionrestore::get_session_info,
             sessionrestore::capture_window_state,
             sessionrestore::restore_window_state,
+            // Local search commands
+            localsearch::search_messages,
+            localsearch::index_message,
+            localsearch::index_messages_batch,
+            localsearch::delete_indexed_message,
+            localsearch::get_search_stats,
+            localsearch::optimize_search_index,
+            localsearch::clear_search_index,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
