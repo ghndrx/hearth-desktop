@@ -33,6 +33,7 @@ mod updater;
 mod workspaceprofiles;
 mod tabs;
 mod quickcapture;
+mod touchbar;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -332,6 +333,9 @@ fn main() {
 
             // Initialize quick capture manager
             app.manage(quickcapture::QuickCaptureManager::new());
+
+            // Initialize Touch Bar manager (macOS)
+            app.manage(touchbar::TouchBarManager::new());
             quickcapture::init(app.handle());
 
             // Load custom spell check dictionary
@@ -630,6 +634,17 @@ fn main() {
             quickcapture::quick_capture_set_config,
             quickcapture::quick_capture_get_state,
             quickcapture::quick_capture_is_visible,
+            // Touch Bar commands (macOS)
+            touchbar::touchbar_check_available,
+            touchbar::touchbar_get_presets,
+            touchbar::touchbar_apply_preset,
+            touchbar::touchbar_set_config,
+            touchbar::touchbar_get_current_config,
+            touchbar::touchbar_update_item,
+            touchbar::touchbar_add_preset,
+            touchbar::touchbar_remove_preset,
+            touchbar::touchbar_clear,
+            touchbar::touchbar_handle_event,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
