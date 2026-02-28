@@ -19,7 +19,7 @@
 	}
 
 	// Format relative time
-	function formatRelativeTime(dateStr: string | null): string {
+	function formatRelativeTime(dateStr: string | null | undefined): string {
 		if (!dateStr) return 'No activity';
 		
 		const date = new Date(dateStr);

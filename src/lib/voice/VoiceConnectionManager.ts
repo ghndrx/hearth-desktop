@@ -1,7 +1,7 @@
 import { browser } from '$app/environment';
 import { get } from 'svelte/store';
 import { gateway, Op, onGatewayEvent } from '$lib/stores/gateway';
-import { voiceState, voiceActions, voiceChannelStates, type VoiceUser } from '$lib/stores/voice';
+import { voiceState, voiceActions } from '$lib/stores/voice';
 import { user as authUser } from '$lib/stores/auth';
 
 // ICE servers for STUN/TURN
@@ -94,7 +94,7 @@ class VoiceConnectionManager {
 		);
 	}
 
-	async connect(channelId: string, serverId: string): Promise<void> {
+	async connect(_channelId: string, _serverId: string): Promise<void> {
 		if (!browser) return;
 
 		try {

@@ -97,21 +97,25 @@
 	</div>
 
 	{#if data}
+		{@const mau = data.mau ?? 0}
+		{@const totalMembers = data.total_members ?? 0}
+		{@const averageDau = data.average_dau ?? 0}
+		{@const stickiness = data.stickiness ?? 0}
 		<div class="metrics-grid">
 			<div class="metric-card">
-				<div class="metric-value">{Math.round(data.average_dau).toLocaleString()}</div>
+				<div class="metric-value">{Math.round(averageDau).toLocaleString()}</div>
 				<div class="metric-label">Avg Daily Active</div>
 			</div>
 			<div class="metric-card">
-				<div class="metric-value">{data.mau.toLocaleString()}</div>
+				<div class="metric-value">{mau.toLocaleString()}</div>
 				<div class="metric-label">Monthly Active</div>
 			</div>
 			<div class="metric-card highlight">
-				<div class="metric-value">{formatPercent(data.stickiness)}</div>
+				<div class="metric-value">{formatPercent(stickiness)}</div>
 				<div class="metric-label">Stickiness (DAU/MAU)</div>
 			</div>
 			<div class="metric-card">
-				<div class="metric-value">{data.total_members.toLocaleString()}</div>
+				<div class="metric-value">{totalMembers.toLocaleString()}</div>
 				<div class="metric-label">Total Members</div>
 			</div>
 		</div>
@@ -121,17 +125,17 @@
 			<canvas bind:this={canvas} style="height: {height}px; width: 100%"></canvas>
 		</div>
 
-		{#if data.total_members > 0}
+		{#if totalMembers > 0}
 			<div class="engagement-bar">
 				<div class="engagement-label">Member Engagement</div>
 				<div class="engagement-track">
 					<div 
 						class="engagement-fill"
-						style="width: {Math.min(100, (data.mau / data.total_members) * 100)}%"
+						style="width: {Math.min(100, (mau / totalMembers) * 100)}%"
 					></div>
 				</div>
 				<div class="engagement-value">
-					{((data.mau / data.total_members) * 100).toFixed(1)}% active
+					{((mau / totalMembers) * 100).toFixed(1)}% active
 				</div>
 			</div>
 		{/if}

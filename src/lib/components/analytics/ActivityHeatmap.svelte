@@ -13,15 +13,16 @@
 	);
 
 	// Find max value for color scaling
-	$: maxMessages = Math.max(...data.map(d => d.message_count), 1);
+	$: maxMessages = Math.max(...data.map(d => d.message_count ?? 0), 1);
 
 	// Get activity level for a cell (0-4)
 	function getActivityLevel(dayOfWeek: number, hour: number): number {
 		const key = `${dayOfWeek}-${hour}`;
 		const stat = activityMap.get(key);
-		if (!stat || stat.message_count === 0) return 0;
+		const msgCount = stat?.message_count ?? 0;
+		if (!stat || msgCount === 0) return 0;
 		
-		const ratio = stat.message_count / maxMessages;
+		const ratio = msgCount / maxMessages;
 		if (ratio > 0.75) return 4;
 		if (ratio > 0.5) return 3;
 		if (ratio > 0.25) return 2;
@@ -32,10 +33,12 @@
 	function getTooltip(dayOfWeek: number, hour: number): string {
 		const key = `${dayOfWeek}-${hour}`;
 		const stat = activityMap.get(key);
-		if (!stat || stat.message_count === 0) {
+		const msgCount = stat?.message_count ?? 0;
+		if (!stat || msgCount === 0) {
 			return `${days[dayOfWeek]} ${formatHour(hour)}: No activity`;
 		}
-		return `${days[dayOfWeek]} ${formatHour(hour)}: ${stat.message_count} messages, ${stat.unique_users} users`;
+		const users = stat.unique_users ?? 0;
+		return `${days[dayOfWeek]} ${formatHour(hour)}: ${msgCount} messages, ${users} users`;
 	}
 
 	// Format hour for display (12h format)

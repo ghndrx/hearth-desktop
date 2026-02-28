@@ -29,7 +29,7 @@ interface AnalyticsState {
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 function createAnalyticsStore() {
-	const { subscribe, set, update } = writable<AnalyticsState>({
+	const { subscribe, update } = writable<AnalyticsState>({
 		loading: false,
 		error: null,
 		serverId: null,

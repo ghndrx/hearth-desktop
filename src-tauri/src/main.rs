@@ -35,6 +35,9 @@ mod workspaceprofiles;
 mod tabs;
 mod quickcapture;
 mod touchbar;
+mod network;
+mod filewatcher;
+mod sessionlock;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -341,6 +344,14 @@ fn main() {
 
             // Load custom spell check dictionary
             spellcheck::load_custom_dictionary(app.handle());
+
+            // Start network connectivity monitor
+            let net_handle = app.handle().clone();
+            network::start_network_monitor(net_handle).ok();
+
+            // Start session lock/unlock monitor
+            let session_handle = app.handle().clone();
+            sessionlock::start_session_lock_monitor(session_handle).ok();
 
             Ok(())
         })
@@ -653,6 +664,22 @@ fn main() {
             smartstatus::detect_gaming,
             smartstatus::get_idle_time,
             smartstatus::set_user_status,
+            // Network monitor commands
+            network::get_network_status,
+            network::is_online,
+            network::measure_latency,
+            network::start_network_monitor,
+            network::stop_network_monitor,
+            // File watcher commands
+            filewatcher::watch_directory,
+            filewatcher::unwatch_directory,
+            filewatcher::unwatch_all,
+            filewatcher::list_watchers,
+            // Session lock commands
+            sessionlock::get_session_lock_status,
+            sessionlock::is_session_locked,
+            sessionlock::start_session_lock_monitor,
+            sessionlock::stop_session_lock_monitor,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

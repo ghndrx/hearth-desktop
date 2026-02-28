@@ -60,6 +60,7 @@
 	import MessageActionBar from './MessageActionBar.svelte';
 	import ThreadReplyIndicator from './ThreadReplyIndicator.svelte';
 	import MediaPlayer from './MediaPlayer.svelte';
+	import LazyImage from './LazyImage.svelte';
 	
 	export let message: any;
 	export let grouped = false;
@@ -324,6 +325,7 @@
 				{#each message.attachments as attachment}
 					{#if attachment.content_type?.startsWith('image/')}
 						<!-- A11Y-004: Use alt_text if available, fallback to filename -->
+						<!-- PERF-IMAGES: Lazy loading with skeleton placeholder -->
 						<figure class="relative inline-block">
 							<button
 								type="button"
@@ -331,11 +333,14 @@
 								on:click={() => openImagePreview(attachment)}
 								aria-label="View {attachment.alt_text || attachment.filename} in full screen"
 							>
-								<img 
-									src={attachment.url} 
+								<LazyImage
+									src={attachment.url}
 									alt={attachment.alt_text || `Image: ${attachment.filename}`}
 									title={attachment.alt_text || attachment.filename}
-									class="max-w-[400px] max-h-[300px] rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+									maxWidth="400px"
+									maxHeight="300px"
+									borderRadius="8px"
+									class="cursor-pointer hover:opacity-90 transition-opacity"
 								/>
 							</button>
 							{#if attachment.alt_text}

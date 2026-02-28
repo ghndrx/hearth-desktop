@@ -9,15 +9,12 @@ import { writable, derived, get } from 'svelte/store';
 import { browser } from '$app/environment';
 import { e2eeApi, type DeviceInfo, type PreKeyCount, type E2EECapabilities } from '$lib/crypto/e2ee-api';
 import { 
-  initializeE2EE, 
   isE2EESupported, 
   generateDeviceId, 
-  generateRegistrationId,
   generateDeviceKeys,
   exportDeviceKeysForUpload,
   performX3DHSender,
   deriveMessageKeys,
-  type DeviceRegistration,
   type RemotePreKeyBundle
 } from '$lib/crypto/signal-protocol';
 import { secureKeyStore } from '$lib/crypto/secure-storage';
@@ -324,7 +321,7 @@ function createE2EEStore() {
         const bundle = bundles[0];
         
         // Perform X3DH
-        const { sharedSecret, ephemeralPublicKey, usedPreKeyId } = await performX3DHSender(
+        const { sharedSecret } = await performX3DHSender(
           localIdentityKey,
           bundle
         );

@@ -51,9 +51,10 @@ interface SessionData {
 }
 
 /**
- * Metadata structure
+ * Metadata structure - reserved for future E2EE implementation
  */
-interface E2EEMetadata {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface _E2EEMetadata {
   deviceId: string;
   registrationId: number;
   signedPreKeyRotation: number;

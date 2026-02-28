@@ -136,9 +136,9 @@
       >
         <!-- Status indicator dot -->
         <div class="relative flex-shrink-0">
-          <span class="w-3 h-3 rounded-full {statusColor} block" />
+          <span class="w-3 h-3 rounded-full {statusColor} block"></span>
           {#if status.state === 'syncing'}
-            <span class="absolute inset-0 w-3 h-3 rounded-full {statusColor} animate-ping opacity-75" />
+            <span class="absolute inset-0 w-3 h-3 rounded-full {statusColor} animate-ping opacity-75"></span>
           {/if}
         </div>
         
@@ -187,7 +187,7 @@
               <div 
                 class="bg-blue-500 h-1.5 rounded-full transition-all duration-300"
                 style="width: {status.progress}%"
-              />
+              ></div>
             </div>
           {/if}
           

@@ -5,10 +5,10 @@
 
 import { browser } from '$app/environment';
 import { writable, derived, type Readable } from 'svelte/store';
-import { pendingCount, failedItems, processingItems, queueStore, type QueueItem } from '$lib/sync/syncQueue';
-import { syncEngineStatus, type SyncEngineStatus, type SyncState } from '$lib/sync/syncEngine';
-import { serviceWorkerStatus, type ServiceWorkerStatus } from '$lib/sync/serviceWorkerRegistration';
-import { onlineStatus, type OnlineStatusState } from './onlineStatus';
+import { queueStore, type QueueItem } from '$lib/sync/syncQueue';
+import { syncEngineStatus } from '$lib/sync/syncEngine';
+import { serviceWorkerStatus } from '$lib/sync/serviceWorkerRegistration';
+import { onlineStatus } from './onlineStatus';
 
 /**
  * Combined sync status for UI display

@@ -1,75 +1,89 @@
-/**
- * Digest Store
- * Manages digest notification preferences and state with full API integration
- */
 import { writable, derived } from 'svelte/store';
 import { api } from '$lib/api';
 
-export type DigestFrequency = 'daily' | 'weekly' | 'hourly' | 'custom';
-export type DigestAggregationMode = 'channel' | 'server' | 'time' | 'priority';
+// Types
+export type DigestFrequency = 'hourly' | 'daily' | 'weekly';
+export type DigestAggregationMode = 'channel' | 'server';
+export type DigestMode = 'inherit' | 'include' | 'exclude' | 'immediate';
 export type DigestStatus = 'pending' | 'sent' | 'failed' | 'skipped';
 
 export interface DigestPreferences {
+	id: string;
+	user_id: string;
 	enabled: boolean;
 	frequency: DigestFrequency;
 	preferred_hour: number;
 	preferred_day: number;
-	timezone: string;
 	aggregation_mode: DigestAggregationMode;
 	max_messages_per_source: number;
 	muted_channels_only: boolean;
+	timezone: string;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface DigestChannelPreference {
+	id?: string;
+	user_id: string;
+	channel_id: string;
+	digest_mode: DigestMode;
+	created_at?: string;
+	updated_at?: string;
+}
+
+export interface DigestServerPreference {
+	id?: string;
+	user_id: string;
+	server_id: string;
+	digest_mode: DigestMode;
+	created_at?: string;
+	updated_at?: string;
 }
 
 export interface DigestPreview {
-	estimated_messages: number;
 	next_digest_at: string;
 	pending_count: number;
-	pending_channels: number;
-	pending_servers: number;
 	pending_mentions: number;
-	sources: Array<{
-		id: string;
-		name: string;
-		type: 'channel' | 'dm' | 'thread';
-		message_count: number;
-	}>;
-}
-
-export interface DigestHistoryItem {
-	id: string;
-	sent_at: string;
-	status: DigestStatus;
-	message_count: number;
-	sources_count: number;
-	total_messages: number;
-	total_mentions: number;
+	pending_servers: number;
+	pending_channels: number;
+	oldest_pending?: string;
 }
 
 export interface DigestHistory {
-	items: DigestHistoryItem[];
-	total: number;
+	id: string;
+	user_id: string;
+	sent_at: string;
+	period_start: string;
+	period_end: string;
+	frequency: DigestFrequency;
+	total_messages: number;
+	total_mentions: number;
+	servers_included: number;
+	channels_included: number;
+	content_json: string;
+	status: DigestStatus;
+	error_message?: string;
+	retry_count: number;
 }
 
-export interface ChannelDigestPreference {
-	channel_id: string;
-	channel_name: string;
-	included: boolean;
-	priority: number;
+export interface UpdateDigestPreferencesRequest {
+	enabled?: boolean;
+	frequency?: DigestFrequency;
+	preferred_hour?: number;
+	preferred_day?: number;
+	aggregation_mode?: DigestAggregationMode;
+	max_messages_per_source?: number;
+	muted_channels_only?: boolean;
+	timezone?: string;
 }
 
-export interface ServerDigestPreference {
-	server_id: string;
-	server_name: string;
-	included: boolean;
-	priority: number;
-}
-
-export interface DigestState {
+// Store state
+interface DigestState {
 	preferences: DigestPreferences | null;
-	channelPreferences: ChannelDigestPreference[];
-	serverPreferences: ServerDigestPreference[];
+	channelPreferences: DigestChannelPreference[];
+	serverPreferences: DigestServerPreference[];
 	preview: DigestPreview | null;
-	history: DigestHistoryItem[];
+	history: DigestHistory[];
 	loading: boolean;
 	error: string | null;
 }
@@ -87,234 +101,267 @@ const initialState: DigestState = {
 function createDigestStore() {
 	const { subscribe, set, update } = writable<DigestState>(initialState);
 
+	async function loadPreferences() {
+		update(s => ({ ...s, loading: true, error: null }));
+		
+		try {
+			const prefs = await api.get<DigestPreferences>('/users/@me/digest/preferences');
+			update(s => ({ ...s, preferences: prefs, loading: false }));
+			return prefs;
+		} catch (err) {
+			const error = err instanceof Error ? err.message : 'Failed to load digest preferences';
+			update(s => ({ ...s, loading: false, error }));
+			throw err;
+		}
+	}
+
+	async function updatePreferences(req: UpdateDigestPreferencesRequest) {
+		update(s => ({ ...s, loading: true, error: null }));
+		
+		try {
+			const prefs = await api.patch<DigestPreferences>('/users/@me/digest/preferences', req);
+			update(s => ({ ...s, preferences: prefs, loading: false }));
+			return prefs;
+		} catch (err) {
+			const error = err instanceof Error ? err.message : 'Failed to update digest preferences';
+			update(s => ({ ...s, loading: false, error }));
+			throw err;
+		}
+	}
+
+	async function loadChannelPreferences() {
+		try {
+			const response = await api.get<{ preferences: DigestChannelPreference[] }>('/users/@me/digest/channels');
+			update(s => ({ ...s, channelPreferences: response.preferences }));
+			return response.preferences;
+		} catch (err) {
+			console.error('Failed to load channel digest preferences:', err);
+			return [];
+		}
+	}
+
+	async function updateChannelPreference(channelId: string, mode: DigestMode) {
+		try {
+			await api.put(`/users/@me/digest/channels/${channelId}`, { digest_mode: mode });
+			
+			update(s => {
+				const prefs = s.channelPreferences.filter(p => p.channel_id !== channelId);
+				if (mode !== 'inherit') {
+					prefs.push({
+						user_id: s.preferences?.user_id || '',
+						channel_id: channelId,
+						digest_mode: mode
+					});
+				}
+				return { ...s, channelPreferences: prefs };
+			});
+		} catch (err) {
+			console.error('Failed to update channel digest preference:', err);
+			throw err;
+		}
+	}
+
+	async function loadServerPreferences() {
+		try {
+			const response = await api.get<{ preferences: DigestServerPreference[] }>('/users/@me/digest/servers');
+			update(s => ({ ...s, serverPreferences: response.preferences }));
+			return response.preferences;
+		} catch (err) {
+			console.error('Failed to load server digest preferences:', err);
+			return [];
+		}
+	}
+
+	async function updateServerPreference(serverId: string, mode: DigestMode) {
+		try {
+			await api.put(`/users/@me/digest/servers/${serverId}`, { digest_mode: mode });
+			
+			update(s => {
+				const prefs = s.serverPreferences.filter(p => p.server_id !== serverId);
+				if (mode !== 'inherit') {
+					prefs.push({
+						user_id: s.preferences?.user_id || '',
+						server_id: serverId,
+						digest_mode: mode
+					});
+				}
+				return { ...s, serverPreferences: prefs };
+			});
+		} catch (err) {
+			console.error('Failed to update server digest preference:', err);
+			throw err;
+		}
+	}
+
+	async function loadPreview() {
+		try {
+			const preview = await api.get<DigestPreview>('/users/@me/digest/preview');
+			update(s => ({ ...s, preview }));
+			return preview;
+		} catch (err) {
+			console.error('Failed to load digest preview:', err);
+			return null;
+		}
+	}
+
+	async function clearQueue() {
+		try {
+			const result = await api.delete<{ cleared: number }>('/users/@me/digest/queue');
+			update(s => ({
+				...s,
+				preview: s.preview ? {
+					...s.preview,
+					pending_count: 0,
+					pending_mentions: 0,
+					pending_servers: 0,
+					pending_channels: 0,
+					oldest_pending: undefined
+				} : null
+			}));
+			return result.cleared;
+		} catch (err) {
+			console.error('Failed to clear digest queue:', err);
+			throw err;
+		}
+	}
+
+	async function loadHistory(limit = 20, offset = 0) {
+		try {
+			const response = await api.get<{ digests: DigestHistory[] }>(
+				`/users/@me/digest/history?limit=${limit}&offset=${offset}`
+			);
+			
+			if (offset === 0) {
+				update(s => ({ ...s, history: response.digests }));
+			} else {
+				update(s => ({ ...s, history: [...s.history, ...response.digests] }));
+			}
+			
+			return response.digests;
+		} catch (err) {
+			console.error('Failed to load digest history:', err);
+			return [];
+		}
+	}
+
+	async function getDigest(digestId: string) {
+		try {
+			return await api.get<DigestHistory>(`/users/@me/digest/history/${digestId}`);
+		} catch (err) {
+			console.error('Failed to get digest:', err);
+			return null;
+		}
+	}
+
+	async function generateDigestNow() {
+		try {
+			const digest = await api.post<DigestHistory>('/users/@me/digest/generate');
+			update(s => ({ ...s, history: [digest, ...s.history] }));
+			return digest;
+		} catch (err) {
+			console.error('Failed to generate digest:', err);
+			throw err;
+		}
+	}
+
+	function reset() {
+		set(initialState);
+	}
+
 	return {
 		subscribe,
-
-		async loadPreferences() {
-			update(state => ({ ...state, loading: true, error: null }));
-			try {
-				const prefs = await api.get<DigestPreferences>('/users/@me/digest/preferences');
-				update(state => ({ ...state, preferences: prefs, loading: false }));
-			} catch (err) {
-				// Fall back to defaults if API not available
-				const prefs: DigestPreferences = {
-					enabled: false,
-					frequency: 'daily',
-					preferred_hour: 9,
-					preferred_day: 1,
-					timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
-					aggregation_mode: 'channel',
-					max_messages_per_source: 10,
-					muted_channels_only: true
-				};
-				update(state => ({ ...state, preferences: prefs, loading: false }));
-			}
-		},
-
-		async updatePreferences(updates: Partial<DigestPreferences>) {
-			update(state => ({ ...state, loading: true, error: null }));
-			try {
-				const prefs = await api.put<DigestPreferences>('/users/@me/digest/preferences', updates);
-				update(state => ({
-					...state,
-					preferences: prefs,
-					loading: false
-				}));
-			} catch (err) {
-				// Optimistic update
-				update(state => ({
-					...state,
-					preferences: state.preferences ? { ...state.preferences, ...updates } : null,
-					loading: false
-				}));
-			}
-		},
-
-		async loadChannelPreferences(serverId?: string) {
-			update(state => ({ ...state, loading: true }));
-			try {
-				const path = serverId
-					? `/servers/${serverId}/digest/channels`
-					: '/users/@me/digest/channels';
-				const channelPrefs = await api.get<ChannelDigestPreference[]>(path);
-				update(state => ({ ...state, channelPreferences: channelPrefs, loading: false }));
-			} catch (err) {
-				update(state => ({ ...state, channelPreferences: [], loading: false }));
-			}
-		},
-
-		async updateChannelPreference(channelId: string, updates: Partial<ChannelDigestPreference>) {
-			try {
-				await api.put(`/users/@me/digest/channels/${channelId}`, updates);
-			} catch {
-				// silent fail
-			}
-			update(state => ({
-				...state,
-				channelPreferences: state.channelPreferences.map(cp =>
-					cp.channel_id === channelId ? { ...cp, ...updates } : cp
-				)
-			}));
-		},
-
-		async loadServerPreferences() {
-			update(state => ({ ...state, loading: true }));
-			try {
-				const serverPrefs = await api.get<ServerDigestPreference[]>('/users/@me/digest/servers');
-				update(state => ({ ...state, serverPreferences: serverPrefs, loading: false }));
-			} catch (err) {
-				update(state => ({ ...state, serverPreferences: [], loading: false }));
-			}
-		},
-
-		async updateServerPreference(serverId: string, updates: Partial<ServerDigestPreference>) {
-			try {
-				await api.put(`/users/@me/digest/servers/${serverId}`, updates);
-			} catch {
-				// silent fail
-			}
-			update(state => ({
-				...state,
-				serverPreferences: state.serverPreferences.map(sp =>
-					sp.server_id === serverId ? { ...sp, ...updates } : sp
-				)
-			}));
-		},
-
-		async loadPreview() {
-			update(state => ({ ...state, loading: true }));
-			try {
-				const preview = await api.get<DigestPreview>('/users/@me/digest/preview');
-				update(state => ({ ...state, preview, loading: false }));
-			} catch (err) {
-				const preview: DigestPreview = {
-					estimated_messages: 0,
-					next_digest_at: new Date(Date.now() + 86400000).toISOString(),
-					pending_count: 0,
-					pending_channels: 0,
-					pending_servers: 0,
-					pending_mentions: 0,
-					sources: []
-				};
-				update(state => ({ ...state, preview, loading: false }));
-			}
-		},
-
-		async clearQueue(): Promise<number> {
-			update(state => ({ ...state, loading: true }));
-			try {
-				const result = await api.post<{ cleared: number }>('/users/@me/digest/clear');
-				update(state => ({ ...state, loading: false }));
-				return result?.cleared || 0;
-			} catch (err) {
-				update(state => ({ ...state, error: 'Failed to clear queue', loading: false }));
-				return 0;
-			}
-		},
-
-		async loadHistory(limit: number = 10) {
-			update(state => ({ ...state, loading: true }));
-			try {
-				const history = await api.get<DigestHistory>(`/users/@me/digest/history?limit=${limit}`);
-				update(state => ({ ...state, history: history?.items || [], loading: false }));
-			} catch (err) {
-				update(state => ({ ...state, history: [], loading: false }));
-			}
-		},
-
-		async getDigest(digestId: string) {
-			try {
-				return await api.get(`/users/@me/digest/${digestId}`);
-			} catch {
-				return null;
-			}
-		},
-
-		async generateDigestNow() {
-			update(state => ({ ...state, loading: true }));
-			try {
-				await api.post('/users/@me/digest/generate');
-				update(state => ({ ...state, loading: false }));
-			} catch (err) {
-				update(state => ({ ...state, error: 'Failed to generate digest', loading: false }));
-				throw err;
-			}
-		},
-
-		reset() {
-			set(initialState);
-		}
+		loadPreferences,
+		updatePreferences,
+		loadChannelPreferences,
+		updateChannelPreference,
+		loadServerPreferences,
+		updateServerPreference,
+		loadPreview,
+		clearQueue,
+		loadHistory,
+		getDigest,
+		generateDigestNow,
+		reset
 	};
 }
 
 export const digest = createDigestStore();
 
 // Derived stores
-export const digestEnabled = derived(digest, $state => $state.preferences?.enabled ?? false);
-export const digestFrequency = derived(digest, $state => $state.preferences?.frequency ?? 'daily');
-export const digestPendingCount = derived(digest, $state => $state.preview?.estimated_messages ?? 0);
-export const digestLoading = derived(digest, $state => $state.loading);
+export const digestEnabled = derived(digest, $d => $d.preferences?.enabled ?? false);
+export const digestFrequency = derived(digest, $d => $d.preferences?.frequency ?? 'daily');
+export const digestPendingCount = derived(digest, $d => $d.preview?.pending_count ?? 0);
+export const digestLoading = derived(digest, $d => $d.loading);
+export const digestError = derived(digest, $d => $d.error);
 
 // Helper functions
 export function formatDigestFrequency(frequency: DigestFrequency): string {
-	const labels: Record<DigestFrequency, string> = {
-		daily: 'Daily',
-		weekly: 'Weekly',
-		hourly: 'Hourly',
-		custom: 'Custom'
-	};
-	return labels[frequency] || frequency;
+	switch (frequency) {
+		case 'hourly': return 'Hourly';
+		case 'daily': return 'Daily';
+		case 'weekly': return 'Weekly';
+		default: return frequency;
+	}
+}
+
+export function formatDigestMode(mode: DigestMode): string {
+	switch (mode) {
+		case 'inherit': return 'Use global settings';
+		case 'include': return 'Always include in digests';
+		case 'exclude': return 'Never include in digests';
+		case 'immediate': return 'Send immediately (no batching)';
+		default: return mode;
+	}
 }
 
 export function formatDigestStatus(status: DigestStatus): string {
-	const labels: Record<DigestStatus, string> = {
-		pending: 'Pending',
-		sent: 'Sent',
-		failed: 'Failed',
-		skipped: 'Skipped'
-	};
-	return labels[status] || status;
+	switch (status) {
+		case 'pending': return 'Pending';
+		case 'sent': return 'Sent';
+		case 'failed': return 'Failed';
+		case 'skipped': return 'Skipped (no messages)';
+		default: return status;
+	}
 }
 
-export function getNextDigestText(preview: DigestPreview | null): string {
-	if (!preview?.next_digest_at) return 'Not scheduled';
-
-	const next = new Date(preview.next_digest_at);
+export function getNextDigestText(preview: DigestPreview | null, preferences: DigestPreferences | null): string {
+	if (!preview || !preferences) return 'Not scheduled';
+	
+	const nextDate = new Date(preview.next_digest_at);
 	const now = new Date();
-	const diff = next.getTime() - now.getTime();
-
-	if (diff < 0) return 'Now';
-
-	const hours = Math.floor(diff / (1000 * 60 * 60));
-	const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-
-	if (hours > 24) {
-		const days = Math.floor(hours / 24);
-		return `in ${days} day${days > 1 ? 's' : ''}`;
+	const diffMs = nextDate.getTime() - now.getTime();
+	const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+	const diffMins = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+	
+	if (diffHours > 24) {
+		const diffDays = Math.round(diffHours / 24);
+		return `in ${diffDays} day${diffDays > 1 ? 's' : ''}`;
+	} else if (diffHours > 0) {
+		return `in ${diffHours}h ${diffMins}m`;
+	} else if (diffMins > 0) {
+		return `in ${diffMins}m`;
+	} else {
+		return 'soon';
 	}
-
-	if (hours > 0) {
-		return `in ${hours}h ${minutes}m`;
-	}
-
-	return `in ${minutes}m`;
 }
 
-// Constants
+// Common timezone options
 export const TIMEZONE_OPTIONS = [
 	{ value: 'UTC', label: 'UTC' },
 	{ value: 'America/New_York', label: 'Eastern Time (US)' },
 	{ value: 'America/Chicago', label: 'Central Time (US)' },
 	{ value: 'America/Denver', label: 'Mountain Time (US)' },
 	{ value: 'America/Los_Angeles', label: 'Pacific Time (US)' },
-	{ value: 'Europe/London', label: 'London (UK)' },
-	{ value: 'Europe/Paris', label: 'Paris (EU)' },
-	{ value: 'Europe/Berlin', label: 'Berlin (EU)' },
-	{ value: 'Asia/Tokyo', label: 'Tokyo (JP)' },
-	{ value: 'Asia/Shanghai', label: 'Shanghai (CN)' },
-	{ value: 'Australia/Sydney', label: 'Sydney (AU)' }
+	{ value: 'Europe/London', label: 'London (GMT/BST)' },
+	{ value: 'Europe/Paris', label: 'Central European Time' },
+	{ value: 'Europe/Berlin', label: 'Berlin (CET/CEST)' },
+	{ value: 'Asia/Tokyo', label: 'Japan Standard Time' },
+	{ value: 'Asia/Shanghai', label: 'China Standard Time' },
+	{ value: 'Asia/Singapore', label: 'Singapore Time' },
+	{ value: 'Australia/Sydney', label: 'Australian Eastern Time' }
 ];
 
+// Day of week options
 export const DAY_OPTIONS = [
 	{ value: 0, label: 'Sunday' },
 	{ value: 1, label: 'Monday' },
@@ -325,6 +372,7 @@ export const DAY_OPTIONS = [
 	{ value: 6, label: 'Saturday' }
 ];
 
+// Hour options (0-23)
 export const HOUR_OPTIONS = Array.from({ length: 24 }, (_, i) => ({
 	value: i,
 	label: `${i.toString().padStart(2, '0')}:00`

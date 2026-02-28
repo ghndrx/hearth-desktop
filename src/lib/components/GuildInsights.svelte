@@ -173,7 +173,7 @@
 					<MemberGrowthChart data={growth.data} height={220} />
 				{:else}
 					<div class="chart-placeholder">
-						<LoadingSpinner size="small" />
+						<LoadingSpinner size="sm" />
 					</div>
 				{/if}
 			</div>
@@ -186,7 +186,7 @@
 					/>
 				{:else}
 					<div class="chart-placeholder">
-						<LoadingSpinner size="small" />
+						<LoadingSpinner size="sm" />
 					</div>
 				{/if}
 			</div>
@@ -199,7 +199,7 @@
 					/>
 				{:else}
 					<div class="chart-placeholder">
-						<LoadingSpinner size="small" />
+						<LoadingSpinner size="sm" />
 					</div>
 				{/if}
 			</div>
@@ -209,7 +209,7 @@
 					<RetentionMetrics data={retention.data} />
 				{:else}
 					<div class="chart-placeholder">
-						<LoadingSpinner size="small" />
+						<LoadingSpinner size="sm" />
 					</div>
 				{/if}
 			</div>

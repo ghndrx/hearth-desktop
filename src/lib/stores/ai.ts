@@ -1,5 +1,5 @@
 // AI Provider and Routing Stores
-import { writable, derived, get } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 import { api } from '$lib/api';
 
 // Types

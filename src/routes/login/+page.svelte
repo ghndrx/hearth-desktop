@@ -1,10 +1,18 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { auth } from '$lib/stores/auth';
 	
 	let email = '';
 	let password = '';
 	let error = '';
 	let loading = false;
+	let oauthProviders: string[] = [];
+	let oauthLoading = '';
+	
+	onMount(async () => {
+		// Fetch enabled OAuth providers
+		oauthProviders = await auth.getOAuthProviders();
+	});
 	
 	async function handleSubmit() {
 		error = '';
@@ -18,6 +26,27 @@
 			loading = false;
 		}
 	}
+	
+	async function handleOAuthLogin(provider: string) {
+		error = '';
+		oauthLoading = provider;
+		
+		try {
+			// Store provider for callback
+			localStorage.setItem('oauth_pending_provider', provider);
+			await auth.startOAuthLogin(provider);
+		} catch (e: any) {
+			localStorage.removeItem('oauth_pending_provider');
+			error = e.message || `${provider} login failed`;
+			oauthLoading = '';
+		}
+	}
+	
+	const providerInfo: Record<string, { name: string; icon: string; color: string }> = {
+		github: { name: 'GitHub', icon: '🐙', color: '#24292e' },
+		google: { name: 'Google', icon: '🔍', color: '#4285f4' },
+		discord: { name: 'Discord', icon: '🎮', color: '#5865f2' }
+	};
 </script>
 
 <div class="auth-page">
@@ -27,11 +56,38 @@
 			<p>We're so excited to see you again!</p>
 		</div>
 		
-		<form on:submit|preventDefault={handleSubmit}>
-			{#if error}
-				<div class="error">{error}</div>
-			{/if}
+		{#if error}
+			<div class="error">{error}</div>
+		{/if}
+		
+		<!-- OAuth Providers -->
+		{#if oauthProviders.length > 0}
+			<div class="oauth-section">
+				{#each oauthProviders as provider}
+					{@const info = providerInfo[provider] || { name: provider, icon: '🔗', color: '#666' }}
+					<button
+						type="button"
+						class="oauth-btn"
+						style="--provider-color: {info.color}"
+						disabled={!!oauthLoading}
+						on:click={() => handleOAuthLogin(provider)}
+					>
+						{#if oauthLoading === provider}
+							<span class="oauth-spinner"></span>
+						{:else}
+							<span class="oauth-icon">{info.icon}</span>
+						{/if}
+						<span>Continue with {info.name}</span>
+					</button>
+				{/each}
+			</div>
 			
+			<div class="divider">
+				<span>or</span>
+			</div>
+		{/if}
+		
+		<form on:submit|preventDefault={handleSubmit}>
 			<div class="form-group">
 				<label for="email">EMAIL</label>
 				<input
@@ -39,7 +95,7 @@
 					id="email"
 					bind:value={email}
 					required
-					disabled={loading}
+					disabled={loading || !!oauthLoading}
 				/>
 			</div>
 			
@@ -50,12 +106,12 @@
 					id="password"
 					bind:value={password}
 					required
-					disabled={loading}
+					disabled={loading || !!oauthLoading}
 				/>
 				<a href="/forgot-password" class="forgot">Forgot your password?</a>
 			</div>
 			
-			<button type="submit" class="submit-btn" disabled={loading}>
+			<button type="submit" class="submit-btn" disabled={loading || !!oauthLoading}>
 				{loading ? 'Logging in...' : 'Log In'}
 			</button>
 			
@@ -74,6 +130,82 @@
 		min-height: 100vh;
 		background: var(--bg-tertiary);
 		padding: 20px;
+	}
+	
+	.oauth-section {
+		display: flex;
+		flex-direction: column;
+		gap: 12px;
+		margin-bottom: 20px;
+	}
+	
+	.oauth-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 12px;
+		width: 100%;
+		padding: 12px;
+		background: var(--provider-color);
+		border: none;
+		border-radius: 4px;
+		color: white;
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: opacity 0.15s ease, transform 0.1s ease;
+	}
+	
+	.oauth-btn:hover:not(:disabled) {
+		opacity: 0.9;
+	}
+	
+	.oauth-btn:active:not(:disabled) {
+		transform: scale(0.98);
+	}
+	
+	.oauth-btn:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+	
+	.oauth-icon {
+		font-size: 18px;
+	}
+	
+	.oauth-spinner {
+		width: 18px;
+		height: 18px;
+		border: 2px solid rgba(255, 255, 255, 0.3);
+		border-top-color: white;
+		border-radius: 50%;
+		animation: spin 0.6s linear infinite;
+	}
+	
+	@keyframes spin {
+		to { transform: rotate(360deg); }
+	}
+	
+	.divider {
+		display: flex;
+		align-items: center;
+		text-align: center;
+		margin: 24px 0;
+		color: var(--text-muted);
+		font-size: 12px;
+		text-transform: uppercase;
+		letter-spacing: 0.05em;
+	}
+	
+	.divider::before,
+	.divider::after {
+		content: '';
+		flex: 1;
+		border-bottom: 1px solid var(--border-color, rgba(255, 255, 255, 0.1));
+	}
+	
+	.divider span {
+		padding: 0 16px;
 	}
 	
 	.auth-card {

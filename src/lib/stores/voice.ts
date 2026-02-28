@@ -101,7 +101,8 @@ function createVoiceChannelStatesStore() {
 				const channelUsers = state[channelId] || [];
 				const filtered = channelUsers.filter(u => u.id !== userId);
 				if (filtered.length === 0) {
-					const { [channelId]: _, ...rest } = state;
+					// eslint-disable-next-line @typescript-eslint/no-unused-vars
+					const { [channelId]: _removed, ...rest } = state;
 					return rest;
 				}
 				return {
