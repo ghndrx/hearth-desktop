@@ -13,6 +13,7 @@
 	import { invoke } from '@tauri-apps/api/core';
 	import { toasts } from '$lib/stores/toasts';
 	import { nativeState } from '$lib/stores/nativeState';
+	import { autoAway, type PresenceTier } from '$lib/stores/autoAway';
 
 	const unlisteners: UnlistenFn[] = [];
 
@@ -184,6 +185,41 @@
 				});
 			}
 		);
+
+		// ── Auto-Away ──────────────────────────────────────────────
+		try {
+			const awayState = await invoke<{
+				tier: PresenceTier;
+				idle_seconds: number;
+				idle_threshold: number;
+				away_threshold: number;
+				monitor_active: boolean;
+				screen_locked: boolean;
+			}>('get_auto_away_state');
+			autoAway.setTier(awayState.tier, awayState.idle_seconds, awayState.screen_locked);
+			autoAway.setConfig(awayState.idle_threshold, awayState.away_threshold);
+			autoAway.setMonitorActive(awayState.monitor_active);
+		} catch {
+			// Command may not be available
+		}
+
+		let lastAwayTier: PresenceTier = 'active';
+		await register<{
+			tier: PresenceTier;
+			idle_seconds: number;
+			screen_locked: boolean;
+		}>('auto-away:tier-changed', (payload) => {
+			autoAway.setTier(payload.tier, payload.idle_seconds, payload.screen_locked);
+
+			if (payload.tier === 'idle' && lastAwayTier === 'active') {
+				toasts.add('Status changed to idle', { type: 'info', duration: 3000 });
+			} else if (payload.tier === 'away') {
+				toasts.add('Status changed to away', { type: 'warning', duration: 3000 });
+			} else if (payload.tier === 'active' && lastAwayTier !== 'active') {
+				toasts.add('Welcome back', { type: 'success', duration: 2000 });
+			}
+			lastAwayTier = payload.tier;
+		});
 	}
 
 	onMount(() => {

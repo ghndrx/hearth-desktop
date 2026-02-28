@@ -4,6 +4,7 @@
 mod accessibility;
 mod activity;
 mod audio;
+mod autoaway;
 mod backup;
 mod badge;
 mod clipboard;
@@ -14,6 +15,7 @@ mod drafts;
 mod fileassoc;
 mod filedrop;
 mod globalshortcut;
+mod linkpreview;
 mod mediasession;
 mod menu;
 mod notification_center;
@@ -28,6 +30,7 @@ mod sysinfo;
 mod taskbar;
 mod theme;
 mod storage;
+mod systemmonitor;
 mod tray;
 mod tts;
 mod updater;
@@ -366,6 +369,10 @@ fn main() {
             let session_handle = app.handle().clone();
             sessionlock::start_session_lock_monitor(session_handle).ok();
 
+            // Start auto-away monitor
+            let away_handle = app.handle().clone();
+            autoaway::start_auto_away_monitor(away_handle).ok();
+
             Ok(())
         })
         .on_menu_event(|app, event| {
@@ -700,6 +707,21 @@ fn main() {
             quickreply::quickreply_clear,
             quickreply::quickreply_export,
             quickreply::quickreply_import,
+            // Auto-away commands
+            autoaway::get_auto_away_state,
+            autoaway::get_auto_away_config,
+            autoaway::set_auto_away_config,
+            autoaway::start_auto_away_monitor,
+            autoaway::stop_auto_away_monitor,
+            // Link preview commands
+            linkpreview::fetch_link_preview,
+            linkpreview::fetch_link_previews,
+            linkpreview::clear_link_preview_cache,
+            // System health monitor commands
+            systemmonitor::get_system_health,
+            systemmonitor::start_system_monitor,
+            systemmonitor::stop_system_monitor,
+            systemmonitor::is_system_monitor_running,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
