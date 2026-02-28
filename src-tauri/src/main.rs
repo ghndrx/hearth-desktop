@@ -49,6 +49,7 @@ mod localsearch;
 mod bandwidth;
 mod calendar;
 mod nativeauth;
+mod qrcode;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -348,6 +349,9 @@ fn main() {
 
             // Initialize clipboard state with history (max 100 entries)
             app.manage(clipboard::init_clipboard_state(100));
+
+            // Initialize QR code state with history (max 50 entries)
+            app.manage(qrcode::init_qrcode_state(50));
 
             // Initialize window tabs state
             app.manage(tabs::init_tabs_state(app.handle()));
@@ -769,6 +773,13 @@ fn main() {
             nativeauth::keychain_delete,
             nativeauth::keychain_biometric_available,
             nativeauth::keychain_list,
+            // QR code commands
+            qrcode::qr_generate,
+            qrcode::qr_scan,
+            qrcode::qr_get_history,
+            qrcode::qr_clear_history,
+            qrcode::qr_generate_invite,
+            qrcode::qr_generate_wifi,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
