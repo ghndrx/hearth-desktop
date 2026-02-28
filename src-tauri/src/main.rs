@@ -50,6 +50,7 @@ mod bandwidth;
 mod calendar;
 mod nativeauth;
 mod qrcode;
+mod scheduler;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -389,6 +390,18 @@ fn main() {
             // Start auto-away monitor
             let away_handle = app.handle().clone();
             autoaway::start_auto_away_monitor(away_handle).ok();
+
+            // Initialize message scheduler state
+            let scheduler_state = std::sync::Arc::new(tokio::sync::RwLock::new(
+                scheduler::SchedulerState::new()
+            ));
+            app.manage(scheduler_state.clone());
+
+            // Start scheduler background task
+            let scheduler_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                scheduler::scheduler_loop(scheduler_state, scheduler_handle).await;
+            });
 
             Ok(())
         })
@@ -780,6 +793,14 @@ fn main() {
             qrcode::qr_clear_history,
             qrcode::qr_generate_invite,
             qrcode::qr_generate_wifi,
+            // Message scheduler commands
+            scheduler::schedule_message,
+            scheduler::cancel_scheduled_message,
+            scheduler::update_scheduled_message,
+            scheduler::get_scheduled_messages,
+            scheduler::get_channel_scheduled_messages,
+            scheduler::mark_scheduled_sent,
+            scheduler::mark_scheduled_failed,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
