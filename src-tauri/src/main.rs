@@ -21,6 +21,7 @@ mod performance;
 mod power;
 mod privacy;
 mod screenshot;
+mod smartstatus;
 mod snooze;
 mod spellcheck;
 mod sysinfo;
@@ -645,6 +646,13 @@ fn main() {
             touchbar::touchbar_remove_preset,
             touchbar::touchbar_clear,
             touchbar::touchbar_handle_event,
+            // Smart Status commands
+            smartstatus::detect_meeting,
+            smartstatus::detect_screen_share,
+            smartstatus::detect_music_playing,
+            smartstatus::detect_gaming,
+            smartstatus::get_idle_time,
+            smartstatus::set_user_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
