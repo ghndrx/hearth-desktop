@@ -462,6 +462,35 @@
     </div>
   </div>
 
+  <!-- Digest Summaries Section -->
+  <div class="mb-10 pb-10 border-b border-[var(--bg-modifier-accent)]">
+    <h2 class="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] mb-4">Digest Summaries</h2>
+    
+    <div class="p-4 rounded-lg bg-[var(--bg-secondary)]">
+      <div class="flex items-start gap-3">
+        <svg class="w-10 h-10 text-[var(--brand-primary)] flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V8l8 5 8-5v10zm-8-7L4 6h16l-8 5z"/>
+        </svg>
+        <div class="flex-1">
+          <span class="block text-base text-[var(--text-primary)] font-medium mb-1">Digest Notifications</span>
+          <span class="text-sm text-[var(--text-muted)] mb-3 block">
+            Batch notifications from muted channels into periodic summaries. 
+            Get hourly, daily, or weekly digests instead of constant interruptions.
+          </span>
+          <a 
+            href="/settings/digest" 
+            class="inline-flex items-center gap-1 text-sm text-[var(--brand-primary)] hover:underline cursor-pointer"
+          >
+            Configure Digest Settings
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+            </svg>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Do Not Disturb Section -->
   <div class="mb-6">
     <h2 class="text-xs font-bold uppercase tracking-wide text-[var(--text-muted)] mb-4">Do Not Disturb</h2>

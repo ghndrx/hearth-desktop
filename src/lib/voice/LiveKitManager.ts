@@ -4,15 +4,11 @@ import {
 	Room,
 	RoomEvent,
 	Track,
-	LocalParticipant,
 	RemoteParticipant,
 	Participant,
 	ConnectionState,
 	DisconnectReason,
-	TrackPublication,
-	LocalTrackPublication,
 	RemoteTrackPublication,
-	type AudioTrack,
 	type RoomOptions,
 	type AudioCaptureOptions,
 } from 'livekit-client';
@@ -179,7 +175,7 @@ class LiveKitManager {
 		// Track unsubscribed
 		this.room.on(
 			RoomEvent.TrackUnsubscribed,
-			(track: Track, publication: RemoteTrackPublication, participant: RemoteParticipant) => {
+			(track: Track, _publication: RemoteTrackPublication, _participant: RemoteParticipant) => {
 				track.detach().forEach(element => element.remove());
 			}
 		);
@@ -229,7 +225,6 @@ class LiveKitManager {
 		if (!this.room || !this.currentChannelId) return;
 
 		const users: VoiceUser[] = [];
-		const currentUser = get(authUser);
 
 		// Add local participant
 		const local = this.room.localParticipant;

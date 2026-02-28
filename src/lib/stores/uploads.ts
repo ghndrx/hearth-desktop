@@ -1,5 +1,4 @@
 import { writable, get } from 'svelte/store';
-import { api } from '$lib/api';
 
 export interface UploadItem {
 	id: string;
@@ -19,7 +18,7 @@ interface UploadStore {
 }
 
 function createUploadStore() {
-	const { subscribe, update, set } = writable<UploadStore>({
+	const { subscribe, update } = writable<UploadStore>({
 		uploads: [],
 		showProgress: false
 	});

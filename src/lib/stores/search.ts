@@ -341,7 +341,6 @@ function createSearchStore() {
 
 		selectSuggestion(suggestion: SearchSuggestion) {
 			update(state => {
-				const currentQuery = state.freeText;
 				const tokens = state.parsedTokens;
 				
 				// Build new query with the suggestion value appended

@@ -1,5 +1,5 @@
 // AI Chat Conversations Store
-import { writable, derived, get } from 'svelte/store';
+import { writable, derived } from 'svelte/store';
 import { api } from '$lib/api';
 
 // Types
@@ -133,7 +133,9 @@ interface TemplatesResponse {
 	templates: AIChatTemplate[];
 }
 
-interface MessagesResponse {
+// Reserved for future use when fetching messages separately
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+interface _MessagesResponse {
 	messages: AIChatMessage[];
 }
 
