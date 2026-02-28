@@ -191,3 +191,8 @@ export { default as QuickReplyManager } from './QuickReplyManager.svelte';
 export { default as ScreenTimeTracker } from './ScreenTimeTracker.svelte';
 export { default as SecureStorageManager } from './SecureStorageManager.svelte';
 export { default as UnreadSummaryWidget } from './UnreadSummaryWidget.svelte';
+
+// Native feature components
+export { default as BandwidthMonitor } from './BandwidthMonitor.svelte';
+export { default as CalendarStatus } from './CalendarStatus.svelte';
+export { default as NativeAuthManager } from './NativeAuthManager.svelte';

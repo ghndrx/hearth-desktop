@@ -4,9 +4,7 @@
  * 
  * Component tests for LazyImage.svelte
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, fireEvent, waitFor, screen } from '@testing-library/svelte';
-import LazyImage from './LazyImage.svelte';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 
 // Mock IntersectionObserver
 class MockIntersectionObserver {

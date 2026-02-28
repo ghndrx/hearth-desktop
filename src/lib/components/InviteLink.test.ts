@@ -407,7 +407,7 @@ describe('InviteLink', () => {
 			}
 		});
 
-		const result = await (component as { generateInvite: () => Promise<string> }).generateInvite();
+		const result = await (component as unknown as { generateInvite: () => Promise<string> }).generateInvite();
 
 		expect(result).toBe('ABC12345');
 		expect(api.post).toHaveBeenCalled();
@@ -426,7 +426,7 @@ describe('InviteLink', () => {
 			expect(api.post).toHaveBeenCalled();
 		});
 
-		const result = await (component as { copyToClipboard: () => Promise<boolean> }).copyToClipboard();
+		const result = await (component as unknown as { copyToClipboard: () => Promise<boolean> }).copyToClipboard();
 
 		expect(result).toBe(true);
 		expect(mockClipboard.writeText).toHaveBeenCalled();
@@ -439,7 +439,7 @@ describe('InviteLink', () => {
 			}
 		});
 
-		const result = await (component as { copyToClipboard: () => Promise<boolean> }).copyToClipboard();
+		const result = await (component as unknown as { copyToClipboard: () => Promise<boolean> }).copyToClipboard();
 
 		expect(result).toBe(false);
 		expect(mockClipboard.writeText).not.toHaveBeenCalled();

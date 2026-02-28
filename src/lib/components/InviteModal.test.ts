@@ -80,7 +80,7 @@ describe('InviteModal', () => {
     });
 
     // Simulate API response by calling onInviteGenerated
-    (component as InviteModalComponent).onInviteGenerated('ABC12345');
+    (component as unknown as InviteModalComponent).onInviteGenerated('ABC12345');
 
     await waitFor(() => {
       const input = container.querySelector('.invite-input') as HTMLInputElement;
@@ -98,7 +98,7 @@ describe('InviteModal', () => {
     });
 
     // Simulate API response
-    (component as InviteModalComponent).onInviteGenerated('TEST1234');
+    (component as unknown as InviteModalComponent).onInviteGenerated('TEST1234');
 
     await waitFor(() => {
       const input = container.querySelector('.invite-input') as HTMLInputElement;
@@ -115,7 +115,7 @@ describe('InviteModal', () => {
     });
 
     // Simulate API response
-    (component as InviteModalComponent).onInviteGenerated('COPYTEST');
+    (component as unknown as InviteModalComponent).onInviteGenerated('COPYTEST');
 
     await waitFor(() => {
       const input = container.querySelector('.invite-input') as HTMLInputElement;
@@ -138,7 +138,7 @@ describe('InviteModal', () => {
     });
 
     // Simulate API response
-    (component as InviteModalComponent).onInviteGenerated('COPYTEST');
+    (component as unknown as InviteModalComponent).onInviteGenerated('COPYTEST');
 
     await waitFor(() => {
       const input = container.querySelector('.invite-input') as HTMLInputElement;
@@ -291,7 +291,7 @@ describe('InviteModal', () => {
     });
 
     // Simulate API response
-    (component as InviteModalComponent).onInviteGenerated('ERRORTEST');
+    (component as unknown as InviteModalComponent).onInviteGenerated('ERRORTEST');
 
     await waitFor(() => {
       const input = container.querySelector('.invite-input') as HTMLInputElement;
@@ -317,7 +317,7 @@ describe('InviteModal', () => {
     });
 
     // Generate an invite first
-    (component as InviteModalComponent).onInviteGenerated('CLEARTEST');
+    (component as unknown as InviteModalComponent).onInviteGenerated('CLEARTEST');
 
     await waitFor(() => {
       const input = container.querySelector('.invite-input') as HTMLInputElement;

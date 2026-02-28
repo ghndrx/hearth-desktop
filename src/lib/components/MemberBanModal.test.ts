@@ -1,6 +1,5 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
-import { tick } from 'svelte';
 import MemberBanModal from './MemberBanModal.svelte';
 
 // Mock the API module

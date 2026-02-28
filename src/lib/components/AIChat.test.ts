@@ -4,7 +4,6 @@
  */
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
-import { get } from 'svelte/store';
 
 // Mock $app/environment
 vi.mock('$app/environment', () => ({
@@ -44,18 +43,19 @@ Object.defineProperty(global, 'navigator', {
 // Mock fetch
 global.fetch = vi.fn();
 
-// Mock api module
-const mockApi = {
-	get: vi.fn(),
-	post: vi.fn(),
-	put: vi.fn(),
-	patch: vi.fn(),
-	delete: vi.fn()
-};
-
+// Mock api module - hoisted mock
 vi.mock('$lib/api', () => ({
-	api: mockApi
+	api: {
+		get: vi.fn().mockResolvedValue({ conversations: [], templates: [], providers: [], models: [] }),
+		post: vi.fn().mockResolvedValue({}),
+		put: vi.fn().mockResolvedValue({}),
+		patch: vi.fn().mockResolvedValue({}),
+		delete: vi.fn().mockResolvedValue({})
+	}
 }));
+
+// Get reference to mocked API for test assertions
+import { api as mockApi } from '$lib/api';
 
 // Import stores
 import {
@@ -93,7 +93,7 @@ describe('AIChat Component (FEAT-005)', () => {
 		availableModels.set([]);
 		
 		// Default mock responses
-		mockApi.get.mockResolvedValue({ conversations: [], templates: [], providers: [], models: [] });
+		vi.mocked(mockApi.get).mockResolvedValue({ conversations: [], templates: [], providers: [], models: [] });
 	});
 
 	describe('Welcome Screen', () => {
@@ -106,7 +106,9 @@ describe('AIChat Component (FEAT-005)', () => {
 		it('should display new chat button on welcome screen', () => {
 			render(AIChat);
 			
-			expect(screen.getByText('New Chat')).toBeInTheDocument();
+			// There are two "New Chat" buttons - one in sidebar and one in welcome area
+			const newChatButtons = screen.getAllByText('New Chat');
+			expect(newChatButtons.length).toBeGreaterThanOrEqual(1);
 		});
 
 		it('should display use template button on welcome screen', () => {
@@ -384,12 +386,18 @@ describe('AIChat Component (FEAT-005)', () => {
 	});
 
 	describe('Error Handling', () => {
-		it('should display error toast when error occurs', () => {
+		it('should display error toast when error occurs', async () => {
+			const { container } = render(AIChat);
+			
+			// Set error after render
 			chatError.set('Something went wrong');
 			
-			render(AIChat);
-			
-			expect(screen.getByText('⚠️ Something went wrong')).toBeInTheDocument();
+			// Wait for reactivity
+			await waitFor(() => {
+				const errorToast = container.querySelector('.error-toast');
+				expect(errorToast).not.toBeNull();
+				expect(errorToast?.textContent).toContain('Something went wrong');
+			});
 		});
 	});
 

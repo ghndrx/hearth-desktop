@@ -1,8 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
+import { render, screen, waitFor } from '@testing-library/svelte';
 import DigestSettings from './DigestSettings.svelte';
 import { digest } from '$lib/stores/digest';
-import type { DigestPreferences, DigestPreview, DigestHistory } from '$lib/stores/digest';
 
 // Mock the stores
 vi.mock('$lib/stores/digest', () => {
@@ -129,20 +128,22 @@ describe('DigestSettings', () => {
 describe('formatDigestFrequency', () => {
 	it('formats frequency correctly', async () => {
 		const { formatDigestFrequency } = await import('$lib/stores/digest');
+		type DigestFrequency = Parameters<typeof formatDigestFrequency>[0];
 		
-		expect(formatDigestFrequency('hourly' as any)).toBe('Hourly');
-		expect(formatDigestFrequency('daily' as any)).toBe('Daily');
-		expect(formatDigestFrequency('weekly' as any)).toBe('Weekly');
+		expect(formatDigestFrequency('hourly' as DigestFrequency)).toBe('Hourly');
+		expect(formatDigestFrequency('daily' as DigestFrequency)).toBe('Daily');
+		expect(formatDigestFrequency('weekly' as DigestFrequency)).toBe('Weekly');
 	});
 });
 
 describe('formatDigestStatus', () => {
 	it('formats status correctly', async () => {
 		const { formatDigestStatus } = await import('$lib/stores/digest');
+		type DigestStatus = Parameters<typeof formatDigestStatus>[0];
 		
-		expect(formatDigestStatus('pending' as any)).toBe('Pending');
-		expect(formatDigestStatus('sent' as any)).toBe('Sent');
-		expect(formatDigestStatus('failed' as any)).toBe('Failed');
-		expect(formatDigestStatus('skipped' as any)).toBe('Skipped');
+		expect(formatDigestStatus('pending' as DigestStatus)).toBe('Pending');
+		expect(formatDigestStatus('sent' as DigestStatus)).toBe('Sent');
+		expect(formatDigestStatus('failed' as DigestStatus)).toBe('Failed');
+		expect(formatDigestStatus('skipped' as DigestStatus)).toBe('Skipped');
 	});
 });
