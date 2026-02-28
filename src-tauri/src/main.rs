@@ -42,6 +42,9 @@ mod network;
 mod filewatcher;
 mod sessionlock;
 mod quickreply;
+mod sessionrestore;
+mod privacylock;
+mod voicerecorder;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -722,6 +725,14 @@ fn main() {
             systemmonitor::start_system_monitor,
             systemmonitor::stop_system_monitor,
             systemmonitor::is_system_monitor_running,
+            // Session restore commands
+            sessionrestore::save_session_state,
+            sessionrestore::load_session_state,
+            sessionrestore::clear_session_state,
+            sessionrestore::restore_from_backup,
+            sessionrestore::get_session_info,
+            sessionrestore::capture_window_state,
+            sessionrestore::restore_window_state,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
