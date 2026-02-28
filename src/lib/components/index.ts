@@ -190,3 +190,4 @@ export { default as HotkeyOverlay } from './HotkeyOverlay.svelte';
 export { default as QuickReplyManager } from './QuickReplyManager.svelte';
 export { default as ScreenTimeTracker } from './ScreenTimeTracker.svelte';
 export { default as SecureStorageManager } from './SecureStorageManager.svelte';
+export { default as UnreadSummaryWidget } from './UnreadSummaryWidget.svelte';
