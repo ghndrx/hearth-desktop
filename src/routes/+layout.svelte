@@ -3,6 +3,8 @@
 	import { auth, isAuthenticated, isLoading } from '$lib/stores/auth';
 	import { gateway } from '$lib/gateway';
 	import '$lib/styles/theme.css';
+	import NativeEventBridge from '$lib/components/NativeEventBridge.svelte';
+	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	
 	onMount(() => {
 		auth.init();
