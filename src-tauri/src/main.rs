@@ -31,6 +31,7 @@ mod tts;
 mod updater;
 mod workspaceprofiles;
 mod tabs;
+mod quickcapture;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -243,6 +244,17 @@ fn main() {
                 })
                 .ok();
 
+            // Toggle quick capture with Cmd/Ctrl+Shift+C
+            shortcut_manager
+                .register("CommandOrControl+Shift+C", {
+                    let app_handle = app.handle().clone();
+                    move || {
+                        let manager = app_handle.state::<quickcapture::QuickCaptureManager>();
+                        let _ = manager.toggle(&app_handle);
+                    }
+                })
+                .ok();
+
             // Register media key shortcuts
             shortcut_manager
                 .register("MediaPlayPause", {
@@ -313,6 +325,10 @@ fn main() {
 
             // Initialize notification center state
             app.manage(notification_center::NotificationCenterState::default());
+
+            // Initialize quick capture manager
+            app.manage(quickcapture::QuickCaptureManager::new());
+            quickcapture::init(app.handle());
 
             // Load custom spell check dictionary
             spellcheck::load_custom_dictionary(app.handle());
@@ -593,6 +609,14 @@ fn main() {
             tabs::remove_tab_from_groups,
             tabs::delete_tab_group,
             tabs::toggle_group_collapsed,
+            // Quick capture commands
+            quickcapture::quick_capture_show,
+            quickcapture::quick_capture_hide,
+            quickcapture::quick_capture_toggle,
+            quickcapture::quick_capture_get_config,
+            quickcapture::quick_capture_set_config,
+            quickcapture::quick_capture_get_state,
+            quickcapture::quick_capture_is_visible,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
