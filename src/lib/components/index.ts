@@ -142,7 +142,6 @@ export { default as PasteHistoryManager } from './PasteHistoryManager.svelte';
 export { default as ReadReceiptIndicator } from './ReadReceiptIndicator.svelte';
 export { default as RecentFilesManager } from './RecentFilesManager.svelte';
 export { default as WhatsNewModal } from './WhatsNewModal.svelte';
-export { default as KeyboardShortcutsModal } from './KeyboardShortcutsModal.svelte';
 export { default as WindowBehaviorSettings } from './WindowBehaviorSettings.svelte';
 export { default as TrayMenuManager } from './TrayMenuManager.svelte';
 export { default as SystemTrayContextMenu } from './SystemTrayContextMenu.svelte';
@@ -199,3 +198,6 @@ export { default as UnreadSummaryWidget } from './UnreadSummaryWidget.svelte';
 export { default as BandwidthMonitor } from './BandwidthMonitor.svelte';
 export { default as CalendarStatus } from './CalendarStatus.svelte';
 export { default as NativeAuthManager } from './NativeAuthManager.svelte';
+
+// Screenshot components
+export { default as ScreenshotGallery } from './ScreenshotGallery.svelte';
