@@ -186,3 +186,4 @@ export { default as TouchBarManager } from './TouchBarManager.svelte';
 export { default as TabSwitcher } from './TabSwitcher.svelte';
 export { default as FloatingToolbar } from './FloatingToolbar.svelte';
 export { default as HotkeyOverlay } from './HotkeyOverlay.svelte';
+export { default as QuickReplyManager } from './QuickReplyManager.svelte';

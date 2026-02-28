@@ -38,6 +38,7 @@ mod touchbar;
 mod network;
 mod filewatcher;
 mod sessionlock;
+mod quickreply;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -257,6 +258,18 @@ fn main() {
                     move || {
                         let manager = app_handle.state::<quickcapture::QuickCaptureManager>();
                         let _ = manager.toggle(&app_handle);
+                    }
+                })
+                .ok();
+
+            // Toggle quick replies with Cmd/Ctrl+Shift+R
+            shortcut_manager
+                .register("CommandOrControl+Shift+R", {
+                    let app_handle = app.handle().clone();
+                    move || {
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            let _ = window.emit("open-quick-replies", ());
+                        }
                     }
                 })
                 .ok();
@@ -680,6 +693,13 @@ fn main() {
             sessionlock::is_session_locked,
             sessionlock::start_session_lock_monitor,
             sessionlock::stop_session_lock_monitor,
+            // Quick reply commands
+            quickreply::quickreply_load,
+            quickreply::quickreply_save,
+            quickreply::quickreply_stats,
+            quickreply::quickreply_clear,
+            quickreply::quickreply_export,
+            quickreply::quickreply_import,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
