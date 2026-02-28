@@ -207,3 +207,6 @@ export { default as SleepTimerManager } from './SleepTimerManager.svelte';
 
 // Message scheduling components
 export { default as MessageScheduler } from './MessageScheduler.svelte';
+
+// Quick access components
+export { default as QuickActionsWheel } from './QuickActionsWheel.svelte';
