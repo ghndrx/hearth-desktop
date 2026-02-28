@@ -55,23 +55,24 @@ pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::er
                     let current = FOCUS_MODE_ENABLED.load(Ordering::Relaxed);
                     let new_state = !current;
                     FOCUS_MODE_ENABLED.store(new_state, Ordering::Relaxed);
-                    
+
                     let is_muted = crate::commands::is_muted().unwrap_or(false);
                     let _ = update_tray_menu(app, is_muted, new_state);
-                    
+
+                    let message = if new_state {
+                        "Focus mode enabled - only mentions and DMs"
+                    } else {
+                        "Focus mode disabled"
+                    };
+
                     // Notify the UI about focus mode change
                     if let Some(window) = app.get_webview_window("main") {
-                        let message = if new_state {
-                            "Focus mode enabled - only mentions and DMs"
-                        } else {
-                            "Focus mode disabled"
-                        };
                         let _ = window.emit("focus-mode-changed", serde_json::json!({
                             "active": new_state,
                             "message": message
                         }));
                     }
-                    
+
                     // Show system notification
                     let _ = app.notification()
                         .builder()
