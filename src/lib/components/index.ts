@@ -201,3 +201,6 @@ export { default as NativeAuthManager } from './NativeAuthManager.svelte';
 
 // Screenshot components
 export { default as ScreenshotGallery } from './ScreenshotGallery.svelte';
+
+// Timer and wellness components
+export { default as SleepTimerManager } from './SleepTimerManager.svelte';
