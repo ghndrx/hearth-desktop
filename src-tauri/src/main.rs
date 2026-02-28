@@ -10,6 +10,7 @@ mod clipboard;
 mod commands;
 mod deeplink;
 mod dnd;
+mod drafts;
 mod fileassoc;
 mod filedrop;
 mod globalshortcut;
@@ -326,6 +327,9 @@ fn main() {
             // Initialize notification center state
             app.manage(notification_center::NotificationCenterState::default());
 
+            // Initialize drafts state
+            app.manage(drafts::DraftsState::default());
+
             // Initialize quick capture manager
             app.manage(quickcapture::QuickCaptureManager::new());
             quickcapture::init(app.handle());
@@ -609,6 +613,15 @@ fn main() {
             tabs::remove_tab_from_groups,
             tabs::delete_tab_group,
             tabs::toggle_group_collapsed,
+            // Message drafts commands
+            drafts::save_draft,
+            drafts::get_draft,
+            drafts::delete_draft,
+            drafts::get_all_drafts,
+            drafts::get_draft_count,
+            drafts::clear_all_drafts,
+            drafts::cleanup_stale_drafts,
+            drafts::load_drafts,
             // Quick capture commands
             quickcapture::quick_capture_show,
             quickcapture::quick_capture_hide,
