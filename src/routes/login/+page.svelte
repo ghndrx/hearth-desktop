@@ -11,7 +11,8 @@
 	
 	onMount(async () => {
 		// Fetch enabled OAuth providers
-		oauthProviders = await auth.getOAuthProviders();
+		const result = await auth.getOAuthProviders();
+		oauthProviders = result.providers;
 	});
 	
 	async function handleSubmit() {
