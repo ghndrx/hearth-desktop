@@ -3,6 +3,7 @@
 	import { writable } from 'svelte/store';
 	import { invoke } from '@tauri-apps/api/core';
 	import HabitTrackerWidget from './HabitTrackerWidget.svelte';
+	import TimezoneWidget from './TimezoneWidget.svelte';
 
 	// Widget bar state
 	let isCollapsed = $state(false);
@@ -16,7 +17,7 @@
 
 	interface Widget {
 		id: string;
-		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits';
+		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone';
 		enabled: boolean;
 		order: number;
 	}
@@ -60,12 +61,13 @@
 	// Default widgets
 	const defaultWidgets: Widget[] = [
 		{ id: 'clock', type: 'clock', enabled: true, order: 0 },
-		{ id: 'system', type: 'system', enabled: true, order: 1 },
-		{ id: 'weather', type: 'weather', enabled: true, order: 2 },
-		{ id: 'calendar', type: 'calendar', enabled: true, order: 3 },
-		{ id: 'notes', type: 'notes', enabled: true, order: 4 },
-		{ id: 'pomodoro', type: 'pomodoro', enabled: true, order: 5 },
-		{ id: 'habits', type: 'habits', enabled: true, order: 6 }
+		{ id: 'timezone', type: 'timezone', enabled: true, order: 1 },
+		{ id: 'system', type: 'system', enabled: true, order: 2 },
+		{ id: 'weather', type: 'weather', enabled: true, order: 3 },
+		{ id: 'calendar', type: 'calendar', enabled: true, order: 4 },
+		{ id: 'notes', type: 'notes', enabled: true, order: 5 },
+		{ id: 'pomodoro', type: 'pomodoro', enabled: true, order: 6 },
+		{ id: 'habits', type: 'habits', enabled: true, order: 7 }
 	];
 
 	let clockInterval: ReturnType<typeof setInterval>;
@@ -353,6 +355,8 @@
 							<div class="time">{formatTime(currentTime)}</div>
 							<div class="date">{formatDate(currentTime)}</div>
 						</div>
+					{:else if widget.type === 'timezone'}
+						<TimezoneWidget compact={true} />
 					{:else if widget.type === 'system'}
 						<div class="widget-system">
 							<div class="stat">
