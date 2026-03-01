@@ -58,6 +58,9 @@ mod applog;
 mod diagnostics;
 mod share;
 mod translate;
+mod applauncher;
+mod nightlight;
+mod widgets;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -416,6 +419,14 @@ fn main() {
 
             // Initialize app log system
             applog::init_applog(app.handle());
+
+            // Initialize application launcher state
+            app.manage(applauncher::AppLauncherState::default());
+
+            // Initialize night light state and start monitor
+            let nightlight_state = std::sync::Arc::new(nightlight::NightLightState::default());
+            app.manage(nightlight_state.clone());
+            nightlight::start_nightlight_monitor(app.handle().clone(), nightlight_state);
 
             // Start scheduler background task
             let scheduler_handle = app.handle().clone();
@@ -872,6 +883,18 @@ fn main() {
             translate::detect_language,
             translate::translate_text,
             translate::get_supported_languages,
+            // Night light / blue light filter commands
+            nightlight::nightlight_get_status,
+            nightlight::nightlight_get_settings,
+            nightlight::nightlight_set_settings,
+            nightlight::nightlight_toggle,
+            nightlight::nightlight_set_temperature,
+            nightlight::nightlight_set_mode,
+            nightlight::nightlight_set_schedule,
+            nightlight::nightlight_get_presets,
+            // Widget bar commands
+            widgets::get_widget_system_stats,
+            widgets::get_widget_weather,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
