@@ -45,6 +45,7 @@ mod quickreply;
 mod sessionrestore;
 mod privacylock;
 mod voicerecorder;
+mod dictation;
 mod localsearch;
 mod bandwidth;
 mod calendar;
@@ -365,6 +366,12 @@ fn main() {
 
             // Initialize quick capture manager
             app.manage(quickcapture::QuickCaptureManager::new());
+
+            // Initialize voice recorder manager
+            app.manage(voicerecorder::VoiceRecorderManager::default());
+
+            // Initialize dictation manager
+            app.manage(dictation::DictationManager::default());
 
             // Initialize Touch Bar manager (macOS)
             app.manage(touchbar::TouchBarManager::new());
@@ -801,6 +808,27 @@ fn main() {
             scheduler::get_channel_scheduled_messages,
             scheduler::mark_scheduled_sent,
             scheduler::mark_scheduled_failed,
+            // Voice recorder commands
+            voicerecorder::start_voice_recording,
+            voicerecorder::stop_voice_recording,
+            voicerecorder::pause_voice_recording,
+            voicerecorder::resume_voice_recording,
+            voicerecorder::cancel_voice_recording,
+            voicerecorder::get_audio_level,
+            voicerecorder::list_audio_input_devices,
+            // Dictation / speech-to-text commands
+            dictation::check_dictation_available,
+            dictation::request_dictation_permission,
+            dictation::get_supported_languages,
+            dictation::start_dictation,
+            dictation::stop_dictation,
+            dictation::pause_dictation,
+            dictation::resume_dictation,
+            dictation::cancel_dictation,
+            dictation::get_dictation_status,
+            dictation::get_dictation_audio_level,
+            dictation::update_dictation_transcript,
+            dictation::add_punctuation,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
