@@ -240,3 +240,6 @@ export { default as AutoReplyManager } from './AutoReplyManager.svelte';
 
 // Native share components
 export { default as NativeShareSheet } from './NativeShareSheet.svelte';
+
+// World clock components
+export { default as TimezoneWidget } from './TimezoneWidget.svelte';
