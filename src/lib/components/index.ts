@@ -214,3 +214,6 @@ export { default as QuickActionsWheel } from './QuickActionsWheel.svelte';
 
 // Desktop automation components
 export { default as HotCornersManager } from './HotCornersManager.svelte';
+
+// Help and onboarding components
+export { default as ContextualHelpPanel } from './ContextualHelpPanel.svelte';
