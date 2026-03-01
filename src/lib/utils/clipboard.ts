@@ -162,7 +162,7 @@ export async function getClipboardContentType(): Promise<'text' | 'image' | 'emp
  */
 export function createClipboardWatcher(pollInterval = 1000) {
   let interval: ReturnType<typeof setInterval> | null = null;
-  let subscribers: Set<(type: 'text' | 'image' | 'empty') => void> = new Set();
+  const subscribers: Set<(type: 'text' | 'image' | 'empty') => void> = new Set();
   let lastType: 'text' | 'image' | 'empty' = 'empty';
 
   const check = async () => {
