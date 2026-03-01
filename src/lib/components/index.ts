@@ -40,6 +40,7 @@ export { default as MentionsPanel } from './MentionsPanel.svelte';
 // Media components
 export { default as MediaPlayer } from './MediaPlayer.svelte';
 export { default as MediaSessionManager } from './MediaSessionManager.svelte';
+export { default as MediaKeyHandler } from './MediaKeyHandler.svelte';
 export { default as FileUploadZone } from './FileUploadZone.svelte';
 export { default as FileQuickPreview } from './FileQuickPreview.svelte';
 export { default as NativeFileDrop } from './NativeFileDrop.svelte';
