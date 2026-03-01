@@ -24,6 +24,13 @@ export default ts.config(
 		}
 	},
 	{
+		// Disable typescript-eslint/no-unused-vars for Svelte files due to parser compatibility issues
+		files: ['**/*.svelte'],
+		rules: {
+			'@typescript-eslint/no-unused-vars': 'off'
+		}
+	},
+	{
 		ignores: ['build/', '.svelte-kit/', 'dist/', 'node_modules/', 'src-tauri/target/']
 	}
 );

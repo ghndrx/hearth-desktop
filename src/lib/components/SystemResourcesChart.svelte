@@ -103,6 +103,7 @@
 
 	function drawLine(data: number[], color: string, width: number, canvasHeight: number) {
 		if (!ctx || data.length < 2) return;
+		const context = ctx; // TypeScript narrowing helper
 
 		const padding = 2;
 		const graphHeight = canvasHeight - padding * 2;
@@ -112,49 +113,49 @@
 		const offset = (maxDataPoints - data.length) * stepX;
 
 		// Draw filled area
-		ctx.beginPath();
-		ctx.moveTo(offset, canvasHeight - padding);
+		context.beginPath();
+		context.moveTo(offset, canvasHeight - padding);
 
 		data.forEach((value, i) => {
 			const x = offset + i * stepX;
 			const y = canvasHeight - padding - (value / 100) * graphHeight;
-			ctx.lineTo(x, y);
+			context.lineTo(x, y);
 		});
 
-		ctx.lineTo(offset + (data.length - 1) * stepX, canvasHeight - padding);
-		ctx.closePath();
+		context.lineTo(offset + (data.length - 1) * stepX, canvasHeight - padding);
+		context.closePath();
 
-		ctx.fillStyle = color.replace(')', `, ${fillOpacity})`).replace('rgb', 'rgba');
-		ctx.fill();
+		context.fillStyle = color.replace(')', `, ${fillOpacity})`).replace('rgb', 'rgba');
+		context.fill();
 
 		// Draw line on top
-		ctx.beginPath();
+		context.beginPath();
 		data.forEach((value, i) => {
 			const x = offset + i * stepX;
 			const y = canvasHeight - padding - (value / 100) * graphHeight;
 			if (i === 0) {
-				ctx.moveTo(x, y);
+				context.moveTo(x, y);
 			} else {
-				ctx.lineTo(x, y);
+				context.lineTo(x, y);
 			}
 		});
 
-		ctx.strokeStyle = color;
-		ctx.lineWidth = 2;
-		ctx.lineCap = 'round';
-		ctx.lineJoin = 'round';
-		ctx.stroke();
+		context.strokeStyle = color;
+		context.lineWidth = 2;
+		context.lineCap = 'round';
+		context.lineJoin = 'round';
+		context.stroke();
 
 		// Draw current value dot
 		const lastX = offset + (data.length - 1) * stepX;
 		const lastY = canvasHeight - padding - (data[data.length - 1] / 100) * graphHeight;
-		ctx.beginPath();
-		ctx.arc(lastX, lastY, 4, 0, Math.PI * 2);
-		ctx.fillStyle = color;
-		ctx.fill();
-		ctx.strokeStyle = '#ffffff';
-		ctx.lineWidth = 2;
-		ctx.stroke();
+		context.beginPath();
+		context.arc(lastX, lastY, 4, 0, Math.PI * 2);
+		context.fillStyle = color;
+		context.fill();
+		context.strokeStyle = '#ffffff';
+		context.lineWidth = 2;
+		context.stroke();
 	}
 
 	async function init() {

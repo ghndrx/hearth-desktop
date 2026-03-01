@@ -303,33 +303,34 @@
   // Draw waveform visualization
   function drawWaveform() {
     if (!canvasCtx || !waveformCanvas) return;
+    const ctx = canvasCtx; // TypeScript narrowing helper
 
     const { width, height } = waveformCanvas;
     const data = $recordingState.waveformData;
 
-    canvasCtx.clearRect(0, 0, width, height);
-    canvasCtx.fillStyle = 'rgba(59, 130, 246, 0.3)';
-    canvasCtx.strokeStyle = '#3b82f6';
-    canvasCtx.lineWidth = 2;
+    ctx.clearRect(0, 0, width, height);
+    ctx.fillStyle = 'rgba(59, 130, 246, 0.3)';
+    ctx.strokeStyle = '#3b82f6';
+    ctx.lineWidth = 2;
 
     const barWidth = width / data.length;
     const centerY = height / 2;
 
-    canvasCtx.beginPath();
+    ctx.beginPath();
     data.forEach((level, i) => {
       const barHeight = level * height * 0.8;
       const x = i * barWidth;
       const y = centerY - barHeight / 2;
 
-      canvasCtx.fillRect(x, y, barWidth - 1, barHeight);
+      ctx.fillRect(x, y, barWidth - 1, barHeight);
       
       if (i === 0) {
-        canvasCtx.moveTo(x, centerY - level * centerY);
+        ctx.moveTo(x, centerY - level * centerY);
       } else {
-        canvasCtx.lineTo(x, centerY - level * centerY);
+        ctx.lineTo(x, centerY - level * centerY);
       }
     });
-    canvasCtx.stroke();
+    ctx.stroke();
   }
 
   // Preview playback controls
@@ -944,4 +945,3 @@
     background: var(--accent-hover, #4752c4);
   }
 </style>
-</script>

@@ -209,10 +209,10 @@
   $: currentSettings = $settings;
 </script>
 
-<!-- Global CSS injection for streamer mode -->
+<!-- Global CSS injection for streamer mode via dynamic style element -->
 <svelte:head>
   {#if $isEnabled}
-    <style>
+    {@html `<style id="streamer-mode-styles">
       /* Streamer Mode Global Styles */
       .streamer-mode .sensitive-info,
       .streamer-mode [data-sensitive="true"] {
@@ -225,37 +225,12 @@
         filter: blur(4px) !important;
       }
       
-      .streamer-mode .dm-content {
-        {#if currentSettings.hideDirectMessages}
-          display: none !important;
-        {/if}
-      }
-      
-      .streamer-mode .member-list {
-        {#if currentSettings.hideMemberList}
-          display: none !important;
-        {/if}
-      }
-      
-      .streamer-mode .invite-link {
-        {#if currentSettings.hideInviteLinks}
-          filter: blur(10px) !important;
-        {/if}
-      }
-      
-      .streamer-mode .email-address {
-        {#if currentSettings.hideEmailAddresses}
-          filter: blur(10px) !important;
-        {/if}
-      }
-      
-      .streamer-mode .user-avatar img,
-      .streamer-mode .message-attachment img {
-        {#if currentSettings.blurImages}
-          filter: blur(15px) !important;
-        {/if}
-      }
-    </style>
+      ${currentSettings.hideDirectMessages ? `.streamer-mode .dm-content { display: none !important; }` : ''}
+      ${currentSettings.hideMemberList ? `.streamer-mode .member-list { display: none !important; }` : ''}
+      ${currentSettings.hideInviteLinks ? `.streamer-mode .invite-link { filter: blur(10px) !important; }` : ''}
+      ${currentSettings.hideEmailAddresses ? `.streamer-mode .email-address { filter: blur(10px) !important; }` : ''}
+      ${currentSettings.blurImages ? `.streamer-mode .user-avatar img, .streamer-mode .message-attachment img { filter: blur(15px) !important; }` : ''}
+    </style>`}
   {/if}
 </svelte:head>
 

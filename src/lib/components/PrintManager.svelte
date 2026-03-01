@@ -157,13 +157,15 @@
       </div>
     `).join('');
     
+    // Use string concatenation to prevent Vite CSS preprocessing of template literal
+    const styleTag = 'sty' + 'le';
     return `
       <!DOCTYPE html>
       <html>
       <head>
         <meta charset="UTF-8">
         <title>${escapeHtml(channelName)} - ${escapeHtml(serverName)}</title>
-        <style>
+        <${styleTag}>
           * { box-sizing: border-box; margin: 0; padding: 0; }
           body { 
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -216,7 +218,7 @@
             body { padding: 0; }
             .message { page-break-inside: avoid; }
           }
-        </style>
+        </${styleTag}>
       </head>
       <body>
         ${printOptions.headerFooter ? `

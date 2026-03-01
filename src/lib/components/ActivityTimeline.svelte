@@ -1051,4 +1051,3 @@
     background: var(--scrollbar-thumb-hover, rgba(255, 255, 255, 0.2));
   }
 </style>
-</script>
