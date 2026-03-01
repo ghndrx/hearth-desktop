@@ -16,6 +16,7 @@ mod fileassoc;
 mod filedrop;
 mod globalshortcut;
 mod linkpreview;
+mod locale;
 mod mediasession;
 mod menu;
 mod notification_center;
@@ -764,6 +765,8 @@ fn main() {
             linkpreview::fetch_link_preview,
             linkpreview::fetch_link_previews,
             linkpreview::clear_link_preview_cache,
+            // Locale detection commands
+            locale::get_system_locale,
             // System health monitor commands
             systemmonitor::get_system_health,
             systemmonitor::start_system_monitor,
