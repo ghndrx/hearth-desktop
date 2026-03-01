@@ -217,3 +217,9 @@ export { default as HotCornersManager } from './HotCornersManager.svelte';
 
 // Help and onboarding components
 export { default as ContextualHelpPanel } from './ContextualHelpPanel.svelte';
+
+// Typing experience components
+export { default as TypingSoundEffects } from './TypingSoundEffects.svelte';
+
+// Performance monitoring components
+export { default as StartupPerformanceProfiler } from './StartupPerformanceProfiler.svelte';
