@@ -52,6 +52,7 @@ mod calendar;
 mod nativeauth;
 mod qrcode;
 mod scheduler;
+mod hotcorners;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -403,6 +404,10 @@ fn main() {
                 scheduler::SchedulerState::new()
             ));
             app.manage(scheduler_state.clone());
+
+            // Initialize hot corners manager
+            let hotcorners_manager = std::sync::Arc::new(hotcorners::HotCornersManager::new());
+            app.manage(hotcorners_manager);
 
             // Start scheduler background task
             let scheduler_handle = app.handle().clone();
@@ -829,6 +834,15 @@ fn main() {
             dictation::get_dictation_audio_level,
             dictation::update_dictation_transcript,
             dictation::add_punctuation,
+            // Hot corners commands
+            hotcorners::hotcorners_get_settings,
+            hotcorners::hotcorners_update_settings,
+            hotcorners::hotcorners_check_position,
+            hotcorners::hotcorners_set_screen_dimensions,
+            hotcorners::hotcorners_set_corner_action,
+            hotcorners::hotcorners_set_corner_enabled,
+            hotcorners::hotcorners_reset_tracking,
+            hotcorners::hotcorners_get_available_actions,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

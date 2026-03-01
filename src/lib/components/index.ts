@@ -211,3 +211,6 @@ export { default as MessageScheduler } from './MessageScheduler.svelte';
 
 // Quick access components
 export { default as QuickActionsWheel } from './QuickActionsWheel.svelte';
+
+// Desktop automation components
+export { default as HotCornersManager } from './HotCornersManager.svelte';
