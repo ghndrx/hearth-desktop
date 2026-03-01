@@ -208,6 +208,7 @@ export { default as SleepTimerManager } from './SleepTimerManager.svelte';
 
 // Message scheduling components
 export { default as MessageScheduler } from './MessageScheduler.svelte';
+export { default as MessageReminderManager } from './MessageReminderManager.svelte';
 
 // Quick access components
 export { default as QuickActionsWheel } from './QuickActionsWheel.svelte';
@@ -223,3 +224,7 @@ export { default as TypingSoundEffects } from './TypingSoundEffects.svelte';
 
 // Performance monitoring components
 export { default as StartupPerformanceProfiler } from './StartupPerformanceProfiler.svelte';
+
+// Clipboard and text expansion components
+export { default as ClipboardHistoryManager } from './ClipboardHistoryManager.svelte';
+export { default as TextExpander } from './TextExpander.svelte';
