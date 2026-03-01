@@ -233,3 +233,6 @@ export { default as TextExpander } from './TextExpander.svelte';
 
 // Auto-reply components
 export { default as AutoReplyManager } from './AutoReplyManager.svelte';
+
+// Native share components
+export { default as NativeShareSheet } from './NativeShareSheet.svelte';
