@@ -2,6 +2,7 @@
 	import { onMount, onDestroy } from 'svelte';
 	import { writable } from 'svelte/store';
 	import { invoke } from '@tauri-apps/api/core';
+	import HabitTrackerWidget from './HabitTrackerWidget.svelte';
 
 	// Widget bar state
 	let isCollapsed = $state(false);
@@ -15,7 +16,7 @@
 
 	interface Widget {
 		id: string;
-		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro';
+		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits';
 		enabled: boolean;
 		order: number;
 	}
@@ -63,7 +64,8 @@
 		{ id: 'weather', type: 'weather', enabled: true, order: 2 },
 		{ id: 'calendar', type: 'calendar', enabled: true, order: 3 },
 		{ id: 'notes', type: 'notes', enabled: true, order: 4 },
-		{ id: 'pomodoro', type: 'pomodoro', enabled: true, order: 5 }
+		{ id: 'pomodoro', type: 'pomodoro', enabled: true, order: 5 },
+		{ id: 'habits', type: 'habits', enabled: true, order: 6 }
 	];
 
 	let clockInterval: ReturnType<typeof setInterval>;
@@ -481,6 +483,8 @@
 								<button onclick={resetPomodoro}>↻</button>
 							</div>
 						</div>
+					{:else if widget.type === 'habits'}
+						<HabitTrackerWidget />
 					{/if}
 				</div>
 			{/each}
