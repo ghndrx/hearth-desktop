@@ -56,6 +56,7 @@ mod scheduler;
 mod hotcorners;
 mod applog;
 mod diagnostics;
+mod share;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -861,6 +862,11 @@ fn main() {
             diagnostics::run_diagnostics,
             diagnostics::run_single_diagnostic,
             diagnostics::export_diagnostic_report,
+            // Native share sheet commands
+            share::get_share_targets,
+            share::share_content,
+            share::is_share_available,
+            share::get_share_icon,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
