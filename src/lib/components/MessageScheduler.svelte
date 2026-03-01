@@ -1,746 +1,493 @@
 <script lang="ts">
-    import { onMount, onDestroy, createEventDispatcher } from 'svelte';
-    import { invoke } from '@tauri-apps/api/core';
-    import { listen, type UnlistenFn } from '@tauri-apps/api/event';
-    import { fade, slide } from 'svelte/transition';
+	import { onMount, onDestroy } from 'svelte';
+	import { writable, derived } from 'svelte/store';
 
-    export let channelId: string = '';
-    export let showPanel: boolean = false;
+	interface ScheduledMessage {
+		id: string;
+		channelId: string;
+		channelName: string;
+		content: string;
+		scheduledTime: number;
+		createdAt: number;
+		recurring: 'none' | 'daily' | 'weekly' | 'monthly';
+		status: 'pending' | 'sent' | 'failed' | 'cancelled';
+		attachments?: string[];
+	}
 
-    interface ScheduledMessage {
-        id: string;
-        channel_id: string;
-        content: string;
-        scheduled_at: number;
-        created_at: number;
-        status: 'pending' | 'sent' | 'failed' | 'cancelled';
-        attachments: string[];
-        reply_to: string | null;
-    }
+	// Store for scheduled messages
+	const scheduledMessages = writable<ScheduledMessage[]>([]);
+	const filter = writable<'all' | 'pending' | 'sent' | 'failed'>('all');
+	const searchQuery = writable('');
+	const showComposePanel = writable(false);
 
-    const dispatch = createEventDispatcher<{
-        schedule: { message: ScheduledMessage };
-        send: { message: ScheduledMessage };
-        close: void;
-    }>();
+	// New message form state
+	let newMessage = {
+		channelId: '',
+		channelName: '',
+		content: '',
+		scheduledDate: '',
+		scheduledTime: '',
+		recurring: 'none' as const
+	};
 
-    let scheduledMessages: ScheduledMessage[] = [];
-    let newContent: string = '';
-    let scheduledDate: string = '';
-    let scheduledTime: string = '';
-    let isLoading: boolean = false;
-    let error: string = '';
-    let editingId: string | null = null;
-    let editContent: string = '';
-    let editDate: string = '';
-    let editTime: string = '';
+	// Filtered messages
+	const filteredMessages = derived(
+		[scheduledMessages, filter, searchQuery],
+		([$messages, $filter, $query]) => {
+			let result = $messages;
 
-    let unlisteners: UnlistenFn[] = [];
+			if ($filter !== 'all') {
+				result = result.filter((m) => m.status === $filter);
+			}
 
-    // Set default scheduled time to 1 hour from now
-    function getDefaultDateTime() {
-        const now = new Date();
-        now.setHours(now.getHours() + 1);
-        now.setMinutes(0);
-        now.setSeconds(0);
-        
-        scheduledDate = now.toISOString().split('T')[0];
-        scheduledTime = now.toTimeString().slice(0, 5);
-    }
+			if ($query.trim()) {
+				const q = $query.toLowerCase();
+				result = result.filter(
+					(m) =>
+						m.content.toLowerCase().includes(q) || m.channelName.toLowerCase().includes(q)
+				);
+			}
 
-    async function loadScheduledMessages() {
-        try {
-            isLoading = true;
-            if (channelId) {
-                scheduledMessages = await invoke<ScheduledMessage[]>('get_channel_scheduled_messages', {
-                    channelId
-                });
-            } else {
-                scheduledMessages = await invoke<ScheduledMessage[]>('get_scheduled_messages');
-            }
-            scheduledMessages = scheduledMessages.filter(m => m.status === 'pending');
-        } catch (e) {
-            console.error('Failed to load scheduled messages:', e);
-        } finally {
-            isLoading = false;
-        }
-    }
+			return result.sort((a, b) => a.scheduledTime - b.scheduledTime);
+		}
+	);
 
-    async function scheduleMessage() {
-        if (!newContent.trim() || !scheduledDate || !scheduledTime) {
-            error = 'Please fill in all fields';
-            return;
-        }
+	// Stats
+	const stats = derived(scheduledMessages, ($messages) => ({
+		pending: $messages.filter((m) => m.status === 'pending').length,
+		sent: $messages.filter((m) => m.status === 'sent').length,
+		failed: $messages.filter((m) => m.status === 'failed').length,
+		total: $messages.length
+	}));
 
-        const scheduledAt = new Date(`${scheduledDate}T${scheduledTime}`).getTime();
-        
-        if (scheduledAt <= Date.now()) {
-            error = 'Scheduled time must be in the future';
-            return;
-        }
+	// Available channels (mock data - in real app, fetch from API)
+	const channels = [
+		{ id: 'general', name: 'general' },
+		{ id: 'random', name: 'random' },
+		{ id: 'announcements', name: 'announcements' },
+		{ id: 'team', name: 'team' }
+	];
 
-        try {
-            error = '';
-            isLoading = true;
-            
-            const message = await invoke<ScheduledMessage>('schedule_message', {
-                request: {
-                    channel_id: channelId,
-                    content: newContent,
-                    scheduled_at: scheduledAt,
-                    attachments: [],
-                    reply_to: null
-                }
-            });
+	let checkInterval: ReturnType<typeof setInterval>;
 
-            scheduledMessages = [...scheduledMessages, message];
-            newContent = '';
-            getDefaultDateTime();
-            
-            dispatch('schedule', { message });
-        } catch (e) {
-            error = String(e);
-        } finally {
-            isLoading = false;
-        }
-    }
+	onMount(() => {
+		loadScheduledMessages();
+		// Check for messages to send every minute
+		checkInterval = setInterval(checkScheduledMessages, 60000);
+		// Initial check
+		checkScheduledMessages();
+	});
 
-    async function cancelMessage(id: string) {
-        try {
-            await invoke('cancel_scheduled_message', { id });
-            scheduledMessages = scheduledMessages.filter(m => m.id !== id);
-        } catch (e) {
-            error = String(e);
-        }
-    }
+	onDestroy(() => {
+		if (checkInterval) {
+			clearInterval(checkInterval);
+		}
+	});
 
-    async function updateMessage(id: string) {
-        if (!editContent.trim() || !editDate || !editTime) {
-            error = 'Please fill in all fields';
-            return;
-        }
+	function loadScheduledMessages() {
+		const saved = localStorage.getItem('hearth_scheduled_messages');
+		if (saved) {
+			scheduledMessages.set(JSON.parse(saved));
+		}
+	}
 
-        const scheduledAt = new Date(`${editDate}T${editTime}`).getTime();
-        
-        if (scheduledAt <= Date.now()) {
-            error = 'Scheduled time must be in the future';
-            return;
-        }
+	function saveScheduledMessages() {
+		scheduledMessages.subscribe((msgs) => {
+			localStorage.setItem('hearth_scheduled_messages', JSON.stringify(msgs));
+		})();
+	}
 
-        try {
-            error = '';
-            const updated = await invoke<ScheduledMessage>('update_scheduled_message', {
-                request: {
-                    id,
-                    content: editContent,
-                    scheduled_at: scheduledAt
-                }
-            });
+	function generateId(): string {
+		return `msg_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+	}
 
-            scheduledMessages = scheduledMessages.map(m => 
-                m.id === id ? updated : m
-            );
-            editingId = null;
-        } catch (e) {
-            error = String(e);
-        }
-    }
+	function scheduleMessage() {
+		if (!newMessage.content.trim() || !newMessage.channelId || !newMessage.scheduledDate || !newMessage.scheduledTime) {
+			return;
+		}
 
-    function startEditing(message: ScheduledMessage) {
-        editingId = message.id;
-        editContent = message.content;
-        const date = new Date(message.scheduled_at);
-        editDate = date.toISOString().split('T')[0];
-        editTime = date.toTimeString().slice(0, 5);
-    }
+		const scheduledTime = new Date(
+			`${newMessage.scheduledDate}T${newMessage.scheduledTime}`
+		).getTime();
 
-    function cancelEditing() {
-        editingId = null;
-        editContent = '';
-        editDate = '';
-        editTime = '';
-    }
+		if (scheduledTime <= Date.now()) {
+			alert('Scheduled time must be in the future');
+			return;
+		}
 
-    function formatDateTime(timestamp: number): string {
-        const date = new Date(timestamp);
-        const now = new Date();
-        const tomorrow = new Date(now);
-        tomorrow.setDate(tomorrow.getDate() + 1);
-        
-        const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        
-        if (date.toDateString() === now.toDateString()) {
-            return `Today at ${timeStr}`;
-        } else if (date.toDateString() === tomorrow.toDateString()) {
-            return `Tomorrow at ${timeStr}`;
-        } else {
-            return date.toLocaleDateString([], { 
-                month: 'short', 
-                day: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-        }
-    }
+		const message: ScheduledMessage = {
+			id: generateId(),
+			channelId: newMessage.channelId,
+			channelName: channels.find((c) => c.id === newMessage.channelId)?.name || 'Unknown',
+			content: newMessage.content,
+			scheduledTime,
+			createdAt: Date.now(),
+			recurring: newMessage.recurring,
+			status: 'pending'
+		};
 
-    function getTimeUntil(timestamp: number): string {
-        const diff = timestamp - Date.now();
-        if (diff < 0) return 'Now';
-        
-        const minutes = Math.floor(diff / 60000);
-        const hours = Math.floor(minutes / 60);
-        const days = Math.floor(hours / 24);
-        
-        if (days > 0) return `in ${days}d ${hours % 24}h`;
-        if (hours > 0) return `in ${hours}h ${minutes % 60}m`;
-        return `in ${minutes}m`;
-    }
+		scheduledMessages.update((msgs) => [...msgs, message]);
+		saveScheduledMessages();
 
-    async function handleDueMessage(message: ScheduledMessage) {
-        // Emit send event for parent to handle actual message sending
-        dispatch('send', { message });
-        
-        // Mark as sent
-        try {
-            await invoke('mark_scheduled_sent', { id: message.id });
-            scheduledMessages = scheduledMessages.filter(m => m.id !== message.id);
-        } catch (e) {
-            console.error('Failed to mark message as sent:', e);
-        }
-    }
+		// Reset form
+		newMessage = {
+			channelId: '',
+			channelName: '',
+			content: '',
+			scheduledDate: '',
+			scheduledTime: '',
+			recurring: 'none'
+		};
+		showComposePanel.set(false);
+	}
 
-    onMount(async () => {
-        getDefaultDateTime();
-        await loadScheduledMessages();
+	function cancelMessage(id: string) {
+		scheduledMessages.update((msgs) =>
+			msgs.map((m) => (m.id === id ? { ...m, status: 'cancelled' as const } : m))
+		);
+		saveScheduledMessages();
+	}
 
-        // Listen for scheduler events
-        unlisteners.push(
-            await listen<ScheduledMessage>('scheduler:added', (event) => {
-                if (!channelId || event.payload.channel_id === channelId) {
-                    scheduledMessages = [...scheduledMessages, event.payload];
-                }
-            }),
-            await listen<ScheduledMessage>('scheduler:cancelled', (event) => {
-                scheduledMessages = scheduledMessages.filter(m => m.id !== event.payload.id);
-            }),
-            await listen<ScheduledMessage>('scheduler:updated', (event) => {
-                scheduledMessages = scheduledMessages.map(m => 
-                    m.id === event.payload.id ? event.payload : m
-                );
-            }),
-            await listen<ScheduledMessage>('scheduler:due', async (event) => {
-                if (!channelId || event.payload.channel_id === channelId) {
-                    await handleDueMessage(event.payload);
-                }
-            }),
-            await listen<ScheduledMessage>('scheduler:sent', (event) => {
-                scheduledMessages = scheduledMessages.filter(m => m.id !== event.payload.id);
-            })
-        );
-    });
+	function deleteMessage(id: string) {
+		scheduledMessages.update((msgs) => msgs.filter((m) => m.id !== id));
+		saveScheduledMessages();
+	}
 
-    onDestroy(() => {
-        unlisteners.forEach(fn => fn());
-    });
+	function retryMessage(id: string) {
+		scheduledMessages.update((msgs) =>
+			msgs.map((m) =>
+				m.id === id
+					? { ...m, status: 'pending' as const, scheduledTime: Date.now() + 60000 }
+					: m
+			)
+		);
+		saveScheduledMessages();
+	}
+
+	async function checkScheduledMessages() {
+		const now = Date.now();
+
+		scheduledMessages.update((msgs) => {
+			const updated = msgs.map((msg) => {
+				if (msg.status === 'pending' && msg.scheduledTime <= now) {
+					// In a real app, send the message via API
+					console.log(`[MessageScheduler] Sending scheduled message to #${msg.channelName}:`, msg.content);
+					
+					// Simulate send (in real app, call Tauri backend)
+					const success = Math.random() > 0.1; // 90% success rate for demo
+					
+					if (success) {
+						// Handle recurring
+						if (msg.recurring !== 'none') {
+							const nextTime = calculateNextRecurrence(msg.scheduledTime, msg.recurring);
+							return { ...msg, scheduledTime: nextTime };
+						}
+						return { ...msg, status: 'sent' as const };
+					} else {
+						return { ...msg, status: 'failed' as const };
+					}
+				}
+				return msg;
+			});
+			return updated;
+		});
+
+		saveScheduledMessages();
+	}
+
+	function calculateNextRecurrence(current: number, type: string): number {
+		const date = new Date(current);
+		switch (type) {
+			case 'daily':
+				date.setDate(date.getDate() + 1);
+				break;
+			case 'weekly':
+				date.setDate(date.getDate() + 7);
+				break;
+			case 'monthly':
+				date.setMonth(date.getMonth() + 1);
+				break;
+		}
+		return date.getTime();
+	}
+
+	function formatTime(timestamp: number): string {
+		return new Date(timestamp).toLocaleString(undefined, {
+			month: 'short',
+			day: 'numeric',
+			hour: '2-digit',
+			minute: '2-digit'
+		});
+	}
+
+	function getTimeUntil(timestamp: number): string {
+		const diff = timestamp - Date.now();
+		if (diff < 0) return 'Now';
+		
+		const minutes = Math.floor(diff / 60000);
+		if (minutes < 60) return `${minutes}m`;
+		
+		const hours = Math.floor(minutes / 60);
+		if (hours < 24) return `${hours}h ${minutes % 60}m`;
+		
+		const days = Math.floor(hours / 24);
+		return `${days}d ${hours % 24}h`;
+	}
+
+	function getStatusColor(status: string): string {
+		switch (status) {
+			case 'pending':
+				return 'bg-yellow-500';
+			case 'sent':
+				return 'bg-green-500';
+			case 'failed':
+				return 'bg-red-500';
+			case 'cancelled':
+				return 'bg-gray-500';
+			default:
+				return 'bg-gray-500';
+		}
+	}
+
+	function getStatusIcon(status: string): string {
+		switch (status) {
+			case 'pending':
+				return '⏳';
+			case 'sent':
+				return '✓';
+			case 'failed':
+				return '✗';
+			case 'cancelled':
+				return '⊘';
+			default:
+				return '?';
+		}
+	}
+
+	// Get today's date for min attribute
+	function getTodayDate(): string {
+		return new Date().toISOString().split('T')[0];
+	}
+
+	// Keyboard shortcut
+	function handleKeydown(e: KeyboardEvent) {
+		if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key === 'S') {
+			e.preventDefault();
+			showComposePanel.update((v) => !v);
+		}
+	}
 </script>
 
-{#if showPanel}
-    <div class="scheduler-panel" transition:slide={{ duration: 200 }}>
-        <div class="scheduler-header">
-            <h3>
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <polyline points="12 6 12 12 16 14"/>
-                </svg>
-                Schedule Message
-            </h3>
-            <button class="close-btn" on:click={() => dispatch('close')} aria-label="Close scheduler">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="18" y1="6" x2="6" y2="18"/>
-                    <line x1="6" y1="6" x2="18" y2="18"/>
-                </svg>
-            </button>
-        </div>
+<svelte:window on:keydown={handleKeydown} />
 
-        {#if error}
-            <div class="error-banner" transition:fade>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="10"/>
-                    <line x1="12" y1="8" x2="12" y2="12"/>
-                    <line x1="12" y1="16" x2="12.01" y2="16"/>
-                </svg>
-                {error}
-                <button on:click={() => error = ''}>×</button>
-            </div>
-        {/if}
+<div class="message-scheduler flex flex-col h-full bg-gray-900 text-gray-100">
+	<!-- Header -->
+	<div class="flex items-center justify-between p-4 border-b border-gray-700">
+		<div class="flex items-center gap-3">
+			<span class="text-2xl">📅</span>
+			<div>
+				<h2 class="text-lg font-semibold">Message Scheduler</h2>
+				<p class="text-xs text-gray-400">Schedule messages to send later</p>
+			</div>
+		</div>
+		<button
+			on:click={() => showComposePanel.update((v) => !v)}
+			class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-lg flex items-center gap-2 transition-colors"
+		>
+			<span>+</span>
+			<span>Schedule Message</span>
+		</button>
+	</div>
 
-        <div class="new-schedule">
-            <textarea
-                bind:value={newContent}
-                placeholder="Type your message..."
-                rows="3"
-                disabled={isLoading}
-            />
-            <div class="schedule-controls">
-                <div class="datetime-inputs">
-                    <input
-                        type="date"
-                        bind:value={scheduledDate}
-                        min={new Date().toISOString().split('T')[0]}
-                        disabled={isLoading}
-                    />
-                    <input
-                        type="time"
-                        bind:value={scheduledTime}
-                        disabled={isLoading}
-                    />
-                </div>
-                <button 
-                    class="schedule-btn"
-                    on:click={scheduleMessage}
-                    disabled={isLoading || !newContent.trim()}
-                >
-                    {#if isLoading}
-                        <span class="spinner"></span>
-                    {:else}
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
-                        </svg>
-                        Schedule
-                    {/if}
-                </button>
-            </div>
-        </div>
+	<!-- Stats Bar -->
+	<div class="grid grid-cols-4 gap-2 p-4 bg-gray-800/50">
+		<div class="text-center p-2 rounded bg-gray-800">
+			<div class="text-2xl font-bold text-yellow-400">{$stats.pending}</div>
+			<div class="text-xs text-gray-400">Pending</div>
+		</div>
+		<div class="text-center p-2 rounded bg-gray-800">
+			<div class="text-2xl font-bold text-green-400">{$stats.sent}</div>
+			<div class="text-xs text-gray-400">Sent</div>
+		</div>
+		<div class="text-center p-2 rounded bg-gray-800">
+			<div class="text-2xl font-bold text-red-400">{$stats.failed}</div>
+			<div class="text-xs text-gray-400">Failed</div>
+		</div>
+		<div class="text-center p-2 rounded bg-gray-800">
+			<div class="text-2xl font-bold text-gray-300">{$stats.total}</div>
+			<div class="text-xs text-gray-400">Total</div>
+		</div>
+	</div>
 
-        {#if scheduledMessages.length > 0}
-            <div class="scheduled-list">
-                <h4>Scheduled ({scheduledMessages.length})</h4>
-                {#each scheduledMessages as message (message.id)}
-                    <div class="scheduled-item" transition:slide={{ duration: 150 }}>
-                        {#if editingId === message.id}
-                            <div class="edit-form">
-                                <textarea
-                                    bind:value={editContent}
-                                    rows="2"
-                                />
-                                <div class="edit-controls">
-                                    <input type="date" bind:value={editDate} />
-                                    <input type="time" bind:value={editTime} />
-                                    <button class="save-btn" on:click={() => updateMessage(message.id)}>
-                                        Save
-                                    </button>
-                                    <button class="cancel-btn" on:click={cancelEditing}>
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        {:else}
-                            <div class="message-preview">
-                                <p class="content">{message.content}</p>
-                                <div class="meta">
-                                    <span class="time">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                            <circle cx="12" cy="12" r="10"/>
-                                            <polyline points="12 6 12 12 16 14"/>
-                                        </svg>
-                                        {formatDateTime(message.scheduled_at)}
-                                    </span>
-                                    <span class="countdown">{getTimeUntil(message.scheduled_at)}</span>
-                                </div>
-                            </div>
-                            <div class="actions">
-                                <button 
-                                    class="edit-btn" 
-                                    on:click={() => startEditing(message)}
-                                    aria-label="Edit message"
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
-                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
-                                    </svg>
-                                </button>
-                                <button 
-                                    class="delete-btn" 
-                                    on:click={() => cancelMessage(message.id)}
-                                    aria-label="Cancel message"
-                                >
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="3 6 5 6 21 6"/>
-                                        <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
-                                    </svg>
-                                </button>
-                            </div>
-                        {/if}
-                    </div>
-                {/each}
-            </div>
-        {:else if !isLoading}
-            <div class="empty-state">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                <p>No scheduled messages</p>
-                <span>Messages you schedule will appear here</span>
-            </div>
-        {/if}
-    </div>
-{/if}
+	<!-- Compose Panel -->
+	{#if $showComposePanel}
+		<div class="p-4 bg-gray-800 border-b border-gray-700">
+			<h3 class="font-medium mb-3">Schedule New Message</h3>
+			<div class="space-y-3">
+				<div>
+					<label class="block text-sm text-gray-400 mb-1">Channel</label>
+					<select
+						bind:value={newMessage.channelId}
+						class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
+					>
+						<option value="">Select channel...</option>
+						{#each channels as channel}
+							<option value={channel.id}>#{channel.name}</option>
+						{/each}
+					</select>
+				</div>
+				<div>
+					<label class="block text-sm text-gray-400 mb-1">Message</label>
+					<textarea
+						bind:value={newMessage.content}
+						placeholder="Type your message..."
+						rows="3"
+						class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-indigo-500 resize-none"
+					></textarea>
+				</div>
+				<div class="grid grid-cols-3 gap-3">
+					<div>
+						<label class="block text-sm text-gray-400 mb-1">Date</label>
+						<input
+							type="date"
+							bind:value={newMessage.scheduledDate}
+							min={getTodayDate()}
+							class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
+						/>
+					</div>
+					<div>
+						<label class="block text-sm text-gray-400 mb-1">Time</label>
+						<input
+							type="time"
+							bind:value={newMessage.scheduledTime}
+							class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
+						/>
+					</div>
+					<div>
+						<label class="block text-sm text-gray-400 mb-1">Repeat</label>
+						<select
+							bind:value={newMessage.recurring}
+							class="w-full bg-gray-700 border border-gray-600 rounded px-3 py-2 focus:outline-none focus:border-indigo-500"
+						>
+							<option value="none">None</option>
+							<option value="daily">Daily</option>
+							<option value="weekly">Weekly</option>
+							<option value="monthly">Monthly</option>
+						</select>
+					</div>
+				</div>
+				<div class="flex gap-2 pt-2">
+					<button
+						on:click={scheduleMessage}
+						disabled={!newMessage.content.trim() || !newMessage.channelId || !newMessage.scheduledDate || !newMessage.scheduledTime}
+						class="flex-1 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:bg-gray-600 disabled:cursor-not-allowed rounded-lg transition-colors"
+					>
+						Schedule Message
+					</button>
+					<button
+						on:click={() => showComposePanel.set(false)}
+						class="px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg transition-colors"
+					>
+						Cancel
+					</button>
+				</div>
+			</div>
+		</div>
+	{/if}
 
-<!-- Trigger button for inline use -->
-<slot name="trigger">
-    <button 
-        class="scheduler-trigger"
-        on:click={() => showPanel = !showPanel}
-        class:active={showPanel}
-        aria-label="Schedule message"
-        title="Schedule message"
-    >
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"/>
-            <polyline points="12 6 12 12 16 14"/>
-        </svg>
-    </button>
-</slot>
+	<!-- Filters -->
+	<div class="flex items-center gap-3 p-4 border-b border-gray-700">
+		<div class="flex gap-1">
+			{#each ['all', 'pending', 'sent', 'failed'] as filterOption}
+				<button
+					on:click={() => filter.set(filterOption)}
+					class="px-3 py-1 rounded text-sm capitalize transition-colors {$filter === filterOption
+						? 'bg-indigo-600 text-white'
+						: 'bg-gray-700 text-gray-400 hover:bg-gray-600'}"
+				>
+					{filterOption}
+				</button>
+			{/each}
+		</div>
+		<input
+			type="text"
+			placeholder="Search messages..."
+			bind:value={$searchQuery}
+			class="flex-1 bg-gray-800 border border-gray-700 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-indigo-500"
+		/>
+	</div>
+
+	<!-- Message List -->
+	<div class="flex-1 overflow-y-auto p-4 space-y-3">
+		{#if $filteredMessages.length === 0}
+			<div class="text-center py-12 text-gray-500">
+				<span class="text-4xl mb-4 block">📭</span>
+				<p>No scheduled messages</p>
+				<p class="text-sm mt-1">Click "Schedule Message" to create one</p>
+			</div>
+		{:else}
+			{#each $filteredMessages as message (message.id)}
+				<div class="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-gray-600 transition-colors">
+					<div class="flex items-start justify-between">
+						<div class="flex-1">
+							<div class="flex items-center gap-2 mb-2">
+								<span class="px-2 py-0.5 rounded text-xs {getStatusColor(message.status)} text-white">
+									{getStatusIcon(message.status)} {message.status}
+								</span>
+								<span class="text-sm text-gray-400">#{message.channelName}</span>
+								{#if message.recurring !== 'none'}
+									<span class="text-xs text-indigo-400">🔁 {message.recurring}</span>
+								{/if}
+							</div>
+							<p class="text-gray-200 mb-2 whitespace-pre-wrap">{message.content}</p>
+							<div class="flex items-center gap-4 text-xs text-gray-500">
+								<span>📅 {formatTime(message.scheduledTime)}</span>
+								{#if message.status === 'pending'}
+									<span class="text-yellow-400">⏱ {getTimeUntil(message.scheduledTime)}</span>
+								{/if}
+							</div>
+						</div>
+						<div class="flex gap-1 ml-4">
+							{#if message.status === 'pending'}
+								<button
+									on:click={() => cancelMessage(message.id)}
+									class="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded transition-colors"
+									title="Cancel"
+								>
+									✗
+								</button>
+							{/if}
+							{#if message.status === 'failed'}
+								<button
+									on:click={() => retryMessage(message.id)}
+									class="p-2 text-gray-400 hover:text-green-400 hover:bg-gray-700 rounded transition-colors"
+									title="Retry"
+								>
+									↻
+								</button>
+							{/if}
+							<button
+								on:click={() => deleteMessage(message.id)}
+								class="p-2 text-gray-400 hover:text-red-400 hover:bg-gray-700 rounded transition-colors"
+								title="Delete"
+							>
+								🗑
+							</button>
+						</div>
+					</div>
+				</div>
+			{/each}
+		{/if}
+	</div>
+
+	<!-- Footer -->
+	<div class="p-3 border-t border-gray-700 bg-gray-800/50 text-xs text-gray-500 text-center">
+		<kbd class="px-1.5 py-0.5 bg-gray-700 rounded">Ctrl+Shift+S</kbd> to toggle compose panel
+	</div>
+</div>
 
 <style>
-    .scheduler-panel {
-        background: var(--background-secondary, #2f3136);
-        border: 1px solid var(--background-modifier-accent, #40444b);
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 12px;
-        max-height: 400px;
-        overflow-y: auto;
-    }
-
-    .scheduler-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-bottom: 12px;
-    }
-
-    .scheduler-header h3 {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin: 0;
-        font-size: 14px;
-        font-weight: 600;
-        color: var(--header-primary, #fff);
-    }
-
-    .close-btn {
-        background: transparent;
-        border: none;
-        color: var(--interactive-normal, #b9bbbe);
-        cursor: pointer;
-        padding: 4px;
-        border-radius: 4px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .close-btn:hover {
-        background: var(--background-modifier-hover, #36393f);
-        color: var(--interactive-hover, #dcddde);
-    }
-
-    .error-banner {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 12px;
-        background: var(--status-danger-background, rgba(237, 66, 69, 0.1));
-        border: 1px solid var(--status-danger, #ed4245);
-        border-radius: 4px;
-        color: var(--status-danger, #ed4245);
-        font-size: 13px;
-        margin-bottom: 12px;
-    }
-
-    .error-banner button {
-        margin-left: auto;
-        background: transparent;
-        border: none;
-        color: inherit;
-        cursor: pointer;
-        font-size: 16px;
-    }
-
-    .new-schedule textarea {
-        width: 100%;
-        padding: 10px 12px;
-        background: var(--background-tertiary, #202225);
-        border: 1px solid var(--background-modifier-accent, #40444b);
-        border-radius: 4px;
-        color: var(--text-normal, #dcddde);
-        font-size: 14px;
-        resize: none;
-        font-family: inherit;
-    }
-
-    .new-schedule textarea:focus {
-        outline: none;
-        border-color: var(--brand-experiment, #5865f2);
-    }
-
-    .schedule-controls {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        margin-top: 8px;
-        gap: 8px;
-    }
-
-    .datetime-inputs {
-        display: flex;
-        gap: 8px;
-    }
-
-    .datetime-inputs input {
-        padding: 6px 10px;
-        background: var(--background-tertiary, #202225);
-        border: 1px solid var(--background-modifier-accent, #40444b);
-        border-radius: 4px;
-        color: var(--text-normal, #dcddde);
-        font-size: 13px;
-    }
-
-    .datetime-inputs input:focus {
-        outline: none;
-        border-color: var(--brand-experiment, #5865f2);
-    }
-
-    .schedule-btn {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        padding: 8px 16px;
-        background: var(--brand-experiment, #5865f2);
-        border: none;
-        border-radius: 4px;
-        color: white;
-        font-size: 13px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.15s ease;
-    }
-
-    .schedule-btn:hover:not(:disabled) {
-        background: var(--brand-experiment-560, #4752c4);
-    }
-
-    .schedule-btn:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-
-    .spinner {
-        width: 14px;
-        height: 14px;
-        border: 2px solid rgba(255, 255, 255, 0.3);
-        border-top-color: white;
-        border-radius: 50%;
-        animation: spin 0.8s linear infinite;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-    .scheduled-list {
-        margin-top: 16px;
-    }
-
-    .scheduled-list h4 {
-        font-size: 12px;
-        font-weight: 600;
-        text-transform: uppercase;
-        color: var(--channels-default, #8e9297);
-        margin: 0 0 8px 0;
-    }
-
-    .scheduled-item {
-        display: flex;
-        align-items: flex-start;
-        justify-content: space-between;
-        padding: 10px 12px;
-        background: var(--background-tertiary, #202225);
-        border-radius: 4px;
-        margin-bottom: 6px;
-    }
-
-    .message-preview {
-        flex: 1;
-        min-width: 0;
-    }
-
-    .message-preview .content {
-        margin: 0 0 6px 0;
-        font-size: 14px;
-        color: var(--text-normal, #dcddde);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
-
-    .message-preview .meta {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-size: 12px;
-        color: var(--text-muted, #72767d);
-    }
-
-    .message-preview .time {
-        display: flex;
-        align-items: center;
-        gap: 4px;
-    }
-
-    .message-preview .countdown {
-        color: var(--brand-experiment, #5865f2);
-        font-weight: 500;
-    }
-
-    .actions {
-        display: flex;
-        gap: 4px;
-        margin-left: 12px;
-    }
-
-    .edit-btn, .delete-btn {
-        padding: 6px;
-        background: transparent;
-        border: none;
-        border-radius: 4px;
-        color: var(--interactive-normal, #b9bbbe);
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .edit-btn:hover {
-        background: var(--background-modifier-hover, #36393f);
-        color: var(--interactive-hover, #dcddde);
-    }
-
-    .delete-btn:hover {
-        background: rgba(237, 66, 69, 0.1);
-        color: var(--status-danger, #ed4245);
-    }
-
-    .edit-form {
-        width: 100%;
-    }
-
-    .edit-form textarea {
-        width: 100%;
-        padding: 8px 10px;
-        background: var(--background-secondary, #2f3136);
-        border: 1px solid var(--brand-experiment, #5865f2);
-        border-radius: 4px;
-        color: var(--text-normal, #dcddde);
-        font-size: 13px;
-        resize: none;
-        font-family: inherit;
-        margin-bottom: 8px;
-    }
-
-    .edit-controls {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-        flex-wrap: wrap;
-    }
-
-    .edit-controls input {
-        padding: 5px 8px;
-        background: var(--background-secondary, #2f3136);
-        border: 1px solid var(--background-modifier-accent, #40444b);
-        border-radius: 4px;
-        color: var(--text-normal, #dcddde);
-        font-size: 12px;
-    }
-
-    .save-btn, .cancel-btn {
-        padding: 5px 12px;
-        border: none;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-    }
-
-    .save-btn {
-        background: var(--brand-experiment, #5865f2);
-        color: white;
-    }
-
-    .save-btn:hover {
-        background: var(--brand-experiment-560, #4752c4);
-    }
-
-    .cancel-btn {
-        background: var(--background-modifier-accent, #40444b);
-        color: var(--text-normal, #dcddde);
-    }
-
-    .cancel-btn:hover {
-        background: var(--background-modifier-hover, #36393f);
-    }
-
-    .empty-state {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 24px;
-        text-align: center;
-        color: var(--text-muted, #72767d);
-    }
-
-    .empty-state svg {
-        opacity: 0.5;
-        margin-bottom: 12px;
-    }
-
-    .empty-state p {
-        margin: 0;
-        font-size: 14px;
-        font-weight: 500;
-        color: var(--text-normal, #dcddde);
-    }
-
-    .empty-state span {
-        font-size: 13px;
-        margin-top: 4px;
-    }
-
-    .scheduler-trigger {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 6px;
-        background: transparent;
-        border: none;
-        border-radius: 4px;
-        color: var(--interactive-normal, #b9bbbe);
-        cursor: pointer;
-        transition: color 0.15s ease;
-    }
-
-    .scheduler-trigger:hover {
-        color: var(--interactive-hover, #dcddde);
-    }
-
-    .scheduler-trigger.active {
-        color: var(--brand-experiment, #5865f2);
-    }
+	.message-scheduler {
+		min-height: 400px;
+	}
 </style>
