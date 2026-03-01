@@ -54,6 +54,7 @@ mod qrcode;
 mod scheduler;
 mod hotcorners;
 mod applog;
+mod diagnostics;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -853,6 +854,10 @@ fn main() {
             applog::applog_clear,
             applog::applog_export,
             applog::applog_log,
+            // Diagnostics commands
+            diagnostics::run_diagnostics,
+            diagnostics::run_single_diagnostic,
+            diagnostics::export_diagnostic_report,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

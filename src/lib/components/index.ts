@@ -155,6 +155,7 @@ export { default as StartupLoadingScreen } from './StartupLoadingScreen.svelte';
 export { default as StartupRestoreManager } from './StartupRestoreManager.svelte';
 export { default as NativeFileWatcher } from './NativeFileWatcher.svelte';
 export { default as DesktopIntegration } from './DesktopIntegration.svelte';
+export { default as DesktopIntegrationDiagnostics } from './DesktopIntegrationDiagnostics.svelte';
 export { default as FocusTimer } from './FocusTimer.svelte';
 export { default as PomodoroWidget } from './PomodoroWidget.svelte';
 export { default as ScreenDimmingManager } from './ScreenDimmingManager.svelte';
