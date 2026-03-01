@@ -60,7 +60,7 @@ function createSessionTimerStore() {
 
 	const { subscribe, update, set } = writable<SessionTimerState>(initialState);
 
-	let intervalId: ReturnType<typeof setInterval> | null = null;
+	const intervalId: ReturnType<typeof setInterval> | null = null;
 	let reminderCheckId: ReturnType<typeof setInterval> | null = null;
 
 	function startIntervals() {

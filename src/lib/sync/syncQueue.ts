@@ -567,7 +567,7 @@ export function getQueueStats(): {
   failed: number;
   cancelled: number;
 } {
-  let stats = {
+  const stats = {
     total: 0,
     pending: 0,
     processing: 0,

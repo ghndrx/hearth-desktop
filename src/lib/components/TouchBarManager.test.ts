@@ -551,7 +551,7 @@ describe('TouchBarManager', () => {
         return undefined;
       });
 
-      let slotProps: Record<string, unknown> | null = null;
+      const slotProps: Record<string, unknown> | null = null;
 
       // We'd need to test with a wrapper component in real usage
       // For now, just verify the component renders

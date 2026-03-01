@@ -496,7 +496,7 @@
 					<div class="form-group">
 						<label for="template-content">
 							Content
-							<span class="hint">(Use {'{'}variable{'}'} for placeholders)</span>
+							<span class="hint">(Use {'{'}variable} for placeholders)</span>
 						</label>
 						<textarea
 							id="template-content"

@@ -105,7 +105,7 @@ function createGlobalShortcutsStore() {
   });
 
   let unlisten: UnlistenFn | null = null;
-  let handlers: Map<string, () => void> = new Map();
+  const handlers: Map<string, () => void> = new Map();
 
   return {
     subscribe,

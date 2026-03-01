@@ -147,7 +147,7 @@ describe('SleepTimerManager', () => {
     render(SleepTimerManager);
 
     // Open action selector
-    let actionToggle = screen.getByText('Pause Media');
+    const actionToggle = screen.getByText('Pause Media');
     await fireEvent.click(actionToggle);
 
     // Select lock screen
