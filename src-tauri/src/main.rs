@@ -57,6 +57,7 @@ mod hotcorners;
 mod applog;
 mod diagnostics;
 mod share;
+mod translate;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -867,6 +868,10 @@ fn main() {
             share::share_content,
             share::is_share_available,
             share::get_share_icon,
+            // Translation commands
+            translate::detect_language,
+            translate::translate_text,
+            translate::get_supported_languages,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
