@@ -148,6 +148,7 @@ export { default as WindowBehaviorSettings } from './WindowBehaviorSettings.svel
 export { default as TrayMenuManager } from './TrayMenuManager.svelte';
 export { default as SystemTrayContextMenu } from './SystemTrayContextMenu.svelte';
 export { default as SystemTrayBadgeManager } from './SystemTrayBadgeManager.svelte';
+export { default as SystemMonitorWidget } from './SystemMonitorWidget.svelte';
 export { default as ToastManager } from './ToastManager.svelte';
 export { default as PrintManager } from './PrintManager.svelte';
 export { default as BookmarksManager } from './BookmarksManager.svelte';
