@@ -228,3 +228,6 @@ export { default as StartupPerformanceProfiler } from './StartupPerformanceProfi
 // Clipboard and text expansion components
 export { default as ClipboardHistoryManager } from './ClipboardHistoryManager.svelte';
 export { default as TextExpander } from './TextExpander.svelte';
+
+// Auto-reply components
+export { default as AutoReplyManager } from './AutoReplyManager.svelte';
