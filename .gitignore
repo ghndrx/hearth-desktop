@@ -3,3 +3,10 @@ node_modules
 package-lock.json
 build/
 src-tauri/target/
+
+# AI management files (local only)
+agent_output.md
+TASK_QUEUE.md
+opencode-task.md
+*_REVIEW_*.md
+*_IMPROVEMENTS.md
