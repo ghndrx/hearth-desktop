@@ -243,3 +243,6 @@ export { default as NativeShareSheet } from './NativeShareSheet.svelte';
 
 // World clock components
 export { default as TimezoneWidget } from './TimezoneWidget.svelte';
+
+// Password components
+export { default as PasswordGeneratorWidget } from './PasswordGeneratorWidget.svelte';
