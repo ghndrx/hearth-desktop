@@ -61,6 +61,9 @@ mod translate;
 mod applauncher;
 mod nightlight;
 mod widgets;
+mod bluetooth;
+mod processmanager;
+mod dndsync;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -895,6 +898,29 @@ fn main() {
             // Widget bar commands
             widgets::get_widget_system_stats,
             widgets::get_widget_weather,
+            // Bluetooth device management commands
+            bluetooth::bluetooth_get_status,
+            bluetooth::bluetooth_get_devices,
+            bluetooth::bluetooth_get_audio_devices,
+            bluetooth::bluetooth_is_available,
+            bluetooth::bluetooth_start_monitor,
+            bluetooth::bluetooth_stop_monitor,
+            bluetooth::bluetooth_is_monitoring,
+            // Process manager commands
+            processmanager::process_get_summary,
+            processmanager::process_find_by_name,
+            processmanager::process_detect_apps,
+            processmanager::process_get_count,
+            processmanager::process_is_running,
+            processmanager::process_detect_communication_apps,
+            processmanager::process_detect_gaming_apps,
+            // OS DND sync commands
+            dndsync::dndsync_get_os_status,
+            dndsync::dndsync_is_os_dnd_active,
+            dndsync::dndsync_is_supported,
+            dndsync::dndsync_start_sync,
+            dndsync::dndsync_stop_sync,
+            dndsync::dndsync_is_sync_running,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
