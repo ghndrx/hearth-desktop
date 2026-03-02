@@ -11,6 +11,7 @@
 	import WeatherWidget from './WeatherWidget.svelte';
 	import PasswordGeneratorWidget from './PasswordGeneratorWidget.svelte';
 	import StopwatchWidget from './StopwatchWidget.svelte';
+	import CurrencyConverterWidget from './CurrencyConverterWidget.svelte';
 
 	// Widget bar state
 	let isCollapsed = $state(false);
@@ -23,7 +24,7 @@
 
 	interface Widget {
 		id: string;
-		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music' | 'calculator' | 'converter' | 'countdown' | 'password' | 'stopwatch';
+		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music' | 'calculator' | 'converter' | 'countdown' | 'password' | 'stopwatch' | 'currency';
 		enabled: boolean;
 		order: number;
 	}
@@ -72,7 +73,8 @@
 		{ id: 'notes', type: 'notes', enabled: true, order: 10 },
 		{ id: 'pomodoro', type: 'pomodoro', enabled: true, order: 11 },
 		{ id: 'stopwatch', type: 'stopwatch', enabled: true, order: 12 },
-		{ id: 'habits', type: 'habits', enabled: true, order: 13 }
+		{ id: 'habits', type: 'habits', enabled: true, order: 13 },
+		{ id: 'currency', type: 'currency', enabled: true, order: 14 }
 	];
 
 	let clockInterval: ReturnType<typeof setInterval>;
@@ -480,6 +482,8 @@
 						<StopwatchWidget compact={true} />
 					{:else if widget.type === 'habits'}
 						<HabitTrackerWidget />
+					{:else if widget.type === 'currency'}
+						<CurrencyConverterWidget compact={true} />
 					{/if}
 				</div>
 			{/each}
