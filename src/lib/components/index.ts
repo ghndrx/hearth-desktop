@@ -249,3 +249,6 @@ export { default as PasswordGeneratorWidget } from './PasswordGeneratorWidget.sv
 
 // Currency components
 export { default as CurrencyConverterWidget } from './CurrencyConverterWidget.svelte';
+
+// Color picker components
+export { default as ColorPickerWidget } from './ColorPickerWidget.svelte';

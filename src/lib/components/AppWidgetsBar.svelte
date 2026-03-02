@@ -13,6 +13,7 @@
 	import StopwatchWidget from './StopwatchWidget.svelte';
 	import CurrencyConverterWidget from './CurrencyConverterWidget.svelte';
 	import ClipboardHistoryWidget from './ClipboardHistoryWidget.svelte';
+	import ColorPickerWidget from './ColorPickerWidget.svelte';
 
 	// Widget bar state
 	let isCollapsed = $state(false);
@@ -25,7 +26,7 @@
 
 	interface Widget {
 		id: string;
-		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music' | 'calculator' | 'converter' | 'countdown' | 'password' | 'stopwatch' | 'currency' | 'clipboard';
+		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music' | 'calculator' | 'converter' | 'countdown' | 'password' | 'stopwatch' | 'currency' | 'clipboard' | 'colorpicker';
 		enabled: boolean;
 		order: number;
 	}
@@ -76,7 +77,8 @@
 		{ id: 'stopwatch', type: 'stopwatch', enabled: true, order: 12 },
 		{ id: 'habits', type: 'habits', enabled: true, order: 13 },
 		{ id: 'currency', type: 'currency', enabled: true, order: 14 },
-		{ id: 'clipboard', type: 'clipboard', enabled: true, order: 15 }
+		{ id: 'clipboard', type: 'clipboard', enabled: true, order: 15 },
+		{ id: 'colorpicker', type: 'colorpicker', enabled: true, order: 16 }
 	];
 
 	let clockInterval: ReturnType<typeof setInterval>;
@@ -488,6 +490,8 @@
 						<CurrencyConverterWidget compact={true} />
 					{:else if widget.type === 'clipboard'}
 						<ClipboardHistoryWidget compact={true} />
+					{:else if widget.type === 'colorpicker'}
+						<ColorPickerWidget />
 					{/if}
 				</div>
 			{/each}
