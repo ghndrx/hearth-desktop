@@ -249,102 +249,6 @@ export interface UserProfile {
 	};
 }
 
-// Analytics types (Server Insights)
-export interface ServerInsightsSummary {
-	messages_today: number;
-	active_users_today: number;
-	messages_week: number;
-	active_users_week: number;
-	total_members: number;
-	new_members_week: number;
-	member_change_week: number;
-	message_change_percent: number;
-}
-
-export interface ServerInsightsResponse {
-	server_id: string;
-	period: string;
-	summary: ServerInsightsSummary;
-	top_contributor?: {
-		user_id: string;
-		username: string;
-		message_count: number;
-	};
-	peak_hour?: number;
-	generated_at?: string;
-}
-
-export interface MemberGrowthDataPoint {
-	date: string;
-	count: number;
-	change: number;
-}
-
-export interface MemberGrowthResponse {
-	server_id: string;
-	period: string;
-	data: MemberGrowthDataPoint[];
-}
-
-export interface ActivityHeatmapCell {
-	day_of_week: number;
-	hour: number;
-	message_count: number;
-	unique_users: number;
-}
-
-export interface ActivityHeatmapResponse {
-	server_id: string;
-	period: string;
-	data: ActivityHeatmapCell[];
-	peak_hours: { hour: number; message_count: number }[];
-	total_stats: {
-		total_messages: number;
-		avg_per_hour: number;
-	};
-}
-
-export interface TopChannel {
-	channel_id: string;
-	channel_name: string;
-	channel_type: string;
-	message_count: number;
-	unique_authors: number;
-	last_activity: string;
-}
-
-export interface TopChannelsResponse {
-	server_id: string;
-	period: string;
-	data: TopChannel[];
-}
-
-export interface RetentionDataPoint {
-	week: number;
-	retained_percentage: number;
-	retained_count: number;
-}
-
-export interface RetentionResponse {
-	server_id: string;
-	period: string;
-	data: RetentionMetrics;
-	overall_retention?: number;
-}
-
-export interface DailyActiveUserPoint {
-	date: string;
-	count: number;
-}
-
-export interface RetentionMetrics {
-	average_dau: number;
-	mau: number;
-	stickiness: number;
-	total_members: number;
-	daily_active_users: DailyActiveUserPoint[];
-}
-
 // Auth types
 export interface LoginRequest {
 	email: string;
@@ -371,3 +275,102 @@ export interface AuthResponse {
 	token: string;
 	refreshToken: string;
 }
+
+// Analytics types
+export interface MemberGrowthPoint {
+	date: string;
+	count: number;
+	change: number;
+}
+
+export interface ActivityHourStat {
+	day_of_week: number;
+	hour: number;
+	message_count: number;
+	unique_users: number;
+}
+
+export interface TopChannelStat {
+	channel_id: string;
+	channel_name: string;
+	channel_type: string;
+	message_count: number;
+	unique_authors: number;
+	last_activity?: string;
+}
+
+export interface DailyActiveUserPoint {
+	date: string;
+	count: number;
+}
+
+export interface RetentionMetrics {
+	daily_active_users: DailyActiveUserPoint[];
+	mau: number;
+	total_members: number;
+	average_dau: number;
+	stickiness: number;
+}
+
+export interface AnalyticsSummary {
+	messages_today: number;
+	active_users_today: number;
+	messages_week: number;
+	active_users_week: number;
+	total_members: number;
+	new_members_week: number;
+	member_change_week: number;
+	message_change_percent: number;
+}
+
+export interface PeakHour {
+	hour: number;
+	message_count: number;
+}
+
+export interface ActiveUserStat {
+	user_id: string;
+	username: string;
+	display_name?: string;
+	avatar_url?: string;
+	message_count: number;
+	days_active: number;
+}
+
+export interface ServerInsightsResponse {
+	server_id: string;
+	period: string;
+	summary: AnalyticsSummary;
+}
+
+export interface MemberGrowthResponse {
+	server_id: string;
+	period: string;
+	data: MemberGrowthPoint[];
+}
+
+export interface ActivityHeatmapResponse {
+	server_id: string;
+	period: string;
+	data: ActivityHourStat[];
+	peak_hours?: PeakHour[];
+	total_stats: {
+		total_messages: number;
+		avg_per_hour: number;
+	};
+}
+
+export interface TopChannelsResponse {
+	server_id: string;
+	period: string;
+	data: TopChannelStat[];
+}
+
+export interface RetentionResponse {
+	server_id: string;
+	period: string;
+	data: RetentionMetrics;
+}
+
+// AI types are re-exported from stores/ai.ts
+// See $lib/stores/ai.ts for AIProvider, UserAICredential, ModelRouting, etc.

@@ -7,7 +7,7 @@
     "beforeBuildCommand": "pnpm build",
     "beforeDevCommand": "pnpm dev",
     "frontendDist": "../build",
-    "devUrl": "http://localhost:5173"
+    "devUrl": "http://localhost:1420"
   },
   "app": {
     "windows": [

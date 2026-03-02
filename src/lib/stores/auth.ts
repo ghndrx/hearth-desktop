@@ -175,8 +175,19 @@ function createAuthStore() {
 					loading: false
 				}));
 				
+				// Preload servers and channels before navigating
+				const { loadServers } = await import('./servers');
+				const { loadDMChannels } = await import('./channels');
+				
+				console.log('[Auth] Pre-loading servers and channels...');
+				await Promise.all([
+					loadServers().catch(e => console.error('[Auth] Failed to preload servers:', e)),
+					loadDMChannels().catch(e => console.error('[Auth] Failed to preload DMs:', e))
+				]);
+				console.log('[Auth] Pre-load complete, navigating...');
+				
 				// Small delay to ensure store state propagates before navigation
-				await new Promise(resolve => setTimeout(resolve, 50));
+				await new Promise(resolve => setTimeout(resolve, 100));
 				goto('/channels/@me');
 			} catch (error: unknown) {
 				authDebug('Login failed', { error });
@@ -305,67 +316,136 @@ function createAuthStore() {
 		setUser(user: User) {
 			update(s => ({ ...s, user }));
 		},
-
-		async getOAuthProviders() {
+		
+		// OAuth methods
+		async getOAuthProviders(): Promise<string[]> {
 			try {
-				return await api.get<{ providers: string[] }>('/auth/oauth/providers');
+				const response = await api.get<{ providers: string[] }>('/auth/oauth/providers');
+				return response.providers || [];
 			} catch {
-				return { providers: [] };
+				return [];
 			}
 		},
-
-		async startOAuthLogin(provider: string) {
-			if (browser) {
-				localStorage.setItem('oauth_pending_provider', provider);
+		
+		async startOAuthLogin(provider: string): Promise<void> {
+			authDebug('Starting OAuth login', { provider });
+			try {
+				const response = await api.get<{ authorization_url: string }>(`/auth/oauth/${provider}`);
+				if (response.authorization_url) {
+					window.location.href = response.authorization_url;
+				} else {
+					throw new Error('No authorization URL received');
+				}
+			} catch (error) {
+				authDebug('OAuth redirect failed', { error });
+				throw error;
 			}
-			const response = await api.get<{ url: string }>(`/auth/oauth/${provider}/authorize`);
-			if (browser && response?.url) {
-				window.location.href = response.url;
-			}
-			return response;
 		},
-
+		
 		async handleOAuthCallback(provider: string, code: string, state: string) {
 			update(s => ({ ...s, loading: true }));
-			authDebug('Handling OAuth callback', { provider });
-
+			authDebug('Handling OAuth callback', { provider, codeLength: code.length });
+			
 			try {
-				const response = await api.post<{ access_token: string; refresh_token: string }>(
-					`/auth/oauth/${provider}/callback`,
-					{ code, state }
-				);
-
+				// The backend handles the token exchange - we just need to pass the code and state
+				const response = await api.get<{
+					access_token: string;
+					refresh_token: string;
+					user?: BackendUser;
+				}>(`/auth/oauth/${provider}/callback?code=${encodeURIComponent(code)}&state=${encodeURIComponent(state)}`);
+				
+				authDebug('OAuth callback response received', {
+					hasAccessToken: !!response?.access_token,
+					hasUser: !!response?.user
+				});
+				
 				const access_token = response?.access_token;
 				const refresh_token = response?.refresh_token;
-
+				
 				if (!access_token || typeof access_token !== 'string') {
-					throw new Error('Invalid response from OAuth provider');
+					throw new Error('Invalid response from server: missing access token');
 				}
-
+				
 				localStorage.setItem('hearth_token', access_token);
 				localStorage.setItem('hearth_refresh_token', refresh_token || '');
 				setAuthToken(access_token);
-
-				const backendUser = await api.get<BackendUser>('/users/@me');
-				const user = normalizeUser(backendUser);
+				
+				// Get user from response or fetch it
+				let user: User;
+				if (response.user) {
+					user = normalizeUser(response.user);
+				} else {
+					const backendUser = await api.get<BackendUser>('/users/@me');
+					user = normalizeUser(backendUser);
+				}
 				setCurrentUserId(user.id);
-
+				
 				authDebug('OAuth login complete', { userId: user.id });
-
+				
 				update(s => ({
 					...s,
 					user,
 					token: access_token,
 					loading: false
 				}));
-
-				await new Promise(resolve => setTimeout(resolve, 50));
+				
+				// Preload servers and channels
+				const { loadServers } = await import('./servers');
+				const { loadDMChannels } = await import('./channels');
+				
+				await Promise.all([
+					loadServers().catch(e => console.error('[Auth] Failed to preload servers:', e)),
+					loadDMChannels().catch(e => console.error('[Auth] Failed to preload DMs:', e))
+				]);
+				
+				await new Promise(resolve => setTimeout(resolve, 100));
 				goto('/channels/@me');
 			} catch (error: unknown) {
 				authDebug('OAuth callback failed', { error });
 				update(s => ({ ...s, loading: false }));
 				throw error;
 			}
+		},
+		
+		// Get linked OAuth providers for current user
+		async getLinkedProviders(): Promise<Array<{
+			id: string;
+			provider: string;
+			provider_user_id: string;
+			email: string;
+			username?: string;
+			display_name?: string;
+			avatar_url?: string;
+			created_at: string;
+		}>> {
+			const response = await api.get<{ providers: Array<{
+				id: string;
+				provider: string;
+				provider_user_id: string;
+				email: string;
+				username?: string;
+				display_name?: string;
+				avatar_url?: string;
+				created_at: string;
+			}> }>('/auth/oauth/linked');
+			return response.providers || [];
+		},
+		
+		// Start OAuth provider linking flow
+		async startOAuthLink(provider: string): Promise<void> {
+			authDebug('Starting OAuth link', { provider });
+			const response = await api.get<{ authorization_url: string }>(`/auth/oauth/link/${provider}`);
+			if (response.authorization_url) {
+				window.location.href = response.authorization_url;
+			} else {
+				throw new Error('No authorization URL received');
+			}
+		},
+		
+		// Unlink an OAuth provider
+		async unlinkProvider(provider: string): Promise<void> {
+			authDebug('Unlinking OAuth provider', { provider });
+			await api.delete(`/auth/oauth/link/${provider}`);
 		}
 	};
 }
