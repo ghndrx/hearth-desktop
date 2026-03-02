@@ -1115,6 +1115,205 @@ export const windowState = {
   onResize: onWindowResize,
 };
 
+// ============================================================================
+// Bluetooth Device Management
+// ============================================================================
+
+export interface BluetoothDevice {
+  name: string;
+  address: string;
+  device_type: string;
+  connected: boolean;
+  paired: boolean;
+  battery_level: number | null;
+  signal_strength: number | null;
+}
+
+export interface BluetoothStatus {
+  available: boolean;
+  enabled: boolean;
+  discovering: boolean;
+  devices: BluetoothDevice[];
+}
+
+export async function bluetoothGetStatus(): Promise<BluetoothStatus> {
+  return invoke("bluetooth_get_status");
+}
+
+export async function bluetoothGetDevices(): Promise<BluetoothDevice[]> {
+  return invoke("bluetooth_get_devices");
+}
+
+export async function bluetoothGetAudioDevices(): Promise<BluetoothDevice[]> {
+  return invoke("bluetooth_get_audio_devices");
+}
+
+export async function bluetoothIsAvailable(): Promise<boolean> {
+  return invoke("bluetooth_is_available");
+}
+
+export async function bluetoothStartMonitor(intervalSecs?: number): Promise<void> {
+  return invoke("bluetooth_start_monitor", { intervalSecs });
+}
+
+export async function bluetoothStopMonitor(): Promise<void> {
+  return invoke("bluetooth_stop_monitor");
+}
+
+export async function bluetoothIsMonitoring(): Promise<boolean> {
+  return invoke("bluetooth_is_monitoring");
+}
+
+export function onBluetoothConnected(callback: (device: BluetoothDevice) => void): Promise<UnlistenFn> {
+  return listen<BluetoothDevice>("bluetooth:connected", (event) => callback(event.payload));
+}
+
+export function onBluetoothDisconnected(callback: (device: BluetoothDevice) => void): Promise<UnlistenFn> {
+  return listen<BluetoothDevice>("bluetooth:disconnected", (event) => callback(event.payload));
+}
+
+export function onBluetoothStatusChanged(callback: (status: BluetoothStatus) => void): Promise<UnlistenFn> {
+  return listen<BluetoothStatus>("bluetooth:status", (event) => callback(event.payload));
+}
+
+export const bluetooth = {
+  getStatus: bluetoothGetStatus,
+  getDevices: bluetoothGetDevices,
+  getAudioDevices: bluetoothGetAudioDevices,
+  isAvailable: bluetoothIsAvailable,
+  startMonitor: bluetoothStartMonitor,
+  stopMonitor: bluetoothStopMonitor,
+  isMonitoring: bluetoothIsMonitoring,
+  onConnected: onBluetoothConnected,
+  onDisconnected: onBluetoothDisconnected,
+  onStatusChanged: onBluetoothStatusChanged,
+};
+
+// ============================================================================
+// Process Manager
+// ============================================================================
+
+export interface ProcessInfo {
+  pid: number;
+  name: string;
+  cpu_usage: number;
+  memory_bytes: number;
+  status: string;
+  start_time: number;
+  parent_pid: number | null;
+}
+
+export interface ProcessSummary {
+  total_processes: number;
+  total_threads: number;
+  total_cpu_usage: number;
+  total_memory_bytes: number;
+  top_cpu: ProcessInfo[];
+  top_memory: ProcessInfo[];
+  timestamp: number;
+}
+
+export interface AppDetectionResult {
+  app_name: string;
+  running: boolean;
+  pid: number | null;
+  cpu_usage: number | null;
+  memory_bytes: number | null;
+}
+
+export async function processGetSummary(topCount?: number): Promise<ProcessSummary> {
+  return invoke("process_get_summary", { topCount });
+}
+
+export async function processFindByName(name: string): Promise<ProcessInfo[]> {
+  return invoke("process_find_by_name", { name });
+}
+
+export async function processDetectApps(appNames: string[]): Promise<AppDetectionResult[]> {
+  return invoke("process_detect_apps", { appNames });
+}
+
+export async function processGetCount(): Promise<number> {
+  return invoke("process_get_count");
+}
+
+export async function processIsRunning(name: string): Promise<boolean> {
+  return invoke("process_is_running", { name });
+}
+
+export async function processDetectCommunicationApps(): Promise<AppDetectionResult[]> {
+  return invoke("process_detect_communication_apps");
+}
+
+export async function processDetectGamingApps(): Promise<AppDetectionResult[]> {
+  return invoke("process_detect_gaming_apps");
+}
+
+export const processManager = {
+  getSummary: processGetSummary,
+  findByName: processFindByName,
+  detectApps: processDetectApps,
+  getCount: processGetCount,
+  isRunning: processIsRunning,
+  detectCommunicationApps: processDetectCommunicationApps,
+  detectGamingApps: processDetectGamingApps,
+};
+
+// ============================================================================
+// OS DND Sync
+// ============================================================================
+
+export interface OsDndStatus {
+  active: boolean;
+  mode_name: string | null;
+  sync_enabled: boolean;
+  platform: string;
+  supported: boolean;
+}
+
+export async function dndSyncGetOsStatus(): Promise<OsDndStatus> {
+  return invoke("dndsync_get_os_status");
+}
+
+export async function dndSyncIsOsDndActive(): Promise<boolean> {
+  return invoke("dndsync_is_os_dnd_active");
+}
+
+export async function dndSyncIsSupported(): Promise<boolean> {
+  return invoke("dndsync_is_supported");
+}
+
+export async function dndSyncStartSync(intervalSecs?: number): Promise<void> {
+  return invoke("dndsync_start_sync", { intervalSecs });
+}
+
+export async function dndSyncStopSync(): Promise<void> {
+  return invoke("dndsync_stop_sync");
+}
+
+export async function dndSyncIsSyncRunning(): Promise<boolean> {
+  return invoke("dndsync_is_sync_running");
+}
+
+export function onOsDndActivated(callback: (status: OsDndStatus) => void): Promise<UnlistenFn> {
+  return listen<OsDndStatus>("dndsync:os-dnd-activated", (event) => callback(event.payload));
+}
+
+export function onOsDndDeactivated(callback: (status: OsDndStatus) => void): Promise<UnlistenFn> {
+  return listen<OsDndStatus>("dndsync:os-dnd-deactivated", (event) => callback(event.payload));
+}
+
+export const dndSync = {
+  getOsStatus: dndSyncGetOsStatus,
+  isOsDndActive: dndSyncIsOsDndActive,
+  isSupported: dndSyncIsSupported,
+  startSync: dndSyncStartSync,
+  stopSync: dndSyncStopSync,
+  isSyncRunning: dndSyncIsSyncRunning,
+  onActivated: onOsDndActivated,
+  onDeactivated: onOsDndDeactivated,
+};
+
 // Default export
 export default {
   window,
@@ -1138,6 +1337,9 @@ export default {
   spellCheck,
   fileAssociation,
   storage,
+  bluetooth,
+  processManager,
+  dndSync,
   onMenuEvent,
   onDeepLink,
 };
