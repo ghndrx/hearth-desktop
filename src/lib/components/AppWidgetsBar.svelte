@@ -8,6 +8,7 @@
 	import CalculatorWidget from './CalculatorWidget.svelte';
 	import UnitConverterWidget from './UnitConverterWidget.svelte';
 	import CountdownWidget from './CountdownWidget.svelte';
+	import WeatherWidget from './WeatherWidget.svelte';
 
 	// Widget bar state
 	let isCollapsed = $state(false);
@@ -15,7 +16,6 @@
 	let widgets = $state<Widget[]>([]);
 	let currentTime = $state(new Date());
 	let systemStats = $state<SystemStats | null>(null);
-	let weatherData = $state<WeatherData | null>(null);
 	let quickNotes = $state<string[]>([]);
 	let newNote = $state('');
 
@@ -32,13 +32,6 @@
 		memoryTotal: number;
 		memoryUsed: number;
 		diskUsage: number;
-	}
-
-	interface WeatherData {
-		temp: number;
-		condition: string;
-		icon: string;
-		location: string;
 	}
 
 	interface CalendarEvent {
@@ -96,7 +89,6 @@
 		}, 5000);
 
 		fetchSystemStats();
-		fetchWeather();
 	});
 
 	onDestroy(() => {
@@ -147,20 +139,6 @@
 				memoryTotal: 16384,
 				memoryUsed: 8192,
 				diskUsage: 65
-			};
-		}
-	}
-
-	async function fetchWeather() {
-		try {
-			weatherData = await invoke<WeatherData>('get_widget_weather');
-		} catch {
-			// Fallback mock
-			weatherData = {
-				temp: 72,
-				condition: 'Partly Cloudy',
-				icon: '⛅',
-				location: 'Local'
 			};
 		}
 	}
@@ -390,18 +368,7 @@
 							</div>
 						</div>
 					{:else if widget.type === 'weather'}
-						<div class="widget-weather">
-							{#if weatherData}
-								<div class="weather-icon">{weatherData.icon}</div>
-								<div class="weather-info">
-									<div class="temp">{weatherData.temp}°F</div>
-									<div class="condition">{weatherData.condition}</div>
-									<div class="location">{weatherData.location}</div>
-								</div>
-							{:else}
-								<div class="loading">Loading...</div>
-							{/if}
-						</div>
+						<WeatherWidget compact={true} />
 					{:else if widget.type === 'music'}
 						<MusicControlWidget minimized={false} />
 					{:else if widget.type === 'calculator'}
@@ -645,32 +612,6 @@
 		font-size: 11px;
 		color: var(--text-secondary, #b9bbbe);
 		text-align: right;
-	}
-
-	.widget-weather {
-		display: flex;
-		align-items: center;
-		gap: 12px;
-	}
-
-	.weather-icon {
-		font-size: 32px;
-	}
-
-	.weather-info .temp {
-		font-size: 20px;
-		font-weight: 600;
-		color: var(--text-primary, #fff);
-	}
-
-	.weather-info .condition {
-		font-size: 12px;
-		color: var(--text-secondary, #b9bbbe);
-	}
-
-	.weather-info .location {
-		font-size: 10px;
-		color: var(--text-muted, #72767d);
 	}
 
 	.widget-notes {
