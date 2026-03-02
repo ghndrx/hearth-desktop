@@ -1391,3 +1391,140 @@ pub fn check_screen_sharing() -> bool {
         false
     }
 }
+
+// =============================================================================
+// Tray Settings Commands
+// =============================================================================
+
+use serde::{Deserialize, Serialize};
+use std::sync::Mutex;
+
+/// Tray settings configuration
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TraySettings {
+    pub minimize_to_tray: bool,
+    pub close_to_tray: bool,
+    pub show_unread_badge: bool,
+    pub animate_badge: bool,
+    pub start_minimized: bool,
+    pub show_in_dock: bool,
+    pub single_click_action: String,
+    pub custom_tooltip: bool,
+    pub tooltip_template: String,
+}
+
+impl Default for TraySettings {
+    fn default() -> Self {
+        Self {
+            minimize_to_tray: true,
+            close_to_tray: true,
+            show_unread_badge: true,
+            animate_badge: true,
+            start_minimized: false,
+            show_in_dock: true,
+            single_click_action: "toggle".to_string(),
+            custom_tooltip: false,
+            tooltip_template: "Hearth - {unread} unread".to_string(),
+        }
+    }
+}
+
+lazy_static::lazy_static! {
+    static ref TRAY_SETTINGS: Mutex<TraySettings> = Mutex::new(TraySettings::default());
+}
+
+/// Get current tray settings
+#[tauri::command]
+pub fn get_tray_settings() -> Result<TraySettings, String> {
+    let settings = TRAY_SETTINGS.lock().map_err(|e| e.to_string())?;
+    Ok(settings.clone())
+}
+
+/// Update tray settings
+#[tauri::command]
+pub fn set_tray_settings(app: AppHandle, settings: TraySettings) -> Result<(), String> {
+    // Update in-memory settings
+    {
+        let mut current = TRAY_SETTINGS.lock().map_err(|e| e.to_string())?;
+        *current = settings.clone();
+    }
+    
+    // Persist to store
+    let store_path = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let settings_file = store_path.join("tray_settings.json");
+    
+    std::fs::create_dir_all(&store_path).map_err(|e| e.to_string())?;
+    let json = serde_json::to_string_pretty(&settings).map_err(|e| e.to_string())?;
+    std::fs::write(&settings_file, json).map_err(|e| e.to_string())?;
+    
+    // Apply dock visibility setting (macOS)
+    #[cfg(target_os = "macos")]
+    {
+        use cocoa::appkit::{NSApp, NSApplication, NSApplicationActivationPolicy};
+        use cocoa::base::nil;
+        
+        unsafe {
+            let policy = if settings.show_in_dock {
+                NSApplicationActivationPolicy::NSApplicationActivationPolicyRegular
+            } else {
+                NSApplicationActivationPolicy::NSApplicationActivationPolicyAccessory
+            };
+            let app = NSApp();
+            app.setActivationPolicy_(policy);
+        }
+    }
+    
+    // Emit settings change event to all windows
+    if let Some(window) = app.get_webview_window("main") {
+        let _ = window.emit("tray-settings-changed", &settings);
+    }
+    
+    Ok(())
+}
+
+/// Load tray settings from persistent storage
+#[tauri::command]
+pub fn load_tray_settings(app: AppHandle) -> Result<TraySettings, String> {
+    let store_path = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let settings_file = store_path.join("tray_settings.json");
+    
+    if settings_file.exists() {
+        let json = std::fs::read_to_string(&settings_file).map_err(|e| e.to_string())?;
+        let settings: TraySettings = serde_json::from_str(&json).map_err(|e| e.to_string())?;
+        
+        // Update in-memory cache
+        let mut current = TRAY_SETTINGS.lock().map_err(|e| e.to_string())?;
+        *current = settings.clone();
+        
+        Ok(settings)
+    } else {
+        Ok(TraySettings::default())
+    }
+}
+
+/// Send a test notification from tray
+#[tauri::command]
+pub async fn test_tray_notification(app: AppHandle) -> Result<(), String> {
+    app.notification()
+        .builder()
+        .title("Hearth Tray Test")
+        .body("System tray notifications are working correctly!")
+        .show()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+/// Check if minimize to tray is enabled
+#[tauri::command]
+pub fn should_minimize_to_tray() -> Result<bool, String> {
+    let settings = TRAY_SETTINGS.lock().map_err(|e| e.to_string())?;
+    Ok(settings.minimize_to_tray)
+}
+
+/// Check if close to tray is enabled
+#[tauri::command]
+pub fn should_close_to_tray() -> Result<bool, String> {
+    let settings = TRAY_SETTINGS.lock().map_err(|e| e.to_string())?;
+    Ok(settings.close_to_tray)
+}

@@ -921,6 +921,13 @@ fn main() {
             dndsync::dndsync_start_sync,
             dndsync::dndsync_stop_sync,
             dndsync::dndsync_is_sync_running,
+            // Tray settings commands
+            commands::get_tray_settings,
+            commands::set_tray_settings,
+            commands::load_tray_settings,
+            commands::test_tray_notification,
+            commands::should_minimize_to_tray,
+            commands::should_close_to_tray,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
