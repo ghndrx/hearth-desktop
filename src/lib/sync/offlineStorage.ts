@@ -28,17 +28,24 @@ export interface StorageMetadata {
   updatedAt: number;
 }
 
-// Internal stored message type - uses numeric _synced for IndexedDB indexing
-// (IndexedDB cannot index boolean values)
+// Stored message with additional offline fields
+export interface StoredMessage extends Message {
+  _stored_at: number;
+  _synced: boolean;
+}
+
+// Internal storage format uses numbers for _synced (IndexedDB can't index booleans)
 interface InternalStoredMessage extends Message {
   _stored_at: number;
   _synced: 0 | 1;
 }
 
-// Public interface retains boolean semantics
-export interface StoredMessage extends Message {
-  _stored_at: number;
-  _synced: boolean;
+// Convert internal storage format to external format
+function toStoredMessage(internal: InternalStoredMessage): StoredMessage {
+  return {
+    ...internal,
+    _synced: internal._synced === 1
+  };
 }
 
 // Stored channel with additional offline fields
@@ -175,7 +182,8 @@ async function getStore(storeName: StoreName, mode: IDBTransactionMode = 'readon
  */
 export async function storeMessage(message: Message, synced = true): Promise<void> {
   const store = await getStore(STORES.MESSAGES, 'readwrite');
-
+  
+  // Store _synced as number (0/1) for IndexedDB indexing
   const storedMessage: InternalStoredMessage = {
     ...message,
     _stored_at: Date.now(),
@@ -198,12 +206,13 @@ export async function storeMessages(messages: Message[], synced = true): Promise
   const store = tx.objectStore(STORES.MESSAGES);
   
   const now = Date.now();
+  const syncedValue: 0 | 1 = synced ? 1 : 0;
   
   for (const message of messages) {
     const storedMessage: InternalStoredMessage = {
       ...message,
       _stored_at: now,
-      _synced: synced ? 1 : 0
+      _synced: syncedValue
     };
     store.put(storedMessage);
   }
@@ -222,7 +231,10 @@ export async function getMessage(id: string): Promise<StoredMessage | null> {
   
   return new Promise((resolve, reject) => {
     const request = store.get(id);
-    request.onsuccess = () => resolve(request.result || null);
+    request.onsuccess = () => {
+      const result = request.result as InternalStoredMessage | undefined;
+      resolve(result ? toStoredMessage(result) : null);
+    };
     request.onerror = () => reject(request.error);
   });
 }
@@ -241,7 +253,7 @@ export async function getChannelMessages(
     const request = index.getAll(channelId);
     
     request.onsuccess = () => {
-      let messages = request.result as StoredMessage[];
+      let messages = (request.result as InternalStoredMessage[]).map(toStoredMessage);
       
       // Sort by created_at descending
       messages.sort((a, b) => 
@@ -277,12 +289,13 @@ export async function getChannelMessages(
 export async function getUnsyncedMessages(): Promise<StoredMessage[]> {
   const store = await getStore(STORES.MESSAGES);
   const index = store.index('_synced');
-
+  
   return new Promise((resolve, reject) => {
-    const request = index.getAll(0);
+    // Query for _synced = 0 (unsynced messages)
+    const request = index.getAll(IDBKeyRange.only(0));
     request.onsuccess = () => {
       const results = (request.result || []) as InternalStoredMessage[];
-      resolve(results.map(m => ({ ...m, _synced: m._synced === 1 })) as unknown as StoredMessage[]);
+      resolve(results.map(toStoredMessage));
     };
     request.onerror = () => reject(request.error);
   });

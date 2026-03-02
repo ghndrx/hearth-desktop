@@ -79,6 +79,17 @@ export { default as DeviceManagement } from './DeviceManagement.svelte';
 export { default as RoleEditor } from './RoleEditor.svelte';
 export { default as AutoModerationSettings } from './AutoModerationSettings.svelte';
 export { default as AuditLogViewer } from './AuditLogViewer.svelte';
+export { default as AISettings } from './AISettings.svelte';
+
+// AI Chat components
+export { default as AIChat } from './AIChat.svelte';
+
+// Skeleton loading components
+export { default as SkeletonBase } from './SkeletonBase.svelte';
+export { default as SkeletonMessage } from './SkeletonMessage.svelte';
+export { default as SkeletonChannel } from './SkeletonChannel.svelte';
+export { default as SkeletonUser } from './SkeletonUser.svelte';
+
 export { default as ThemeSettings } from './ThemeSettings.svelte';
 export { default as AutoLaunchSettings } from './AutoLaunchSettings.svelte';
 export { default as KeyboardShortcutsSettings } from './KeyboardShortcutsSettings.svelte';

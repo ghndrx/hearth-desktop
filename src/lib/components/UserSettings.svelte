@@ -7,6 +7,7 @@
   import Avatar from './Avatar.svelte';
   import NotificationSettings from './NotificationSettings.svelte';
   import DeviceManagement from './DeviceManagement.svelte';
+  import AISettings from './AISettings.svelte';
   
   export let open = false;
   
@@ -34,6 +35,7 @@
     { id: 'notifications', label: 'Notifications', icon: 'bell' },
     { id: 'keybinds', label: 'Keybinds', icon: 'keyboard' },
     { id: 'splitview', label: 'Split View', icon: 'splitview' },
+    { id: 'ai', label: 'AI Settings', icon: 'ai' },
     { id: 'divider-other', label: '', divider: true },
     { id: 'about', label: 'About Hearth', icon: 'info' },
     { id: 'logout', label: 'Log Out', icon: 'logout', danger: true }
@@ -968,6 +970,11 @@
                   <p class="text-sm text-[var(--text-muted)]">Use <kbd class="px-1 py-0.5 bg-[var(--bg-tertiary)] rounded text-xs">Alt+P</kbd> to pin the current channel</p>
                 </div>
               {/if}
+            </section>
+          
+          {:else if activeSection === 'ai'}
+            <section>
+              <AISettings />
             </section>
           
           {:else if activeSection === 'about'}

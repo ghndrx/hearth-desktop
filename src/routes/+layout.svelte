@@ -24,6 +24,9 @@
 	<meta name="description" content="Self-hosted chat with E2EE" />
 </svelte:head>
 
+<NativeEventBridge />
+<ToastContainer />
+
 {#if $isLoading}
 	<div class="loading">
 		<div class="spinner"></div>

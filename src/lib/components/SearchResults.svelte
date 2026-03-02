@@ -12,6 +12,8 @@
 	import { channels as channelsStore } from '$lib/stores/channels';
 	import Avatar from './Avatar.svelte';
 	import LoadingSpinner from './LoadingSpinner.svelte';
+	import EmptyState from './EmptyState.svelte';
+	import SkeletonMessage from './SkeletonMessage.svelte';
 
 	const dispatch = createEventDispatcher<{
 		jumpToMessage: { channelId: string; messageId: string };
@@ -202,8 +204,7 @@
 	>
 		{#if $searchLoading && $searchResults.length === 0}
 			<div class="loading-container">
-				<LoadingSpinner />
-				<span>Searching...</span>
+				<SkeletonMessage count={5} />
 			</div>
 		{:else if $searchError}
 			<div class="error-container">
@@ -217,21 +218,17 @@
 				</button>
 			</div>
 		{:else if $searchResults.length === 0 && searchInput.trim()}
-			<div class="empty-state">
-				<svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" class="empty-icon">
-					<path d="M21.707 20.293L16.314 14.9C17.403 13.504 18 11.799 18 10C18 5.589 14.411 2 10 2C5.589 2 2 5.589 2 10C2 14.411 5.589 18 10 18C11.799 18 13.504 17.403 14.9 16.314L20.293 21.707L21.707 20.293ZM10 16C6.691 16 4 13.309 4 10C4 6.691 6.691 4 10 4C13.309 4 16 6.691 16 10C16 13.309 13.309 16 10 16Z" />
-				</svg>
-				<p class="empty-title">No results found</p>
-				<p class="empty-message">Try a different search term or adjust your filters</p>
-			</div>
+			<EmptyState
+				icon="🔍"
+				title="No results found"
+				description="Try a different search term or adjust your filters"
+			/>
 		{:else if $searchResults.length === 0}
-			<div class="empty-state">
-				<svg width="48" height="48" viewBox="0 0 24 24" fill="currentColor" class="empty-icon">
-					<path d="M21.707 20.293L16.314 14.9C17.403 13.504 18 11.799 18 10C18 5.589 14.411 2 10 2C5.589 2 2 5.589 2 10C2 14.411 5.589 18 10 18C11.799 18 13.504 17.403 14.9 16.314L20.293 21.707L21.707 20.293ZM10 16C6.691 16 4 13.309 4 10C4 6.691 6.691 4 10 4C13.309 4 16 6.691 16 10C16 13.309 13.309 16 10 16Z" />
-				</svg>
-				<p class="empty-title">Search messages</p>
-				<p class="empty-message">Enter a search term to find messages</p>
-			</div>
+			<EmptyState
+				icon="🔍"
+				title="Search messages"
+				description="Enter a search term to find messages"
+			/>
 		{:else}
 			{#each $searchResults as result (result.id)}
 				<button 

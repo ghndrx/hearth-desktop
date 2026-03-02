@@ -9,6 +9,8 @@
 	import Avatar from './Avatar.svelte';
 	import ContextMenu from './ContextMenu.svelte';
 	import ContextMenuItem from './ContextMenuItem.svelte';
+	import EmptyState from './EmptyState.svelte';
+	import SkeletonUser from './SkeletonUser.svelte';
 
 	let memberListElement: HTMLElement;
 	let loading = false;
@@ -328,6 +330,21 @@
 		aria-label="Server members"
 		on:keydown={handleKeydown}
 	>
+		{#if loading}
+			<!-- Loading skeleton -->
+			<div class="member-group">
+				<h3 class="group-header">LOADING...</h3>
+				<SkeletonUser count={8} showStatus={true} showActivity={true} />
+			</div>
+		{:else if groupedMembers.length === 0 || $members.length === 0}
+			<!-- Empty state -->
+			<EmptyState
+				variant="compact"
+				icon="👥"
+				title="No members"
+				description="This server has no visible members"
+			/>
+		{:else}
 		{#each groupedMembers as group}
 			<div class="member-group">
 				<!-- Group Header -->
@@ -374,6 +391,7 @@
 				{/each}
 			</div>
 		{/each}
+		{/if}
 	</aside>
 {/if}
 

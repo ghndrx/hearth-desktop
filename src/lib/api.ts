@@ -154,17 +154,27 @@ export const api = {
 	upload: <T = unknown>(path: string, formData: FormData) => request<T, FormData>('POST', path, formData),
 };
 
-export { ApiError };
+// Message queue handler type for offline sync integration
+// Generic handler that can accept any arguments and return any promise
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type MessageQueueHandler = (...args: any[]) => Promise<any>;
 
-// MessageQueueHandler for offline sync integration
-export type MessageQueueHandler = (channelId: string, content: string, options?: { replyTo?: string; attachments?: string[] }) => Promise<void>;
-
+// Storage for registered message queue handler
 let messageQueueHandler: MessageQueueHandler | null = null;
 
-export function registerMessageQueueHandler(handler: MessageQueueHandler) {
+/**
+ * Register a handler for queuing messages when offline
+ * Used by the sync module to intercept failed message sends
+ */
+export function registerMessageQueueHandler(handler: MessageQueueHandler): void {
 	messageQueueHandler = handler;
 }
 
+/**
+ * Get the registered message queue handler
+ */
 export function getMessageQueueHandler(): MessageQueueHandler | null {
 	return messageQueueHandler;
 }
+
+export { ApiError };

@@ -25,6 +25,9 @@
 		const channel = $channels.find(c => c.id === channelId);
 		if (channel && $currentChannel?.id !== channelId) {
 			currentChannel.set(channel);
+		} else if (!channel && serverId && serverId !== '@me') {
+			// Channel not in store yet - load server channels
+			loadServerChannels(serverId);
 		}
 	}
 	

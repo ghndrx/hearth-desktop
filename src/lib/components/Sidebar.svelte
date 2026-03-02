@@ -1,8 +1,12 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { servers, currentServer, loadServerChannels } from '$stores';
 	import { isInVoiceCall, voiceCallChannel } from '$lib/stores/voiceCall';
 	import type { Server } from '$lib/stores/servers';
-	import { dev } from '$app/environment';
+	import { mentions, unreadMentionCount } from '$lib/stores/mentions';
+	import MentionsPanel from './MentionsPanel.svelte';
+
+	let showMentionsPanel = false;
 
 	function getInitials(name: string): string {
 		return name
@@ -14,12 +18,22 @@
 	}
 
 	function selectServer(server: Server) {
-		if (dev) {
-			console.log('[Sidebar] Selecting server:', server.id, server.name);
-		}
 		currentServer.set(server);
 		loadServerChannels(server.id);
 	}
+
+	function toggleMentionsPanel() {
+		showMentionsPanel = !showMentionsPanel;
+	}
+
+	function closeMentionsPanel() {
+		showMentionsPanel = false;
+	}
+
+	onMount(() => {
+		// Load initial mention count
+		mentions.getUnreadCount();
+	});
 </script>
 
 <aside class="w-[72px] bg-dark-950 flex flex-col items-center py-3 gap-2 shrink-0" role="navigation" aria-label="Server navigation">
@@ -115,4 +129,57 @@
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
 		</svg>
 	</button>
+
+	<div class="w-8 h-0.5 bg-dark-700 rounded-full my-1" role="separator"></div>
+
+	<!-- Mentions button -->
+	<div class="relative">
+		<button
+			class="w-12 h-12 rounded-[24px] bg-dark-700 hover:bg-hearth-500 hover:rounded-[16px]
+			       flex items-center justify-center transition-all duration-200 group relative
+			       focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-hearth-500"
+			class:bg-hearth-500={showMentionsPanel}
+			class:rounded-[16px]={showMentionsPanel}
+			on:click={toggleMentionsPanel}
+			aria-label="Mentions"
+			aria-expanded={showMentionsPanel}
+			title="Mentions"
+			type="button"
+		>
+			<svg
+				class="w-6 h-6 text-gray-400 group-hover:text-white transition-colors"
+				class:text-white={showMentionsPanel}
+				fill="currentColor"
+				viewBox="0 0 24 24"
+				aria-hidden="true"
+			>
+				<path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10h5v-2h-5c-4.34 0-8-3.66-8-8s3.66-8 8-8 8 3.66 8 8v1.43c0 .79-.71 1.57-1.5 1.57s-1.5-.78-1.5-1.57V12c0-2.76-2.24-5-5-5s-5 2.24-5 5 2.24 5 5 5c1.38 0 2.64-.56 3.54-1.47.65.89 1.77 1.47 2.96 1.47 1.97 0 3.5-1.6 3.5-3.57V12c0-5.52-4.48-10-10-10zm0 13c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3z"/>
+			</svg>
+
+			<!-- Unread badge -->
+			{#if $unreadMentionCount > 0}
+				<span
+					class="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-red-500 text-white
+					       text-xs font-bold rounded-full flex items-center justify-center px-1"
+					aria-label="{$unreadMentionCount} unread mentions"
+				>
+					{$unreadMentionCount > 99 ? '99+' : $unreadMentionCount}
+				</span>
+			{/if}
+		</button>
+
+		<!-- Mentions Panel Popover -->
+		{#if showMentionsPanel}
+			<div class="absolute left-full ml-4 bottom-0 z-50">
+				<MentionsPanel show={showMentionsPanel} />
+			</div>
+			<!-- Click outside to close -->
+			<button
+				class="fixed inset-0 z-40 cursor-default"
+				on:click={closeMentionsPanel}
+				aria-label="Close mentions panel"
+				type="button"
+			></button>
+		{/if}
+	</div>
 </aside>

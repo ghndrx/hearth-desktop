@@ -73,7 +73,7 @@ function createMentionsStore() {
 
 				const queryString = params.toString();
 				const url = queryString ? `/mentions?${queryString}` : '/mentions';
-
+				
 				const response = await api.get<{
 					mentions: MentionContext[];
 					total_count: number;
@@ -211,6 +211,7 @@ function createMentionsStore() {
 		subscribeToEvents() {
 			if (wsUnsubscribe) return;
 
+			// Listen for new mention events using the gateway event handler
 			wsUnsubscribe = onGatewayEvent('MENTION_RECEIVED', (data) => {
 				const mentionData = data as { mention: MentionContext };
 				update(s => ({
