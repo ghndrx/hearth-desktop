@@ -246,3 +246,6 @@ export { default as TimezoneWidget } from './TimezoneWidget.svelte';
 
 // Password components
 export { default as PasswordGeneratorWidget } from './PasswordGeneratorWidget.svelte';
+
+// Currency components
+export { default as CurrencyConverterWidget } from './CurrencyConverterWidget.svelte';
