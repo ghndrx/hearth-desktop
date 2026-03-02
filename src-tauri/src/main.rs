@@ -64,6 +64,7 @@ mod widgets;
 mod bluetooth;
 mod processmanager;
 mod dndsync;
+mod colorpicker;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -425,6 +426,9 @@ fn main() {
 
             // Initialize application launcher state
             app.manage(applauncher::AppLauncherState::default());
+
+            // Initialize color picker state
+            app.manage(colorpicker::ColorPickerState::default());
 
             // Initialize night light state and start monitor
             let nightlight_state = std::sync::Arc::new(nightlight::NightLightState::default());
@@ -921,6 +925,16 @@ fn main() {
             dndsync::dndsync_start_sync,
             dndsync::dndsync_stop_sync,
             dndsync::dndsync_is_sync_running,
+            // Color picker commands
+            colorpicker::pick_color_at_cursor,
+            colorpicker::parse_color,
+            colorpicker::get_color_history,
+            colorpicker::clear_color_history,
+            colorpicker::add_color_to_favorites,
+            colorpicker::remove_color_from_favorites,
+            colorpicker::get_favorite_colors,
+            colorpicker::copy_color_to_clipboard,
+            colorpicker::generate_color_palette,
             // Tray settings commands
             commands::get_tray_settings,
             commands::set_tray_settings,
