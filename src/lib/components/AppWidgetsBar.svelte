@@ -5,6 +5,7 @@
 	import HabitTrackerWidget from './HabitTrackerWidget.svelte';
 	import TimezoneWidget from './TimezoneWidget.svelte';
 	import MusicControlWidget from './MusicControlWidget.svelte';
+	import CalculatorWidget from './CalculatorWidget.svelte';
 
 	// Widget bar state
 	let isCollapsed = $state(false);
@@ -18,7 +19,7 @@
 
 	interface Widget {
 		id: string;
-		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music';
+		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music' | 'calculator';
 		enabled: boolean;
 		order: number;
 	}
@@ -66,10 +67,11 @@
 		{ id: 'system', type: 'system', enabled: true, order: 2 },
 		{ id: 'weather', type: 'weather', enabled: true, order: 3 },
 		{ id: 'music', type: 'music', enabled: true, order: 4 },
-		{ id: 'calendar', type: 'calendar', enabled: true, order: 5 },
-		{ id: 'notes', type: 'notes', enabled: true, order: 6 },
-		{ id: 'pomodoro', type: 'pomodoro', enabled: true, order: 7 },
-		{ id: 'habits', type: 'habits', enabled: true, order: 8 }
+		{ id: 'calculator', type: 'calculator', enabled: true, order: 5 },
+		{ id: 'calendar', type: 'calendar', enabled: true, order: 6 },
+		{ id: 'notes', type: 'notes', enabled: true, order: 7 },
+		{ id: 'pomodoro', type: 'pomodoro', enabled: true, order: 8 },
+		{ id: 'habits', type: 'habits', enabled: true, order: 9 }
 	];
 
 	let clockInterval: ReturnType<typeof setInterval>;
@@ -398,6 +400,8 @@
 						</div>
 					{:else if widget.type === 'music'}
 						<MusicControlWidget minimized={false} />
+					{:else if widget.type === 'calculator'}
+						<CalculatorWidget compact={true} showHistory={false} />
 					{:else if widget.type === 'calendar'}
 						<div class="widget-calendar">
 							<div class="calendar-header">

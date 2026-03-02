@@ -5,31 +5,34 @@
    * Supports basic arithmetic, percentage, and keyboard input.
    */
   import { onMount, onDestroy } from 'svelte';
-  import { writable, derived } from 'svelte/store';
 
   // Props
-  export let compact = false;
-  export let showHistory = true;
-  export let maxHistoryItems = 10;
+  interface Props {
+    compact?: boolean;
+    showHistory?: boolean;
+    maxHistoryItems?: number;
+  }
+
+  let { compact = false, showHistory = true, maxHistoryItems = 10 }: Props = $props();
 
   // State
-  const display = writable('0');
-  const history = writable<Array<{ expression: string; result: string }>>([]);
-  const currentOperator = writable<string | null>(null);
-  const previousValue = writable<string>('');
-  const waitingForOperand = writable(false);
-  const error = writable(false);
+  let display = $state('0');
+  let history = $state<Array<{ expression: string; result: string }>>([]);
+  let currentOperator = $state<string | null>(null);
+  let previousValue = $state('');
+  let waitingForOperand = $state(false);
+  let error = $state(false);
 
   // Derived state for formatted display
-  const formattedDisplay = derived(display, ($display) => {
-    if ($display === 'Error') return $display;
-    const num = parseFloat($display);
-    if (isNaN(num)) return $display;
+  let formattedDisplay = $derived(() => {
+    if (display === 'Error') return display;
+    const num = parseFloat(display);
+    if (isNaN(num)) return display;
     // Format with thousand separators for readability
-    if (Math.abs(num) >= 1000 && !$display.includes('.')) {
+    if (Math.abs(num) >= 1000 && !display.includes('.')) {
       return num.toLocaleString('en-US', { maximumFractionDigits: 10 });
     }
-    return $display;
+    return display;
   });
 
   // Button layout
@@ -42,58 +45,55 @@
   ];
 
   function inputDigit(digit: string) {
-    error.set(false);
-    if ($waitingForOperand) {
-      display.set(digit);
-      waitingForOperand.set(false);
+    error = false;
+    if (waitingForOperand) {
+      display = digit;
+      waitingForOperand = false;
     } else {
-      display.update(d => d === '0' ? digit : d + digit);
+      display = display === '0' ? digit : display + digit;
     }
   }
 
   function inputDecimal() {
-    error.set(false);
-    if ($waitingForOperand) {
-      display.set('0.');
-      waitingForOperand.set(false);
+    error = false;
+    if (waitingForOperand) {
+      display = '0.';
+      waitingForOperand = false;
       return;
     }
-    if (!$display.includes('.')) {
-      display.update(d => d + '.');
+    if (!display.includes('.')) {
+      display = display + '.';
     }
   }
 
   function clear() {
-    display.set('0');
-    previousValue.set('');
-    currentOperator.set(null);
-    waitingForOperand.set(false);
-    error.set(false);
+    display = '0';
+    previousValue = '';
+    currentOperator = null;
+    waitingForOperand = false;
+    error = false;
   }
 
   function toggleSign() {
-    display.update(d => {
-      const value = parseFloat(d);
-      if (isNaN(value)) return d;
-      return String(-value);
-    });
+    const value = parseFloat(display);
+    if (!isNaN(value)) {
+      display = String(-value);
+    }
   }
 
   function inputPercent() {
-    display.update(d => {
-      const value = parseFloat(d);
-      if (isNaN(value)) return d;
-      return String(value / 100);
-    });
+    const value = parseFloat(display);
+    if (!isNaN(value)) {
+      display = String(value / 100);
+    }
   }
 
   function backspace() {
-    display.update(d => {
-      if (d.length === 1 || (d.length === 2 && d.startsWith('-'))) {
-        return '0';
-      }
-      return d.slice(0, -1);
-    });
+    if (display.length === 1 || (display.length === 2 && display.startsWith('-'))) {
+      display = '0';
+    } else {
+      display = display.slice(0, -1);
+    }
   }
 
   function calculate(left: number, right: number, operator: string): number {
@@ -107,45 +107,43 @@
   }
 
   function performOperation(nextOperator: string) {
-    const inputValue = parseFloat($display);
+    const inputValue = parseFloat(display);
     
     if (isNaN(inputValue)) {
-      error.set(true);
-      display.set('Error');
+      error = true;
+      display = 'Error';
       return;
     }
 
-    if ($previousValue === '') {
-      previousValue.set($display);
-    } else if ($currentOperator) {
-      const prev = parseFloat($previousValue);
-      const result = calculate(prev, inputValue, $currentOperator);
+    if (previousValue === '') {
+      previousValue = display;
+    } else if (currentOperator) {
+      const prev = parseFloat(previousValue);
+      const result = calculate(prev, inputValue, currentOperator);
       
       if (isNaN(result) || !isFinite(result)) {
-        error.set(true);
-        display.set('Error');
-        previousValue.set('');
-        currentOperator.set(null);
-        waitingForOperand.set(false);
+        error = true;
+        display = 'Error';
+        previousValue = '';
+        currentOperator = null;
+        waitingForOperand = false;
         return;
       }
       
       // Add to history when we get a result and are about to start new operation
       if (nextOperator === '=') {
-        const expression = `${$previousValue} ${$currentOperator} ${$display}`;
+        const expression = `${previousValue} ${currentOperator} ${display}`;
         const resultStr = String(result);
-        history.update(h => {
-          const newHistory = [{ expression, result: resultStr }, ...h];
-          return newHistory.slice(0, maxHistoryItems);
-        });
+        const newHistory = [{ expression, result: resultStr }, ...history];
+        history = newHistory.slice(0, maxHistoryItems);
       }
       
-      display.set(String(result));
-      previousValue.set(String(result));
+      display = String(result);
+      previousValue = String(result);
     }
 
-    waitingForOperand.set(true);
-    currentOperator.set(nextOperator === '=' ? null : nextOperator);
+    waitingForOperand = true;
+    currentOperator = nextOperator === '=' ? null : nextOperator;
   }
 
   function handleButton(btn: string) {
@@ -207,12 +205,12 @@
   }
 
   function clearHistory() {
-    history.set([]);
+    history = [];
   }
 
   function useHistoryResult(result: string) {
-    display.set(result);
-    waitingForOperand.set(false);
+    display = result;
+    waitingForOperand = false;
   }
 
   onMount(() => {
@@ -224,13 +222,13 @@
   });
 </script>
 
-<div class="calculator-widget" class:compact class:has-error={$error}>
+<div class="calculator-widget" class:compact class:has-error={error}>
   <div class="display-container">
-    <div class="display" class:error={$error}>
-      {$formattedDisplay}
+    <div class="display" class:error>
+      {formattedDisplay()}
     </div>
-    {#if $currentOperator}
-      <div class="operator-indicator">{$currentOperator}</div>
+    {#if currentOperator}
+      <div class="operator-indicator">{currentOperator}</div>
     {/if}
   </div>
 
@@ -239,7 +237,7 @@
       {#each row as btn}
         <button
           class={getButtonClass(btn)}
-          on:click={() => handleButton(btn)}
+          onclick={() => handleButton(btn)}
           tabindex="-1"
           aria-label={btn === '±' ? 'Toggle sign' : btn === '⌫' ? 'Backspace' : btn}
         >
@@ -249,19 +247,19 @@
     {/each}
   </div>
 
-  {#if showHistory && $history.length > 0}
+  {#if showHistory && history.length > 0}
     <div class="history-section">
       <div class="history-header">
         <span>History</span>
-        <button class="clear-history" on:click={clearHistory} aria-label="Clear history">
+        <button class="clear-history" onclick={clearHistory} aria-label="Clear history">
           Clear
         </button>
       </div>
       <div class="history-list">
-        {#each $history as item}
+        {#each history as item}
           <button
             class="history-item"
-            on:click={() => useHistoryResult(item.result)}
+            onclick={() => useHistoryResult(item.result)}
             aria-label="Use result {item.result}"
           >
             <span class="expression">{item.expression}</span>
@@ -275,51 +273,48 @@
 
 <style>
   .calculator-widget {
-    --calc-bg: var(--color-surface, #1e1e1e);
-    --calc-display-bg: var(--color-surface-elevated, #2d2d2d);
-    --calc-text: var(--color-text, #ffffff);
-    --calc-text-muted: var(--color-text-muted, #888888);
-    --calc-btn-bg: var(--color-surface-hover, #3d3d3d);
-    --calc-btn-hover: var(--color-surface-active, #4d4d4d);
-    --calc-operator-bg: var(--color-primary, #ff9f0a);
-    --calc-operator-hover: var(--color-primary-hover, #ffb340);
-    --calc-function-bg: var(--color-surface-subtle, #505050);
-    --calc-function-hover: var(--color-surface-subtle-hover, #606060);
-    --calc-error: var(--color-error, #ff453a);
-    --calc-radius: 8px;
+    --calc-bg: var(--bg-tertiary, #40444b);
+    --calc-display-bg: var(--bg-primary, #36393f);
+    --calc-text: var(--text-primary, #ffffff);
+    --calc-text-muted: var(--text-muted, #72767d);
+    --calc-btn-bg: var(--bg-secondary, #2f3136);
+    --calc-btn-hover: var(--bg-modifier-hover, #4f545c);
+    --calc-operator-bg: var(--accent, #5865f2);
+    --calc-operator-hover: #4752c4;
+    --calc-function-bg: var(--bg-modifier-accent, #40444b);
+    --calc-function-hover: #4f545c;
+    --calc-error: var(--error, #ed4245);
+    --calc-radius: 6px;
 
     display: flex;
     flex-direction: column;
     background: var(--calc-bg);
     border-radius: var(--calc-radius);
-    padding: 12px;
-    width: 280px;
     user-select: none;
     font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
   }
 
   .calculator-widget.compact {
-    width: 240px;
-    padding: 8px;
+    padding: 0;
   }
 
   .display-container {
     position: relative;
-    margin-bottom: 12px;
+    margin-bottom: 8px;
   }
 
   .display {
     background: var(--calc-display-bg);
     color: var(--calc-text);
-    font-size: 2rem;
-    font-weight: 300;
+    font-size: 1.5rem;
+    font-weight: 500;
     text-align: right;
-    padding: 12px 16px;
+    padding: 10px 12px;
     border-radius: var(--calc-radius);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    min-height: 56px;
+    min-height: 44px;
     display: flex;
     align-items: center;
     justify-content: flex-end;
@@ -330,16 +325,16 @@
   }
 
   .compact .display {
-    font-size: 1.5rem;
-    padding: 8px 12px;
-    min-height: 44px;
+    font-size: 1.25rem;
+    padding: 8px 10px;
+    min-height: 36px;
   }
 
   .operator-indicator {
     position: absolute;
-    top: 8px;
-    right: 16px;
-    font-size: 0.75rem;
+    top: 6px;
+    right: 12px;
+    font-size: 0.7rem;
     color: var(--calc-operator-bg);
     opacity: 0.8;
   }
@@ -347,11 +342,11 @@
   .button-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 8px;
+    gap: 4px;
   }
 
   .compact .button-grid {
-    gap: 6px;
+    gap: 3px;
   }
 
   .calc-btn {
@@ -359,16 +354,16 @@
     color: var(--calc-text);
     border: none;
     border-radius: var(--calc-radius);
-    padding: 16px;
-    font-size: 1.25rem;
+    padding: 10px;
+    font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
     transition: background-color 0.15s ease, transform 0.1s ease;
   }
 
   .compact .calc-btn {
-    padding: 12px;
-    font-size: 1rem;
+    padding: 8px;
+    font-size: 0.9rem;
   }
 
   .calc-btn:hover {
@@ -397,18 +392,18 @@
   }
 
   .history-section {
-    margin-top: 12px;
+    margin-top: 8px;
     border-top: 1px solid var(--calc-btn-bg);
-    padding-top: 12px;
+    padding-top: 8px;
   }
 
   .history-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
     color: var(--calc-text-muted);
-    font-size: 0.75rem;
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.5px;
   }
@@ -418,8 +413,8 @@
     border: none;
     color: var(--calc-text-muted);
     cursor: pointer;
-    font-size: 0.75rem;
-    padding: 4px 8px;
+    font-size: 0.7rem;
+    padding: 2px 6px;
     border-radius: 4px;
     transition: background-color 0.15s ease;
   }
@@ -430,11 +425,11 @@
   }
 
   .history-list {
-    max-height: 120px;
+    max-height: 80px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 3px;
   }
 
   .history-item {
@@ -444,7 +439,7 @@
     background: var(--calc-display-bg);
     border: none;
     border-radius: 4px;
-    padding: 8px 12px;
+    padding: 6px 8px;
     cursor: pointer;
     text-align: left;
     transition: background-color 0.15s ease;
@@ -456,12 +451,12 @@
 
   .expression {
     color: var(--calc-text-muted);
-    font-size: 0.85rem;
+    font-size: 0.75rem;
   }
 
   .result {
     color: var(--calc-text);
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     font-weight: 500;
   }
 
