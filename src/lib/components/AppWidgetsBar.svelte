@@ -10,6 +10,7 @@
 	import CountdownWidget from './CountdownWidget.svelte';
 	import WeatherWidget from './WeatherWidget.svelte';
 	import PasswordGeneratorWidget from './PasswordGeneratorWidget.svelte';
+	import StopwatchWidget from './StopwatchWidget.svelte';
 
 	// Widget bar state
 	let isCollapsed = $state(false);
@@ -22,7 +23,7 @@
 
 	interface Widget {
 		id: string;
-		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music' | 'calculator' | 'converter' | 'countdown' | 'password';
+		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music' | 'calculator' | 'converter' | 'countdown' | 'password' | 'stopwatch';
 		enabled: boolean;
 		order: number;
 	}
@@ -70,7 +71,8 @@
 		{ id: 'calendar', type: 'calendar', enabled: true, order: 9 },
 		{ id: 'notes', type: 'notes', enabled: true, order: 10 },
 		{ id: 'pomodoro', type: 'pomodoro', enabled: true, order: 11 },
-		{ id: 'habits', type: 'habits', enabled: true, order: 12 }
+		{ id: 'stopwatch', type: 'stopwatch', enabled: true, order: 12 },
+		{ id: 'habits', type: 'habits', enabled: true, order: 13 }
 	];
 
 	let clockInterval: ReturnType<typeof setInterval>;
@@ -474,6 +476,8 @@
 								<button onclick={resetPomodoro}>↻</button>
 							</div>
 						</div>
+					{:else if widget.type === 'stopwatch'}
+						<StopwatchWidget compact={true} />
 					{:else if widget.type === 'habits'}
 						<HabitTrackerWidget />
 					{/if}
