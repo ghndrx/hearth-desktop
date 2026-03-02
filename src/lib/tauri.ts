@@ -262,6 +262,78 @@ export const clipboard = {
 };
 
 // ============================================================================
+// Clipboard History Functions
+// ============================================================================
+
+export type ClipboardContentType = 
+  | { type: 'Text'; data: string }
+  | { type: 'Html'; data: { html: string; plain: string | null } }
+  | { type: 'Image'; data: { base64: string; width: number; height: number; format: string } }
+  | { type: 'Files'; data: string[] }
+  | { type: 'Empty' };
+
+export interface ClipboardEntry {
+  id: string;
+  content: ClipboardContentType;
+  timestamp: number;
+  source: string | null;
+}
+
+export async function clipboardCopyText(
+  text: string,
+  trackHistory?: boolean,
+): Promise<ClipboardEntry> {
+  return invoke("clipboard_copy_text", { text, trackHistory });
+}
+
+export async function clipboardCopyHtml(
+  html: string,
+  plainText?: string,
+  trackHistory?: boolean,
+): Promise<ClipboardEntry> {
+  return invoke("clipboard_copy_html", { html, plainText, trackHistory });
+}
+
+export async function clipboardCopyImage(
+  base64Data: string,
+  trackHistory?: boolean,
+): Promise<ClipboardEntry> {
+  return invoke("clipboard_copy_image", { base64Data, trackHistory });
+}
+
+export async function clipboardReadContent(): Promise<ClipboardContentType> {
+  return invoke("clipboard_read");
+}
+
+export async function clipboardGetHistory(limit?: number): Promise<ClipboardEntry[]> {
+  return invoke("clipboard_get_history", { limit });
+}
+
+export async function clipboardClearHistory(): Promise<void> {
+  return invoke("clipboard_clear_history");
+}
+
+export async function clipboardRemoveEntry(id: string): Promise<boolean> {
+  return invoke("clipboard_remove_entry", { id });
+}
+
+export async function clipboardPasteEntry(id: string): Promise<ClipboardContentType> {
+  return invoke("clipboard_paste_entry", { id });
+}
+
+// Combined clipboard history API
+export const clipboardHistory = {
+  copyText: clipboardCopyText,
+  copyHtml: clipboardCopyHtml,
+  copyImage: clipboardCopyImage,
+  read: clipboardReadContent,
+  getHistory: clipboardGetHistory,
+  clearHistory: clipboardClearHistory,
+  removeEntry: clipboardRemoveEntry,
+  pasteEntry: clipboardPasteEntry,
+};
+
+// ============================================================================
 // Focus Mode Functions
 // ============================================================================
 
@@ -1323,6 +1395,7 @@ export default {
   app,
   updater,
   clipboard,
+  clipboardHistory,
   focusMode,
   mute,
   snooze,
