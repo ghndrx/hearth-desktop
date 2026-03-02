@@ -263,3 +263,6 @@ export { default as CurrencyConverterWidget } from './CurrencyConverterWidget.sv
 
 // Color picker components
 export { default as ColorPickerWidget } from './ColorPickerWidget.svelte';
+
+// Developer tools widgets
+export { default as RegexTesterWidget } from './RegexTesterWidget.svelte';
