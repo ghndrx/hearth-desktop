@@ -266,3 +266,4 @@ export { default as ColorPickerWidget } from './ColorPickerWidget.svelte';
 
 // Developer tools widgets
 export { default as RegexTesterWidget } from './RegexTesterWidget.svelte';
+export { default as RandomPickerWidget } from './RandomPickerWidget.svelte';
