@@ -268,6 +268,7 @@ export { default as ColorPickerWidget } from './ColorPickerWidget.svelte';
 export { default as RegexTesterWidget } from './RegexTesterWidget.svelte';
 export { default as RandomPickerWidget } from './RandomPickerWidget.svelte';
 export { default as NumberBaseConverterWidget } from './NumberBaseConverterWidget.svelte';
+export { default as LoremIpsumGeneratorWidget } from './LoremIpsumGeneratorWidget.svelte';
 
 // Form components (synced from frontend)
 export { default as Dropdown } from './Dropdown.svelte';
