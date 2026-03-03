@@ -16,6 +16,7 @@
 	import ColorPickerWidget from './ColorPickerWidget.svelte';
 	import JsonFormatterWidget from './JsonFormatterWidget.svelte';
 	import TimestampConverterWidget from './TimestampConverterWidget.svelte';
+	import DiskUsageWidget from './DiskUsageWidget.svelte';
 
 	// Widget bar state
 	let isCollapsed = $state(false);
@@ -28,7 +29,7 @@
 
 	interface Widget {
 		id: string;
-		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music' | 'calculator' | 'converter' | 'countdown' | 'password' | 'stopwatch' | 'currency' | 'clipboard' | 'colorpicker' | 'jsonformatter' | 'timestamp';
+		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music' | 'calculator' | 'converter' | 'countdown' | 'password' | 'stopwatch' | 'currency' | 'clipboard' | 'colorpicker' | 'jsonformatter' | 'timestamp' | 'diskusage';
 		enabled: boolean;
 		order: number;
 	}
@@ -82,7 +83,8 @@
 		{ id: 'clipboard', type: 'clipboard', enabled: true, order: 15 },
 		{ id: 'colorpicker', type: 'colorpicker', enabled: true, order: 16 },
 		{ id: 'jsonformatter', type: 'jsonformatter', enabled: true, order: 17 },
-		{ id: 'timestamp', type: 'timestamp', enabled: true, order: 18 }
+		{ id: 'timestamp', type: 'timestamp', enabled: true, order: 18 },
+		{ id: 'diskusage', type: 'diskusage', enabled: true, order: 19 }
 	];
 
 	let clockInterval: ReturnType<typeof setInterval>;

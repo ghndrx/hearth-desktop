@@ -267,3 +267,16 @@ export { default as ColorPickerWidget } from './ColorPickerWidget.svelte';
 // Developer tools widgets
 export { default as RegexTesterWidget } from './RegexTesterWidget.svelte';
 export { default as RandomPickerWidget } from './RandomPickerWidget.svelte';
+export { default as NumberBaseConverterWidget } from './NumberBaseConverterWidget.svelte';
+
+// Form components (synced from frontend)
+export { default as Dropdown } from './Dropdown.svelte';
+export { default as FileUploadPreview } from './FileUploadPreview.svelte';
+export { default as FriendsList } from './FriendsList.svelte';
+export { default as NotificationBadge } from './NotificationBadge.svelte';
+export { default as Skeleton } from './Skeleton.svelte';
+export { default as TextInput } from './TextInput.svelte';
+export { default as Toggle } from './Toggle.svelte';
+
+// Native disk usage widget
+export { default as DiskUsageWidget } from './DiskUsageWidget.svelte';
