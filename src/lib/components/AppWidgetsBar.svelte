@@ -15,6 +15,7 @@
 	import ClipboardHistoryWidget from './ClipboardHistoryWidget.svelte';
 	import ColorPickerWidget from './ColorPickerWidget.svelte';
 	import JsonFormatterWidget from './JsonFormatterWidget.svelte';
+	import TimestampConverterWidget from './TimestampConverterWidget.svelte';
 
 	// Widget bar state
 	let isCollapsed = $state(false);
@@ -27,7 +28,7 @@
 
 	interface Widget {
 		id: string;
-		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music' | 'calculator' | 'converter' | 'countdown' | 'password' | 'stopwatch' | 'currency' | 'clipboard' | 'colorpicker' | 'jsonformatter';
+		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music' | 'calculator' | 'converter' | 'countdown' | 'password' | 'stopwatch' | 'currency' | 'clipboard' | 'colorpicker' | 'jsonformatter' | 'timestamp';
 		enabled: boolean;
 		order: number;
 	}
@@ -80,7 +81,8 @@
 		{ id: 'currency', type: 'currency', enabled: true, order: 14 },
 		{ id: 'clipboard', type: 'clipboard', enabled: true, order: 15 },
 		{ id: 'colorpicker', type: 'colorpicker', enabled: true, order: 16 },
-		{ id: 'jsonformatter', type: 'jsonformatter', enabled: true, order: 17 }
+		{ id: 'jsonformatter', type: 'jsonformatter', enabled: true, order: 17 },
+		{ id: 'timestamp', type: 'timestamp', enabled: true, order: 18 }
 	];
 
 	let clockInterval: ReturnType<typeof setInterval>;
@@ -496,6 +498,8 @@
 						<ColorPickerWidget />
 					{:else if widget.type === 'jsonformatter'}
 						<JsonFormatterWidget compact={true} />
+					{:else if widget.type === 'timestamp'}
+						<TimestampConverterWidget />
 					{/if}
 				</div>
 			{/each}
