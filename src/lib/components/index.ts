@@ -281,3 +281,6 @@ export { default as Toggle } from './Toggle.svelte';
 
 // Native disk usage widget
 export { default as DiskUsageWidget } from './DiskUsageWidget.svelte';
+
+// Text diff widget
+export { default as TextDiffWidget } from './TextDiffWidget.svelte';
