@@ -285,3 +285,6 @@ export { default as DiskUsageWidget } from './DiskUsageWidget.svelte';
 
 // Text diff widget
 export { default as TextDiffWidget } from './TextDiffWidget.svelte';
+
+// Unix timestamp converter widget
+export { default as TimestampConverterWidget } from './TimestampConverterWidget.svelte';
