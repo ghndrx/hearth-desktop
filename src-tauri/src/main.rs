@@ -66,6 +66,7 @@ mod processmanager;
 mod dndsync;
 mod colorpicker;
 mod pomodoro;
+mod connection_status;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -450,6 +451,10 @@ fn main() {
             ));
             app.manage(pomodoro_manager.clone());
             pomodoro::start_pomodoro_timer(app.handle().clone(), pomodoro_manager);
+
+            // Initialize connection status manager
+            app.manage(connection_status::ConnectionStatusManager::new());
+            connection_status::init(app.handle());
 
             Ok(())
         })
@@ -965,6 +970,15 @@ fn main() {
             pomodoro::pomodoro_is_running,
             pomodoro::pomodoro_save_state,
             pomodoro::pomodoro_get_tray_info,
+            // Connection status commands
+            connection_status::connection_get_stats,
+            connection_status::connection_start_monitoring,
+            connection_status::connection_stop_monitoring,
+            connection_status::connection_reconnect,
+            connection_status::connection_set_auto_reconnect,
+            connection_status::connection_get_auto_reconnect,
+            connection_status::connection_reset,
+            connection_status::connection_simulate_state,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
