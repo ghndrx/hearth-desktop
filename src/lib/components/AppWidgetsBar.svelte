@@ -18,6 +18,7 @@
 	import TimestampConverterWidget from './TimestampConverterWidget.svelte';
 	import DiskUsageWidget from './DiskUsageWidget.svelte';
 	import MarkdownPreviewWidget from './MarkdownPreviewWidget.svelte';
+	import MarkdownTableGeneratorWidget from './MarkdownTableGeneratorWidget.svelte';
 
 	// Widget bar state
 	let isCollapsed = $state(false);
@@ -30,7 +31,7 @@
 
 	interface Widget {
 		id: string;
-		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music' | 'calculator' | 'converter' | 'countdown' | 'password' | 'stopwatch' | 'currency' | 'clipboard' | 'colorpicker' | 'jsonformatter' | 'timestamp' | 'diskusage' | 'markdown';
+		type: 'clock' | 'system' | 'weather' | 'notes' | 'calendar' | 'pomodoro' | 'habits' | 'timezone' | 'music' | 'calculator' | 'converter' | 'countdown' | 'password' | 'stopwatch' | 'currency' | 'clipboard' | 'colorpicker' | 'jsonformatter' | 'timestamp' | 'diskusage' | 'markdown' | 'markdowntable';
 		enabled: boolean;
 		order: number;
 	}
@@ -86,7 +87,8 @@
 		{ id: 'jsonformatter', type: 'jsonformatter', enabled: true, order: 17 },
 		{ id: 'timestamp', type: 'timestamp', enabled: true, order: 18 },
 		{ id: 'diskusage', type: 'diskusage', enabled: true, order: 19 },
-		{ id: 'markdown', type: 'markdown', enabled: true, order: 20 }
+		{ id: 'markdown', type: 'markdown', enabled: true, order: 20 },
+		{ id: 'markdowntable', type: 'markdowntable', enabled: true, order: 21 }
 	];
 
 	let clockInterval: ReturnType<typeof setInterval>;
@@ -506,6 +508,8 @@
 						<TimestampConverterWidget />
 					{:else if widget.type === 'markdown'}
 						<MarkdownPreviewWidget compact={true} />
+					{:else if widget.type === 'markdowntable'}
+						<MarkdownTableGeneratorWidget compact={true} />
 					{/if}
 				</div>
 			{/each}
