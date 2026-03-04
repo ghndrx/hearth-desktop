@@ -39,6 +39,18 @@ pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::er
                         let _ = window.hide();
                     }
                 }
+                "quick_capture" => {
+                    if let Some(manager) = app.try_state::<crate::quickcapture::QuickCaptureManager>() {
+                        let _ = manager.toggle(app);
+                    }
+                }
+                "settings" => {
+                    if let Some(window) = app.get_webview_window("main") {
+                        let _ = window.show();
+                        let _ = window.set_focus();
+                        let _ = window.emit("navigate", "/settings");
+                    }
+                }
                 "toggle_mute" => {
                     // Toggle mute state
                     let muted = crate::commands::toggle_mute().unwrap_or(false);
@@ -218,8 +230,10 @@ fn create_tray_menu<R: Runtime>(
     app: &AppHandle<R>,
     is_muted: bool,
 ) -> Result<Menu<R>, Box<dyn std::error::Error>> {
-    let show_i = MenuItem::with_id(app, "show", "Show", true, None::<&str>)?;
+    let show_i = MenuItem::with_id(app, "show", "Show App", true, None::<&str>)?;
     let hide_i = MenuItem::with_id(app, "hide", "Hide", true, None::<&str>)?;
+    let quick_capture_i = MenuItem::with_id(app, "quick_capture", "Quick Capture", true, None::<&str>)?;
+    let settings_i = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
     let separator = PredefinedMenuItem::separator(app)?;
     
     let mute_text = if is_muted {
@@ -299,10 +313,12 @@ fn create_tray_menu<R: Runtime>(
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
 
     let menu = Menu::with_items(app, &[
-        &show_i, 
-        &hide_i, 
-        &separator, 
-        &toggle_mute_i, 
+        &show_i,
+        &hide_i,
+        &quick_capture_i,
+        &settings_i,
+        &separator,
+        &toggle_mute_i,
         &toggle_focus_i, 
         &snooze_submenu, 
         &pomodoro_submenu,
