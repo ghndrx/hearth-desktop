@@ -16,5 +16,8 @@ export default defineConfig({
 		environment: 'jsdom',
 		globals: true,
 		setupFiles: ['src/lib/__tests__/setup.ts']
+	},
+	resolve: {
+		conditions: ['browser']
 	}
 });
