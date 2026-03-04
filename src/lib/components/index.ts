@@ -296,3 +296,6 @@ export { default as HttpStatusWidget } from './HttpStatusWidget.svelte';
 export { default as MimeTypeLookupWidget } from './MimeTypeLookupWidget.svelte';
 export { default as ChmodCalculatorWidget } from './ChmodCalculatorWidget.svelte';
 export { default as RegexTesterWidget } from './RegexTesterWidget.svelte';
+
+// Daily digest widget - provides morning/evening summary of notifications, focus time, and events
+export { default as DailyDigestWidget } from './DailyDigestWidget.svelte';
