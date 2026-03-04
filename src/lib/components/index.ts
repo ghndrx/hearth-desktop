@@ -288,3 +288,6 @@ export { default as TextDiffWidget } from './TextDiffWidget.svelte';
 
 // Unix timestamp converter widget
 export { default as TimestampConverterWidget } from './TimestampConverterWidget.svelte';
+
+// HTTP status code reference widget
+export { default as HttpStatusWidget } from './HttpStatusWidget.svelte';
