@@ -1,171 +1,128 @@
 <script lang="ts">
   import { onMount } from 'svelte';
 
-  // Widget state
-  let pattern = '';
-  let flags = 'g';
-  let testString = 'Hello world! This is a test string.\nWith multiple lines.';
+  let pattern: string = '';
+  let flags: string = 'g';
+  let testString: string = '';
   let matches: RegExpMatchArray[] = [];
-  let error = '';
-  let isValid = true;
-  let groups: Record<string, string>[] = [];
+  let error: string = '';
+  let highlightedText: string = '';
+  let matchCount: number = 0;
+  let executionTime: number = 0;
 
-  // Flag checkboxes
-  let globalFlag = true;
-  let caseInsensitiveFlag = false;
-  let multilineFlag = false;
-  let dotAllFlag = false;
-  let unicodeFlag = false;
-  let stickyFlag = false;
+  // Flag toggles
+  let globalFlag: boolean = true;
+  let caseInsensitive: boolean = false;
+  let multiline: boolean = false;
+  let dotAll: boolean = false;
+  let unicode: boolean = false;
 
-  // Common patterns
-  const commonPatterns = [
+  // Common regex patterns
+  const presets = [
     { name: 'Email', pattern: '[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}' },
-    { name: 'URL', pattern: 'https?://[^\\s]+' },
+    { name: 'URL', pattern: 'https?:\\/\\/[\\w\\-._~:/?#[\\]@!$&\'()*+,;=%]+' },
     { name: 'Phone (US)', pattern: '\\(?\\d{3}\\)?[-.\\s]?\\d{3}[-.\\s]?\\d{4}' },
     { name: 'IPv4', pattern: '\\b(?:\\d{1,3}\\.){3}\\d{1,3}\\b' },
-    { name: 'Date (YYYY-MM-DD)', pattern: '\\d{4}-\\d{2}-\\d{2}' },
-    { name: 'Hex Color', pattern: '#[0-9A-Fa-f]{3,6}\\b' },
-    { name: 'Word', pattern: '\\b\\w+\\b' },
-    { name: 'Number', pattern: '-?\\d+(?:\\.\\d+)?' },
+    { name: 'Date (YYYY-MM-DD)', pattern: '\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[12]\\d|3[01])' },
+    { name: 'Hex Color', pattern: '#(?:[0-9a-fA-F]{3}){1,2}\\b' },
+    { name: 'UUID', pattern: '[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}' },
+    { name: 'Credit Card', pattern: '\\b(?:\\d{4}[- ]?){3}\\d{4}\\b' },
   ];
 
-  // History
-  let history: { pattern: string; flags: string }[] = [];
-  const MAX_HISTORY = 10;
-
-  function updateFlags() {
-    let f = '';
-    if (globalFlag) f += 'g';
-    if (caseInsensitiveFlag) f += 'i';
-    if (multilineFlag) f += 'm';
-    if (dotAllFlag) f += 's';
-    if (unicodeFlag) f += 'u';
-    if (stickyFlag) f += 'y';
-    flags = f;
-    testPattern();
+  $: {
+    flags = '';
+    if (globalFlag) flags += 'g';
+    if (caseInsensitive) flags += 'i';
+    if (multiline) flags += 'm';
+    if (dotAll) flags += 's';
+    if (unicode) flags += 'u';
   }
 
-  function testPattern() {
-    matches = [];
-    groups = [];
-    error = '';
-    isValid = true;
+  $: testRegex(pattern, flags, testString);
 
-    if (!pattern) {
+  function testRegex(pat: string, flg: string, str: string) {
+    error = '';
+    matches = [];
+    highlightedText = '';
+    matchCount = 0;
+    executionTime = 0;
+
+    if (!pat || !str) {
+      highlightedText = escapeHtml(str);
       return;
     }
 
     try {
-      const regex = new RegExp(pattern, flags);
+      const startTime = performance.now();
+      const regex = new RegExp(pat, flg);
       
-      if (flags.includes('g')) {
+      // Collect all matches
+      if (flg.includes('g')) {
         let match;
-        while ((match = regex.exec(testString)) !== null) {
+        while ((match = regex.exec(str)) !== null) {
           matches.push(match);
-          if (match.groups) {
-            groups.push(match.groups);
-          }
-          // Prevent infinite loop for zero-width matches
-          if (match.index === regex.lastIndex) {
-            regex.lastIndex++;
+          matchCount++;
+          // Safety: prevent infinite loops
+          if (matchCount > 1000) {
+            error = 'Too many matches (>1000). Pattern may be too broad.';
+            break;
           }
         }
       } else {
-        const match = regex.exec(testString);
+        const match = str.match(regex);
         if (match) {
           matches.push(match);
-          if (match.groups) {
-            groups.push(match.groups);
-          }
+          matchCount = 1;
         }
       }
-    } catch (e) {
-      error = e instanceof Error ? e.message : 'Invalid regex';
-      isValid = false;
+
+      executionTime = performance.now() - startTime;
+
+      // Generate highlighted text
+      highlightedText = generateHighlightedText(str, pat, flg);
+    } catch (e: any) {
+      error = e.message || 'Invalid regex pattern';
+      highlightedText = escapeHtml(str);
     }
   }
 
-  function addToHistory() {
-    if (pattern && isValid) {
-      const entry = { pattern, flags };
-      // Remove duplicates
-      history = history.filter(h => h.pattern !== pattern || h.flags !== flags);
-      history.unshift(entry);
-      if (history.length > MAX_HISTORY) {
-        history = history.slice(0, MAX_HISTORY);
-      }
-    }
-  }
-
-  function loadFromHistory(entry: { pattern: string; flags: string }) {
-    pattern = entry.pattern;
-    // Parse flags
-    globalFlag = entry.flags.includes('g');
-    caseInsensitiveFlag = entry.flags.includes('i');
-    multilineFlag = entry.flags.includes('m');
-    dotAllFlag = entry.flags.includes('s');
-    unicodeFlag = entry.flags.includes('u');
-    stickyFlag = entry.flags.includes('y');
-    flags = entry.flags;
-    testPattern();
-  }
-
-  function loadCommonPattern(p: { name: string; pattern: string }) {
-    pattern = p.pattern;
-    testPattern();
-    addToHistory();
-  }
-
-  function copyPattern() {
-    navigator.clipboard.writeText(`/${pattern}/${flags}`);
-  }
-
-  function copyMatches() {
-    const text = matches.map(m => m[0]).join('\n');
-    navigator.clipboard.writeText(text);
-  }
-
-  function clearAll() {
-    pattern = '';
-    testString = '';
-    matches = [];
-    groups = [];
-    error = '';
-    isValid = true;
-  }
-
-  function getHighlightedText(): string {
-    if (!pattern || !isValid || matches.length === 0) {
-      return escapeHtml(testString);
-    }
-
+  function generateHighlightedText(str: string, pat: string, flg: string): string {
+    if (!pat) return escapeHtml(str);
+    
     try {
-      const regex = new RegExp(pattern, flags.includes('g') ? flags : flags + 'g');
-      let result = testString;
-      let offset = 0;
+      const regex = new RegExp(pat, flg);
+      let result = '';
+      let lastIndex = 0;
+      let matchIdx = 0;
       
-      // Sort matches by index to process in order
-      const sortedMatches = [...matches].sort((a, b) => (a.index || 0) - (b.index || 0));
-      
-      for (const match of sortedMatches) {
-        const idx = (match.index || 0) + offset;
-        const before = result.slice(0, idx);
-        const matchText = match[0];
-        const after = result.slice(idx + matchText.length);
-        const highlighted = `<mark class="match-highlight">${escapeHtml(matchText)}</mark>`;
-        result = before + highlighted + after;
-        offset += highlighted.length - matchText.length;
+      if (flg.includes('g')) {
+        let match;
+        const tempRegex = new RegExp(pat, flg);
+        while ((match = tempRegex.exec(str)) !== null && matchIdx < 1000) {
+          result += escapeHtml(str.slice(lastIndex, match.index));
+          result += `<mark class="match match-${matchIdx % 5}">${escapeHtml(match[0])}</mark>`;
+          lastIndex = match.index + match[0].length;
+          matchIdx++;
+          if (match[0].length === 0) tempRegex.lastIndex++;
+        }
+      } else {
+        const match = str.match(regex);
+        if (match && match.index !== undefined) {
+          result += escapeHtml(str.slice(0, match.index));
+          result += `<mark class="match match-0">${escapeHtml(match[0])}</mark>`;
+          lastIndex = match.index + match[0].length;
+        }
       }
       
+      result += escapeHtml(str.slice(lastIndex));
       return result;
     } catch {
-      return escapeHtml(testString);
+      return escapeHtml(str);
     }
   }
 
-  function escapeHtml(text: string): string {
-    return text
+  function escapeHtml(str: string): string {
+    return str
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -174,403 +131,411 @@
       .replace(/\n/g, '<br>');
   }
 
-  // Reactive update
-  $: if (pattern !== undefined || testString !== undefined || flags !== undefined) {
-    testPattern();
+  function applyPreset(preset: { name: string; pattern: string }) {
+    pattern = preset.pattern;
   }
 
-  onMount(() => {
-    testPattern();
-  });
+  function copyPattern() {
+    navigator.clipboard.writeText(pattern);
+  }
+
+  function clearAll() {
+    pattern = '';
+    testString = '';
+    matches = [];
+    error = '';
+    highlightedText = '';
+  }
 </script>
 
-<div class="regex-tester-widget">
-  <div class="widget-header">
-    <h3>🔍 RegEx Tester</h3>
-    <div class="header-actions">
-      <button class="icon-btn" on:click={clearAll} title="Clear all">
-        🗑️
-      </button>
+<div class="regex-tester">
+  <div class="header">
+    <h3>🔍 Regex Tester</h3>
+    <button class="clear-btn" on:click={clearAll} title="Clear all">
+      ✕
+    </button>
+  </div>
+
+  <div class="presets">
+    <span class="presets-label">Presets:</span>
+    <div class="preset-buttons">
+      {#each presets as preset}
+        <button class="preset-btn" on:click={() => applyPreset(preset)}>
+          {preset.name}
+        </button>
+      {/each}
     </div>
   </div>
 
-  <div class="widget-content">
-    <!-- Pattern input -->
-    <div class="input-group">
-      <label for="pattern">Pattern</label>
-      <div class="pattern-input-wrapper">
-        <span class="pattern-delimiter">/</span>
-        <input
-          id="pattern"
-          type="text"
-          bind:value={pattern}
-          placeholder="Enter regex pattern..."
-          class:invalid={!isValid}
-          on:blur={addToHistory}
-        />
-        <span class="pattern-delimiter">/</span>
-        <span class="flags-display">{flags}</span>
-      </div>
-      {#if error}
-        <div class="error-message">{error}</div>
+  <div class="pattern-section">
+    <div class="pattern-input-row">
+      <span class="regex-delimiter">/</span>
+      <input
+        type="text"
+        bind:value={pattern}
+        placeholder="Enter regex pattern..."
+        class="pattern-input"
+        spellcheck="false"
+      />
+      <span class="regex-delimiter">/</span>
+      <span class="flags-display">{flags || 'no flags'}</span>
+      <button class="copy-btn" on:click={copyPattern} title="Copy pattern">
+        📋
+      </button>
+    </div>
+
+    <div class="flags-row">
+      <label class="flag-checkbox">
+        <input type="checkbox" bind:checked={globalFlag} />
+        <span>g</span> global
+      </label>
+      <label class="flag-checkbox">
+        <input type="checkbox" bind:checked={caseInsensitive} />
+        <span>i</span> case insensitive
+      </label>
+      <label class="flag-checkbox">
+        <input type="checkbox" bind:checked={multiline} />
+        <span>m</span> multiline
+      </label>
+      <label class="flag-checkbox">
+        <input type="checkbox" bind:checked={dotAll} />
+        <span>s</span> dot all
+      </label>
+      <label class="flag-checkbox">
+        <input type="checkbox" bind:checked={unicode} />
+        <span>u</span> unicode
+      </label>
+    </div>
+
+    {#if error}
+      <div class="error">{error}</div>
+    {/if}
+  </div>
+
+  <div class="test-string-section">
+    <label for="test-string">Test String:</label>
+    <textarea
+      id="test-string"
+      bind:value={testString}
+      placeholder="Enter text to test against..."
+      rows="4"
+      spellcheck="false"
+    ></textarea>
+  </div>
+
+  <div class="results-section">
+    <div class="results-header">
+      <span class="match-count">
+        {matchCount} match{matchCount !== 1 ? 'es' : ''} found
+      </span>
+      {#if executionTime > 0}
+        <span class="execution-time">({executionTime.toFixed(2)}ms)</span>
       {/if}
     </div>
 
-    <!-- Flags -->
-    <div class="flags-group">
-      <label>
-        <input type="checkbox" bind:checked={globalFlag} on:change={updateFlags} />
-        <span title="Global - find all matches">g</span>
-      </label>
-      <label>
-        <input type="checkbox" bind:checked={caseInsensitiveFlag} on:change={updateFlags} />
-        <span title="Case insensitive">i</span>
-      </label>
-      <label>
-        <input type="checkbox" bind:checked={multilineFlag} on:change={updateFlags} />
-        <span title="Multiline - ^ and $ match line boundaries">m</span>
-      </label>
-      <label>
-        <input type="checkbox" bind:checked={dotAllFlag} on:change={updateFlags} />
-        <span title="Dot all - . matches newlines">s</span>
-      </label>
-      <label>
-        <input type="checkbox" bind:checked={unicodeFlag} on:change={updateFlags} />
-        <span title="Unicode">u</span>
-      </label>
-      <label>
-        <input type="checkbox" bind:checked={stickyFlag} on:change={updateFlags} />
-        <span title="Sticky - match from lastIndex">y</span>
-      </label>
+    <div class="highlighted-output">
+      {@html highlightedText || '<span class="placeholder">Results will appear here...</span>'}
     </div>
 
-    <!-- Common patterns dropdown -->
-    <div class="common-patterns">
-      <select on:change={(e) => {
-        const idx = parseInt(e.currentTarget.value);
-        if (idx >= 0) {
-          loadCommonPattern(commonPatterns[idx]);
-          e.currentTarget.value = '-1';
-        }
-      }}>
-        <option value="-1">Common patterns...</option>
-        {#each commonPatterns as p, i}
-          <option value={i}>{p.name}</option>
-        {/each}
-      </select>
-    </div>
-
-    <!-- Test string -->
-    <div class="input-group">
-      <label for="test-string">Test String</label>
-      <textarea
-        id="test-string"
-        bind:value={testString}
-        placeholder="Enter text to test against..."
-        rows="4"
-      ></textarea>
-    </div>
-
-    <!-- Highlighted result -->
-    <div class="result-section">
-      <div class="result-header">
-        <span>Result ({matches.length} match{matches.length !== 1 ? 'es' : ''})</span>
-        {#if matches.length > 0}
-          <button class="copy-btn" on:click={copyMatches} title="Copy matches">
-            📋
-          </button>
-        {/if}
-      </div>
-      <div class="highlighted-text">
-        {@html getHighlightedText()}
-      </div>
-    </div>
-
-    <!-- Matches list -->
     {#if matches.length > 0}
-      <div class="matches-section">
-        <div class="matches-header">Matches</div>
-        <div class="matches-list">
-          {#each matches as match, i}
+      <div class="matches-list">
+        <h4>Match Details:</h4>
+        <div class="matches-scroll">
+          {#each matches.slice(0, 50) as match, i}
             <div class="match-item">
-              <span class="match-index">{i + 1}</span>
-              <span class="match-text">"{match[0]}"</span>
-              <span class="match-position">@{match.index}</span>
+              <span class="match-index">#{i + 1}</span>
+              <span class="match-value">"{match[0]}"</span>
+              <span class="match-position">at {match.index}</span>
               {#if match.length > 1}
                 <div class="capture-groups">
                   {#each match.slice(1) as group, gi}
-                    <span class="group">Group {gi + 1}: "{group || ''}"</span>
+                    <span class="capture-group">Group {gi + 1}: "{group ?? 'undefined'}"</span>
                   {/each}
                 </div>
               {/if}
             </div>
           {/each}
+          {#if matches.length > 50}
+            <div class="more-matches">...and {matches.length - 50} more matches</div>
+          {/if}
         </div>
       </div>
     {/if}
-
-    <!-- Named groups -->
-    {#if groups.length > 0 && Object.keys(groups[0]).length > 0}
-      <div class="groups-section">
-        <div class="groups-header">Named Groups</div>
-        {#each groups as group, i}
-          <div class="group-item">
-            {#each Object.entries(group) as [name, value]}
-              <span class="named-group">{name}: "{value}"</span>
-            {/each}
-          </div>
-        {/each}
-      </div>
-    {/if}
-
-    <!-- History -->
-    {#if history.length > 0}
-      <div class="history-section">
-        <div class="history-header">Recent Patterns</div>
-        <div class="history-list">
-          {#each history as entry}
-            <button class="history-item" on:click={() => loadFromHistory(entry)}>
-              <span class="history-pattern">/{entry.pattern}/{entry.flags}</span>
-            </button>
-          {/each}
-        </div>
-      </div>
-    {/if}
-
-    <!-- Quick actions -->
-    <div class="actions">
-      <button class="action-btn" on:click={copyPattern} disabled={!pattern || !isValid}>
-        📋 Copy Pattern
-      </button>
-    </div>
   </div>
 </div>
 
 <style>
-  .regex-tester-widget {
-    background: var(--widget-bg, #1e1e2e);
-    border-radius: 12px;
+  .regex-tester {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
     padding: 16px;
-    color: var(--text-primary, #cdd6f4);
-    font-family: system-ui, -apple-system, sans-serif;
-    min-width: 320px;
-    max-width: 500px;
+    background: var(--bg-secondary, #2f3136);
+    border-radius: 8px;
+    font-family: var(--font-primary, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    color: var(--text-normal, #dcddde);
+    max-height: 600px;
+    overflow: hidden;
   }
 
-  .widget-header {
+  .header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 16px;
-    padding-bottom: 12px;
-    border-bottom: 1px solid var(--border-color, #313244);
   }
 
-  .widget-header h3 {
+  .header h3 {
     margin: 0;
     font-size: 16px;
     font-weight: 600;
   }
 
-  .header-actions {
+  .clear-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-muted, #72767d);
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 14px;
+  }
+
+  .clear-btn:hover {
+    background: var(--bg-modifier-hover, rgba(79, 84, 92, 0.4));
+    color: var(--text-normal, #dcddde);
+  }
+
+  .presets {
     display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .presets-label {
+    font-size: 12px;
+    color: var(--text-muted, #72767d);
+  }
+
+  .preset-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+
+  .preset-btn {
+    background: var(--bg-tertiary, #202225);
+    border: 1px solid var(--bg-modifier-accent, #4f545c);
+    color: var(--text-normal, #dcddde);
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .preset-btn:hover {
+    background: var(--brand-experiment, #5865f2);
+    border-color: var(--brand-experiment, #5865f2);
+  }
+
+  .pattern-section {
+    display: flex;
+    flex-direction: column;
     gap: 8px;
   }
 
-  .icon-btn {
-    background: transparent;
-    border: none;
-    cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 6px;
-    transition: background-color 0.2s;
-  }
-
-  .icon-btn:hover {
-    background: var(--hover-bg, #313244);
-  }
-
-  .widget-content {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-  }
-
-  .input-group {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .input-group label {
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-secondary, #a6adc8);
-  }
-
-  .pattern-input-wrapper {
+  .pattern-input-row {
     display: flex;
     align-items: center;
-    background: var(--input-bg, #181825);
-    border: 1px solid var(--border-color, #313244);
-    border-radius: 8px;
-    padding: 0 12px;
     gap: 4px;
+    background: var(--bg-tertiary, #202225);
+    padding: 8px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--bg-modifier-accent, #4f545c);
   }
 
-  .pattern-delimiter {
-    color: var(--text-muted, #6c7086);
-    font-family: monospace;
+  .regex-delimiter {
+    color: var(--text-muted, #72767d);
+    font-family: 'Fira Code', 'Consolas', monospace;
     font-size: 16px;
   }
 
-  .flags-display {
-    color: var(--accent-color, #cba6f7);
-    font-family: monospace;
-    font-size: 14px;
-    min-width: 40px;
-  }
-
-  .pattern-input-wrapper input {
+  .pattern-input {
     flex: 1;
     background: transparent;
     border: none;
-    color: var(--text-primary, #cdd6f4);
-    font-family: monospace;
+    color: var(--text-normal, #dcddde);
+    font-family: 'Fira Code', 'Consolas', monospace;
     font-size: 14px;
-    padding: 10px 0;
     outline: none;
   }
 
-  .pattern-input-wrapper input.invalid {
-    color: var(--error-color, #f38ba8);
+  .pattern-input::placeholder {
+    color: var(--text-muted, #72767d);
   }
 
-  .error-message {
-    color: var(--error-color, #f38ba8);
+  .flags-display {
+    color: var(--brand-experiment, #5865f2);
+    font-family: 'Fira Code', 'Consolas', monospace;
     font-size: 12px;
-    padding: 4px 8px;
-    background: rgba(243, 139, 168, 0.1);
-    border-radius: 4px;
-  }
-
-  .flags-group {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
-  .flags-group label {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    font-family: monospace;
-  }
-
-  .flags-group label span {
-    color: var(--accent-color, #cba6f7);
-  }
-
-  .flags-group input[type="checkbox"] {
-    accent-color: var(--accent-color, #cba6f7);
-  }
-
-  .common-patterns select {
-    width: 100%;
-    padding: 8px 12px;
-    background: var(--input-bg, #181825);
-    border: 1px solid var(--border-color, #313244);
-    border-radius: 8px;
-    color: var(--text-primary, #cdd6f4);
-    font-size: 14px;
-    cursor: pointer;
-  }
-
-  textarea {
-    background: var(--input-bg, #181825);
-    border: 1px solid var(--border-color, #313244);
-    border-radius: 8px;
-    color: var(--text-primary, #cdd6f4);
-    font-family: monospace;
-    font-size: 13px;
-    padding: 10px 12px;
-    resize: vertical;
-    outline: none;
-  }
-
-  textarea:focus {
-    border-color: var(--accent-color, #cba6f7);
-  }
-
-  .result-section {
-    background: var(--input-bg, #181825);
-    border-radius: 8px;
-    padding: 12px;
-  }
-
-  .result-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 12px;
-    font-weight: 500;
-    color: var(--text-secondary, #a6adc8);
-    margin-bottom: 8px;
+    min-width: 60px;
   }
 
   .copy-btn {
     background: transparent;
     border: none;
     cursor: pointer;
-    padding: 2px 6px;
-    border-radius: 4px;
+    padding: 4px;
+    font-size: 14px;
+    opacity: 0.7;
+    transition: opacity 0.15s ease;
   }
 
   .copy-btn:hover {
-    background: var(--hover-bg, #313244);
+    opacity: 1;
   }
 
-  .highlighted-text {
-    font-family: monospace;
-    font-size: 13px;
-    line-height: 1.5;
-    white-space: pre-wrap;
-    word-break: break-all;
-    max-height: 150px;
-    overflow-y: auto;
+  .flags-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
   }
 
-  :global(.match-highlight) {
-    background: rgba(203, 166, 247, 0.3);
-    color: var(--accent-color, #cba6f7);
-    padding: 1px 2px;
-    border-radius: 2px;
-  }
-
-  .matches-section,
-  .groups-section {
-    background: var(--input-bg, #181825);
-    border-radius: 8px;
-    padding: 12px;
-  }
-
-  .matches-header,
-  .groups-header,
-  .history-header {
+  .flag-checkbox {
+    display: flex;
+    align-items: center;
+    gap: 4px;
     font-size: 12px;
-    font-weight: 500;
-    color: var(--text-secondary, #a6adc8);
-    margin-bottom: 8px;
+    color: var(--text-muted, #72767d);
+    cursor: pointer;
   }
 
-  .matches-list {
+  .flag-checkbox input {
+    cursor: pointer;
+  }
+
+  .flag-checkbox span {
+    font-family: 'Fira Code', 'Consolas', monospace;
+    color: var(--brand-experiment, #5865f2);
+    font-weight: 600;
+  }
+
+  .error {
+    background: var(--status-danger-background, rgba(237, 66, 69, 0.1));
+    color: var(--status-danger, #ed4245);
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+  }
+
+  .test-string-section {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .test-string-section label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted, #72767d);
+  }
+
+  .test-string-section textarea {
+    background: var(--bg-tertiary, #202225);
+    border: 1px solid var(--bg-modifier-accent, #4f545c);
+    border-radius: 4px;
+    color: var(--text-normal, #dcddde);
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    padding: 8px;
+    resize: vertical;
+    min-height: 60px;
+  }
+
+  .test-string-section textarea:focus {
+    outline: none;
+    border-color: var(--brand-experiment, #5865f2);
+  }
+
+  .results-section {
     display: flex;
     flex-direction: column;
     gap: 8px;
-    max-height: 200px;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .results-header {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .match-count {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-positive, #3ba55c);
+  }
+
+  .execution-time {
+    font-size: 11px;
+    color: var(--text-muted, #72767d);
+  }
+
+  .highlighted-output {
+    background: var(--bg-tertiary, #202225);
+    padding: 12px;
+    border-radius: 4px;
+    font-family: 'Fira Code', 'Consolas', monospace;
+    font-size: 13px;
+    line-height: 1.5;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 120px;
     overflow-y: auto;
+  }
+
+  .highlighted-output :global(.placeholder) {
+    color: var(--text-muted, #72767d);
+    font-style: italic;
+  }
+
+  .highlighted-output :global(.match) {
+    padding: 1px 2px;
+    border-radius: 2px;
+    font-weight: 600;
+  }
+
+  .highlighted-output :global(.match-0) { background: rgba(88, 101, 242, 0.4); }
+  .highlighted-output :global(.match-1) { background: rgba(59, 165, 92, 0.4); }
+  .highlighted-output :global(.match-2) { background: rgba(250, 166, 26, 0.4); }
+  .highlighted-output :global(.match-3) { background: rgba(237, 66, 69, 0.4); }
+  .highlighted-output :global(.match-4) { background: rgba(235, 69, 158, 0.4); }
+
+  .matches-list {
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .matches-list h4 {
+    margin: 0 0 8px 0;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--text-muted, #72767d);
+  }
+
+  .matches-scroll {
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
   }
 
   .match-item {
@@ -579,114 +544,47 @@
     align-items: center;
     gap: 8px;
     padding: 6px 8px;
-    background: var(--widget-bg, #1e1e2e);
-    border-radius: 6px;
-    font-family: monospace;
+    background: var(--bg-tertiary, #202225);
+    border-radius: 4px;
     font-size: 12px;
   }
 
   .match-index {
-    background: var(--accent-color, #cba6f7);
-    color: var(--widget-bg, #1e1e2e);
-    padding: 2px 6px;
-    border-radius: 4px;
+    color: var(--text-muted, #72767d);
     font-weight: 600;
-    font-size: 11px;
+    min-width: 30px;
   }
 
-  .match-text {
-    color: var(--text-primary, #cdd6f4);
+  .match-value {
+    font-family: 'Fira Code', 'Consolas', monospace;
+    color: var(--brand-experiment, #5865f2);
   }
 
   .match-position {
-    color: var(--text-muted, #6c7086);
-    font-size: 11px;
+    color: var(--text-muted, #72767d);
   }
 
   .capture-groups {
     width: 100%;
     display: flex;
     flex-wrap: wrap;
-    gap: 6px;
+    gap: 4px;
     margin-top: 4px;
-    padding-left: 28px;
+    padding-left: 38px;
   }
 
-  .group,
-  .named-group {
-    font-size: 11px;
-    color: var(--text-secondary, #a6adc8);
-    background: rgba(166, 173, 200, 0.1);
+  .capture-group {
+    background: var(--bg-secondary, #2f3136);
     padding: 2px 6px;
-    border-radius: 4px;
-  }
-
-  .group-item {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-    padding: 6px;
-    background: var(--widget-bg, #1e1e2e);
-    border-radius: 6px;
-    margin-top: 4px;
-  }
-
-  .history-section {
-    border-top: 1px solid var(--border-color, #313244);
-    padding-top: 12px;
-  }
-
-  .history-list {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-
-  .history-item {
-    background: var(--input-bg, #181825);
-    border: 1px solid var(--border-color, #313244);
-    border-radius: 6px;
-    padding: 4px 8px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-
-  .history-item:hover {
-    border-color: var(--accent-color, #cba6f7);
-    background: var(--hover-bg, #313244);
-  }
-
-  .history-pattern {
-    font-family: monospace;
+    border-radius: 3px;
     font-size: 11px;
-    color: var(--text-secondary, #a6adc8);
+    color: var(--text-muted, #72767d);
   }
 
-  .actions {
-    display: flex;
-    gap: 8px;
-    margin-top: 8px;
-  }
-
-  .action-btn {
-    flex: 1;
-    padding: 10px 16px;
-    background: var(--accent-color, #cba6f7);
-    color: var(--widget-bg, #1e1e2e);
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.2s;
-  }
-
-  .action-btn:hover:not(:disabled) {
-    opacity: 0.9;
-  }
-
-  .action-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+  .more-matches {
+    text-align: center;
+    color: var(--text-muted, #72767d);
+    font-size: 11px;
+    padding: 8px;
   }
 </style>
