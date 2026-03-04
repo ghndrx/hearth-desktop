@@ -240,6 +240,32 @@ pub fn quick_capture_is_visible<R: Runtime>(app: AppHandle<R>) -> bool {
     manager.is_visible()
 }
 
+/// Send a message via quick capture
+/// This emits an event to the main window to handle the actual sending
+#[tauri::command]
+pub async fn quick_capture_send_message<R: Runtime>(
+    app: AppHandle<R>,
+    recipient_id: String,
+    recipient_type: String,
+    content: String,
+) -> Result<(), String> {
+    // Emit event to the main window
+    app.emit(
+        "quick-capture:message-sent",
+        serde_json::json!({
+            "recipientId": recipient_id,
+            "recipientType": recipient_type,
+            "content": content,
+            "timestamp": chrono::Utc::now().to_rfc3339(),
+        }),
+    )
+    .map_err(|e| format!("Failed to emit message event: {}", e))?;
+
+    // Also try to send via HTTP API if configured
+    // This would connect to the Hearth backend
+    Ok(())
+}
+
 /// Initialize quick capture event listeners
 pub fn init<R: Runtime>(app: &AppHandle<R>) {
     // Listen for show/hide events from frontend
