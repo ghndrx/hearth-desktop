@@ -65,6 +65,7 @@ mod bluetooth;
 mod processmanager;
 mod dndsync;
 mod colorpicker;
+mod pomodoro;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -440,6 +441,15 @@ fn main() {
             tauri::async_runtime::spawn(async move {
                 scheduler::scheduler_loop(scheduler_state, scheduler_handle).await;
             });
+
+            // Initialize pomodoro timer
+            let (pomodoro_state, pomodoro_settings) = pomodoro::load_pomodoro_state(app.handle());
+            let pomodoro_manager = std::sync::Arc::new(pomodoro::PomodoroManager::with_state(
+                pomodoro_state,
+                pomodoro_settings,
+            ));
+            app.manage(pomodoro_manager.clone());
+            pomodoro::start_pomodoro_timer(app.handle().clone(), pomodoro_manager);
 
             Ok(())
         })
@@ -942,6 +952,18 @@ fn main() {
             commands::test_tray_notification,
             commands::should_minimize_to_tray,
             commands::should_close_to_tray,
+            // Pomodoro timer commands
+            pomodoro::pomodoro_start,
+            pomodoro::pomodoro_pause,
+            pomodoro::pomodoro_reset,
+            pomodoro::pomodoro_skip,
+            pomodoro::pomodoro_set_session,
+            pomodoro::pomodoro_get_state,
+            pomodoro::pomodoro_get_settings,
+            pomodoro::pomodoro_update_settings,
+            pomodoro::pomodoro_is_running,
+            pomodoro::pomodoro_save_state,
+            pomodoro::pomodoro_get_tray_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

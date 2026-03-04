@@ -3,7 +3,7 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Manager, Runtime, AppHandle,
 };
-use std::sync::atomic::{AtomicU32, AtomicBool, Ordering};
+use std::sync::atomic::{AtomicU32, AtomicBool, AtomicU64, Ordering};
 use crate::snooze::{self, SnoozeDuration};
 
 /// Global unread count for tray updates
@@ -11,6 +11,11 @@ static UNREAD_COUNT: AtomicU32 = AtomicU32::new(0);
 
 /// Global focus mode state
 static FOCUS_MODE_ENABLED: AtomicBool = AtomicBool::new(false);
+
+/// Global pomodoro tray state
+static POMODORO_TIME_REMAINING: AtomicU64 = AtomicU64::new(0);
+static POMODORO_IS_RUNNING: AtomicBool = AtomicBool::new(false);
+static POMODORO_SESSION_TYPE: AtomicU32 = AtomicU32::new(0); // 0=work, 1=short_break, 2=long_break
 
 pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::error::Error>> {
     let handle = app.handle().clone();
@@ -136,6 +141,50 @@ pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::er
                         let _ = update_tray_menu(app, is_muted, focus_mode);
                     }
                 }
+                // Pomodoro menu items
+                "pomodoro_start_pause" => {
+                    if let Some(manager) = app.try_state::<std::sync::Arc<crate::pomodoro::PomodoroManager>>() {
+                        if manager.is_running() {
+                            manager.pause();
+                        } else {
+                            manager.start();
+                        }
+                        let is_muted = crate::commands::is_muted().unwrap_or(false);
+                        let focus_mode = FOCUS_MODE_ENABLED.load(Ordering::Relaxed);
+                        let _ = update_tray_menu(app, is_muted, focus_mode);
+                        
+                        // Emit event to UI
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.emit("pomodoro:tray-action", serde_json::json!({
+                                "action": if manager.is_running() { "started" } else { "paused" }
+                            }));
+                        }
+                    }
+                }
+                "pomodoro_reset" => {
+                    if let Some(manager) = app.try_state::<std::sync::Arc<crate::pomodoro::PomodoroManager>>() {
+                        manager.reset();
+                        let is_muted = crate::commands::is_muted().unwrap_or(false);
+                        let focus_mode = FOCUS_MODE_ENABLED.load(Ordering::Relaxed);
+                        let _ = update_tray_menu(app, is_muted, focus_mode);
+                        
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.emit("pomodoro:tray-action", serde_json::json!({ "action": "reset" }));
+                        }
+                    }
+                }
+                "pomodoro_skip" => {
+                    if let Some(manager) = app.try_state::<std::sync::Arc<crate::pomodoro::PomodoroManager>>() {
+                        manager.skip_session();
+                        let is_muted = crate::commands::is_muted().unwrap_or(false);
+                        let focus_mode = FOCUS_MODE_ENABLED.load(Ordering::Relaxed);
+                        let _ = update_tray_menu(app, is_muted, focus_mode);
+                        
+                        if let Some(window) = app.get_webview_window("main") {
+                            let _ = window.emit("pomodoro:tray-action", serde_json::json!({ "action": "skipped" }));
+                        }
+                    }
+                }
                 "quit" => {
                     app.exit(0);
                 }
@@ -216,6 +265,30 @@ fn create_tray_menu<R: Runtime>(
         )?
     };
     
+    // Pomodoro submenu
+    let pomodoro_time = get_pomodoro_time_display();
+    let pomodoro_running = POMODORO_IS_RUNNING.load(Ordering::Relaxed);
+    let pomodoro_session = match POMODORO_SESSION_TYPE.load(Ordering::Relaxed) {
+        1 => "☕",
+        2 => "🌴",
+        _ => "🍅",
+    };
+    let pomodoro_status = MenuItem::with_id(app, "pomodoro_status", 
+        &format!("{} {} {}", pomodoro_session, if pomodoro_running { "▶" } else { "⏸" }, pomodoro_time), 
+        false, None::<&str>)?;
+    let pomodoro_start_pause_text = if pomodoro_running { "⏸ Pause" } else { "▶ Start" };
+    let pomodoro_start_pause_i = MenuItem::with_id(app, "pomodoro_start_pause", pomodoro_start_pause_text, true, None::<&str>)?;
+    let pomodoro_reset_i = MenuItem::with_id(app, "pomodoro_reset", "↻ Reset", true, None::<&str>)?;
+    let pomodoro_skip_i = MenuItem::with_id(app, "pomodoro_skip", "⏭ Skip", true, None::<&str>)?;
+    let pomodoro_sep = PredefinedMenuItem::separator(app)?;
+    
+    let pomodoro_submenu = Submenu::with_items(
+        app,
+        "Pomodoro Timer",
+        true,
+        &[&pomodoro_status, &pomodoro_sep, &pomodoro_start_pause_i, &pomodoro_reset_i, &pomodoro_skip_i],
+    )?;
+    
     // Privacy mode toggle (boss key)
     let toggle_privacy_i = MenuItem::with_id(app, "toggle_privacy", "Privacy Mode (⇧⌘L)", true, None::<&str>)?;
     
@@ -232,6 +305,7 @@ fn create_tray_menu<R: Runtime>(
         &toggle_mute_i, 
         &toggle_focus_i, 
         &snooze_submenu, 
+        &pomodoro_submenu,
         &toggle_privacy_i, 
         &check_updates_i, 
         &separator2, 
@@ -307,4 +381,76 @@ pub fn set_unread_count<R: Runtime>(
 /// Get current unread count
 pub fn get_unread_count() -> u32 {
     UNREAD_COUNT.load(Ordering::Relaxed)
+}
+
+/// Get formatted pomodoro time for tray display
+fn get_pomodoro_time_display() -> String {
+    let seconds = POMODORO_TIME_REMAINING.load(Ordering::Relaxed);
+    let minutes = seconds / 60;
+    let secs = seconds % 60;
+    format!("{:02}:{:02}", minutes, secs)
+}
+
+/// Update pomodoro state from the timer
+pub fn update_pomodoro_state(
+    time_remaining: u64,
+    is_running: bool,
+    session_type: crate::pomodoro::SessionType,
+) {
+    POMODORO_TIME_REMAINING.store(time_remaining, Ordering::Relaxed);
+    POMODORO_IS_RUNNING.store(is_running, Ordering::Relaxed);
+    let session_num = match session_type {
+        crate::pomodoro::SessionType::Work => 0,
+        crate::pomodoro::SessionType::ShortBreak => 1,
+        crate::pomodoro::SessionType::LongBreak => 2,
+    };
+    POMODORO_SESSION_TYPE.store(session_num, Ordering::Relaxed);
+}
+
+/// Update tray menu with pomodoro state (call this when pomodoro state changes)
+pub fn update_tray_pomodoro_state<R: Runtime>(
+    app: &AppHandle<R>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let is_muted = crate::commands::is_muted().unwrap_or(false);
+    let focus_mode = FOCUS_MODE_ENABLED.load(Ordering::Relaxed);
+    update_tray_menu(app, is_muted, focus_mode)?;
+    
+    // Also update tooltip to show pomodoro status
+    update_tray_tooltip_with_pomodoro(app)?;
+    
+    Ok(())
+}
+
+/// Update tray tooltip to include pomodoro status
+fn update_tray_tooltip_with_pomodoro<R: Runtime>(
+    app: &AppHandle<R>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let count = UNREAD_COUNT.load(Ordering::Relaxed);
+    let pomodoro_time = get_pomodoro_time_display();
+    let pomodoro_running = POMODORO_IS_RUNNING.load(Ordering::Relaxed);
+    let pomodoro_session = match POMODORO_SESSION_TYPE.load(Ordering::Relaxed) {
+        1 => "☕ Break",
+        2 => "🌴 Long Break",
+        _ => "🍅 Focus",
+    };
+    
+    let mut tooltip = String::from("Hearth");
+    
+    // Add pomodoro status
+    if pomodoro_running {
+        tooltip.push_str(&format!("\n{} {} (running)", pomodoro_session, pomodoro_time));
+    } else if POMODORO_TIME_REMAINING.load(Ordering::Relaxed) > 0 {
+        tooltip.push_str(&format!("\n{} {} (paused)", pomodoro_session, pomodoro_time));
+    }
+    
+    // Add unread count if any
+    if count > 0 {
+        tooltip.push_str(&format!("\n{} unread messages", count));
+    }
+    
+    if let Some(tray) = app.tray_by_id("main") {
+        tray.set_tooltip(Some(&tooltip))?;
+    }
+    
+    Ok(())
 }
