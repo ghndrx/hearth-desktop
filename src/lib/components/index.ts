@@ -291,3 +291,6 @@ export { default as TimestampConverterWidget } from './TimestampConverterWidget.
 
 // HTTP status code reference widget
 export { default as HttpStatusWidget } from './HttpStatusWidget.svelte';
+
+// MIME type lookup widget
+export { default as MimeTypeLookupWidget } from './MimeTypeLookupWidget.svelte';
