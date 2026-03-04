@@ -1,313 +1,217 @@
+<!--
+  PomodoroWidget - Productivity timer with native Tauri backend integration
+  
+  Features:
+  - Native timer with system notifications
+  - Persistent state across sessions
+  - System tray integration
+  - Sound and notification settings
+  - Session tracking and statistics
+-->
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { writable, derived } from 'svelte/store';
-  import { invoke } from '@tauri-apps/api/core';
+  import { 
+    pomodoro, 
+    pomodoroFormattedTime, 
+    pomodoroProgress, 
+    pomodoroSessionLabel, 
+    pomodoroSessionColor 
+  } from '$lib/stores/pomodoro';
+  import type { PomodoroSessionType, PomodoroSettings } from '$lib/stores/pomodoro';
 
-  // Pomodoro settings
-  export let workDuration = 25; // minutes
-  export let shortBreakDuration = 5;
-  export let longBreakDuration = 15;
-  export let pomodorosBeforeLongBreak = 4;
-  export let autoStartBreaks = false;
-  export let autoStartWork = false;
-  export let soundEnabled = true;
-  export let showNotifications = true;
+  // Props with defaults
   export let minimized = false;
+  export let compact = false;
+  export let onMinimize: (() => void) | undefined = undefined;
+  export let onClose: (() => void) | undefined = undefined;
 
-  type SessionType = 'work' | 'short-break' | 'long-break';
+  // Local state for settings panel
+  let showSettings = false;
+  let settings: PomodoroSettings = {
+    work_duration: 25,
+    short_break_duration: 5,
+    long_break_duration: 15,
+    pomodoros_before_long_break: 4,
+    auto_start_breaks: false,
+    auto_start_work: false,
+    sound_enabled: true,
+    notifications_enabled: true
+  };
 
-  interface PomodoroState {
-    sessionType: SessionType;
-    timeRemaining: number; // seconds
-    isRunning: boolean;
-    completedPomodoros: number;
-    totalCompletedToday: number;
-    streak: number;
-  }
-
-  const state = writable<PomodoroState>({
-    sessionType: 'work',
-    timeRemaining: workDuration * 60,
-    isRunning: false,
-    completedPomodoros: 0,
-    totalCompletedToday: 0,
-    streak: 0
-  });
-
-  let interval: number | null = null;
-
-  const formattedTime = derived(state, ($state) => {
-    const minutes = Math.floor($state.timeRemaining / 60);
-    const seconds = $state.timeRemaining % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  });
-
-  const progress = derived(state, ($state) => {
-    const totalSeconds = getSessionDuration($state.sessionType) * 60;
-    return ((totalSeconds - $state.timeRemaining) / totalSeconds) * 100;
-  });
-
-  const sessionLabel = derived(state, ($state) => {
-    switch ($state.sessionType) {
-      case 'work': return 'Focus Time';
-      case 'short-break': return 'Short Break';
-      case 'long-break': return 'Long Break';
-    }
-  });
-
-  const sessionColor = derived(state, ($state) => {
-    switch ($state.sessionType) {
-      case 'work': return 'var(--color-primary, #ef4444)';
-      case 'short-break': return 'var(--color-success, #22c55e)';
-      case 'long-break': return 'var(--color-info, #3b82f6)';
-    }
-  });
-
-  function getSessionDuration(type: SessionType): number {
-    switch (type) {
-      case 'work': return workDuration;
-      case 'short-break': return shortBreakDuration;
-      case 'long-break': return longBreakDuration;
-    }
-  }
-
-  function startTimer() {
-    if (interval) return;
-    
-    state.update(s => ({ ...s, isRunning: true }));
-    
-    interval = window.setInterval(() => {
-      state.update(s => {
-        if (s.timeRemaining <= 0) {
-          handleSessionComplete();
-          return s;
-        }
-        return { ...s, timeRemaining: s.timeRemaining - 1 };
-      });
-    }, 1000);
-  }
-
-  function pauseTimer() {
-    if (interval) {
-      clearInterval(interval);
-      interval = null;
-    }
-    state.update(s => ({ ...s, isRunning: false }));
-  }
-
-  function resetTimer() {
-    pauseTimer();
-    state.update(s => ({
-      ...s,
-      timeRemaining: getSessionDuration(s.sessionType) * 60
-    }));
-  }
-
-  function skipSession() {
-    pauseTimer();
-    handleSessionComplete();
-  }
-
-  async function handleSessionComplete() {
-    pauseTimer();
-    
-    let currentState: PomodoroState;
-    state.subscribe(s => currentState = s)();
-    
-    if (soundEnabled) {
-      await playCompletionSound();
-    }
-    
-    if (showNotifications) {
-      await showCompletionNotification(currentState!.sessionType);
-    }
-
-    state.update(s => {
-      let nextType: SessionType;
-      let newCompletedPomodoros = s.completedPomodoros;
-      let newTotalToday = s.totalCompletedToday;
-
-      if (s.sessionType === 'work') {
-        newCompletedPomodoros += 1;
-        newTotalToday += 1;
-        
-        if (newCompletedPomodoros >= pomodorosBeforeLongBreak) {
-          nextType = 'long-break';
-          newCompletedPomodoros = 0;
-        } else {
-          nextType = 'short-break';
-        }
-      } else {
-        nextType = 'work';
-      }
-
-      const shouldAutoStart = 
-        (nextType === 'work' && autoStartWork) ||
-        (nextType !== 'work' && autoStartBreaks);
-
-      return {
-        ...s,
-        sessionType: nextType,
-        timeRemaining: getSessionDuration(nextType) * 60,
-        completedPomodoros: newCompletedPomodoros,
-        totalCompletedToday: newTotalToday,
-        isRunning: false
-      };
-    });
-
-    // Auto-start if enabled
-    let shouldAutoStart: boolean;
-    state.subscribe(s => {
-      shouldAutoStart = 
-        (s.sessionType === 'work' && autoStartWork) ||
-        (s.sessionType !== 'work' && autoStartBreaks);
-    })();
-    
-    if (shouldAutoStart!) {
-      setTimeout(() => startTimer(), 1000);
-    }
-  }
-
-  async function playCompletionSound() {
-    try {
-      await invoke('play_notification_sound', { soundType: 'pomodoro_complete' });
-    } catch (e) {
-      // Fallback to web audio
-      const audio = new Audio('/sounds/bell.mp3');
-      audio.volume = 0.5;
-      audio.play().catch(() => {});
-    }
-  }
-
-  async function showCompletionNotification(completedType: SessionType) {
-    try {
-      const title = completedType === 'work' ? '🍅 Pomodoro Complete!' : '⏰ Break Over!';
-      const body = completedType === 'work' 
-        ? 'Great work! Time for a break.'
-        : 'Ready to focus again?';
-      
-      await invoke('show_notification', { title, body });
-    } catch (e) {
-      // Fallback to browser notification
-      if (Notification.permission === 'granted') {
-        new Notification(completedType === 'work' ? '🍅 Pomodoro Complete!' : '⏰ Break Over!');
-      }
-    }
-  }
-
-  function setSessionType(type: SessionType) {
-    pauseTimer();
-    state.update(s => ({
-      ...s,
-      sessionType: type,
-      timeRemaining: getSessionDuration(type) * 60
-    }));
-  }
+  // Load settings from store
+  $: pomodoro.settings.subscribe(s => settings = s);
 
   onMount(() => {
-    // Load saved state from storage
-    loadState();
+    pomodoro.init();
   });
 
   onDestroy(() => {
-    if (interval) {
-      clearInterval(interval);
-    }
+    pomodoro.save();
+    pomodoro.cleanup();
   });
 
-  async function loadState() {
-    try {
-      const saved = await invoke<{ totalCompletedToday: number; streak: number } | null>('load_pomodoro_state');
-      if (saved) {
-        state.update(s => ({
-          ...s,
-          totalCompletedToday: saved.totalCompletedToday,
-          streak: saved.streak
-        }));
-      }
-    } catch (e) {
-      // Use localStorage fallback
-      const saved = localStorage.getItem('pomodoro_state');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        state.update(s => ({
-          ...s,
-          totalCompletedToday: parsed.totalCompletedToday || 0,
-          streak: parsed.streak || 0
-        }));
-      }
-    }
+  function handleStart() {
+    pomodoro.start();
   }
 
-  async function saveState() {
-    let currentState: PomodoroState;
-    state.subscribe(s => currentState = s)();
-    
-    const toSave = {
-      totalCompletedToday: currentState!.totalCompletedToday,
-      streak: currentState!.streak
-    };
-    
-    try {
-      await invoke('save_pomodoro_state', { state: toSave });
-    } catch (e) {
-      localStorage.setItem('pomodoro_state', JSON.stringify(toSave));
-    }
+  function handlePause() {
+    pomodoro.pause();
   }
 
-  // Save state when completed pomodoros change
-  $: if ($state.totalCompletedToday > 0) {
-    saveState();
+  function handleReset() {
+    pomodoro.reset();
+  }
+
+  function handleSkip() {
+    pomodoro.skip();
+  }
+
+  function handleSessionChange(type: PomodoroSessionType) {
+    pomodoro.setSessionType(type);
+  }
+
+  async function handleSettingsSave() {
+    await pomodoro.updateSettings(settings);
+    showSettings = false;
+  }
+
+  function toggleSettings() {
+    showSettings = !showSettings;
   }
 </script>
 
 <div 
   class="pomodoro-widget"
   class:minimized
-  style="--session-color: {$sessionColor}"
+  class:compact
+  style="--session-color: {$pomodoroSessionColor}"
   role="timer"
   aria-label="Pomodoro Timer"
 >
   {#if minimized}
-    <button class="mini-display" on:click={() => minimized = false}>
-      <span class="mini-time">{$formattedTime}</span>
-      <span class="mini-indicator" class:running={$state.isRunning}></span>
+    <button class="mini-display" on:click={() => onMinimize?.()} aria-label="Expand pomodoro timer">
+      <span class="mini-icon">🍅</span>
+      <span class="mini-time">{$pomodoroFormattedTime}</span>
+      <span class="mini-indicator" class:running={$pomodoro.is_running}></span>
     </button>
+  {:else if showSettings}
+    <div class="settings-panel">
+      <div class="settings-header">
+        <h3>⚙️ Timer Settings</h3>
+        <button class="icon-btn" on:click={toggleSettings} aria-label="Back">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z"/>
+          </svg>
+        </button>
+      </div>
+      
+      <div class="settings-content">
+        <div class="setting-group">
+          <label>Durations (minutes)</label>
+          <div class="duration-inputs">
+            <div class="input-group">
+              <span>Focus</span>
+              <input 
+                type="number" 
+                min="1" 
+                max="60" 
+                bind:value={settings.work_duration}
+              />
+            </div>
+            <div class="input-group">
+              <span>Short Break</span>
+              <input 
+                type="number" 
+                min="1" 
+                max="30" 
+                bind:value={settings.short_break_duration}
+              />
+            </div>
+            <div class="input-group">
+              <span>Long Break</span>
+              <input 
+                type="number" 
+                min="1" 
+                max="60" 
+                bind:value={settings.long_break_duration}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <label>
+            <input type="checkbox" bind:checked={settings.auto_start_breaks} />
+            Auto-start breaks
+          </label>
+          <label>
+            <input type="checkbox" bind:checked={settings.auto_start_work} />
+            Auto-start work sessions
+          </label>
+          <label>
+            <input type="checkbox" bind:checked={settings.sound_enabled} />
+            Enable sound
+          </label>
+          <label>
+            <input type="checkbox" bind:checked={settings.notifications_enabled} />
+            Enable notifications
+          </label>
+        </div>
+
+        <button class="save-btn" on:click={handleSettingsSave}>Save Settings</button>
+      </div>
+    </div>
   {:else}
     <div class="widget-header">
       <h3>🍅 Pomodoro</h3>
-      <button class="minimize-btn" on:click={() => minimized = true} aria-label="Minimize">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M19 13H5v-2h14v2z"/>
-        </svg>
-      </button>
+      <div class="header-actions">
+        <button class="icon-btn" on:click={toggleSettings} aria-label="Settings">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.07-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.74,8.87 C2.62,9.08,2.66,9.34,2.86,9.49l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.07,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.47-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"/>
+          </svg>
+        </button>
+        {#if onMinimize}
+          <button class="icon-btn" on:click={onMinimize} aria-label="Minimize">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 13H5v-2h14v2z"/>
+            </svg>
+          </button>
+        {/if}
+        {#if onClose}
+          <button class="icon-btn" on:click={onClose} aria-label="Close">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+            </svg>
+          </button>
+        {/if}
+      </div>
     </div>
 
     <div class="session-tabs" role="tablist">
       <button 
         class="session-tab"
-        class:active={$state.sessionType === 'work'}
-        on:click={() => setSessionType('work')}
+        class:active={$pomodoro.session_type === 'work'}
+        on:click={() => handleSessionChange('work')}
         role="tab"
-        aria-selected={$state.sessionType === 'work'}
+        aria-selected={$pomodoro.session_type === 'work'}
       >
         Focus
       </button>
       <button 
         class="session-tab"
-        class:active={$state.sessionType === 'short-break'}
-        on:click={() => setSessionType('short-break')}
+        class:active={$pomodoro.session_type === 'short-break'}
+        on:click={() => handleSessionChange('short-break')}
         role="tab"
-        aria-selected={$state.sessionType === 'short-break'}
+        aria-selected={$pomodoro.session_type === 'short-break'}
       >
         Short Break
       </button>
       <button 
         class="session-tab"
-        class:active={$state.sessionType === 'long-break'}
-        on:click={() => setSessionType('long-break')}
+        class:active={$pomodoro.session_type === 'long-break'}
+        on:click={() => handleSessionChange('long-break')}
         role="tab"
-        aria-selected={$state.sessionType === 'long-break'}
+        aria-selected={$pomodoro.session_type === 'long-break'}
       >
         Long Break
       </button>
@@ -331,36 +235,36 @@
           fill="none"
           stroke-width="6"
           stroke-dasharray="339.292"
-          stroke-dashoffset={339.292 - (339.292 * $progress / 100)}
+          stroke-dashoffset={339.292 - (339.292 * $pomodoroProgress / 100)}
           transform="rotate(-90 60 60)"
         />
       </svg>
       <div class="time-text">
-        <span class="time">{$formattedTime}</span>
-        <span class="session-label">{$sessionLabel}</span>
+        <span class="time">{$pomodoroFormattedTime}</span>
+        <span class="session-label">{$pomodoroSessionLabel}</span>
       </div>
     </div>
 
     <div class="controls">
-      {#if $state.isRunning}
-        <button class="control-btn pause" on:click={pauseTimer} aria-label="Pause">
+      {#if $pomodoro.is_running}
+        <button class="control-btn pause" on:click={handlePause} aria-label="Pause">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
             <path d="M6 4h4v16H6zM14 4h4v16h-4z"/>
           </svg>
         </button>
       {:else}
-        <button class="control-btn play" on:click={startTimer} aria-label="Start">
+        <button class="control-btn play" on:click={handleStart} aria-label="Start">
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
             <path d="M8 5v14l11-7z"/>
           </svg>
         </button>
       {/if}
-      <button class="control-btn secondary" on:click={resetTimer} aria-label="Reset">
+      <button class="control-btn secondary" on:click={handleReset} aria-label="Reset">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
           <path d="M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z"/>
         </svg>
       </button>
-      <button class="control-btn secondary" on:click={skipSession} aria-label="Skip">
+      <button class="control-btn secondary" on:click={handleSkip} aria-label="Skip">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
           <path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/>
         </svg>
@@ -369,13 +273,19 @@
 
     <div class="stats">
       <div class="stat">
-        <span class="stat-value">{$state.completedPomodoros}</span>
-        <span class="stat-label">/ {pomodorosBeforeLongBreak}</span>
+        <span class="stat-value">{$pomodoro.completed_pomodoros}</span>
+        <span class="stat-label">/ {$pomodoro.settings.pomodoros_before_long_break}</span>
       </div>
       <div class="stat">
-        <span class="stat-value">🍅 {$state.totalCompletedToday}</span>
+        <span class="stat-value">🍅 {$pomodoro.total_completed_today}</span>
         <span class="stat-label">today</span>
       </div>
+      {#if $pomodoro.streak > 0}
+        <div class="stat">
+          <span class="stat-value">🔥 {$pomodoro.streak}</span>
+          <span class="stat-label">streak</span>
+        </div>
+      {/if}
     </div>
   {/if}
 </div>
@@ -391,11 +301,17 @@
     color: var(--text-primary, #cdd6f4);
   }
 
+  .pomodoro-widget.compact {
+    width: 240px;
+    padding: 12px;
+  }
+
   .pomodoro-widget.minimized {
     width: auto;
     padding: 8px 12px;
   }
 
+  /* Header */
   .widget-header {
     display: flex;
     justify-content: space-between;
@@ -409,7 +325,12 @@
     font-weight: 600;
   }
 
-  .minimize-btn {
+  .header-actions {
+    display: flex;
+    gap: 4px;
+  }
+
+  .icon-btn {
     background: transparent;
     border: none;
     color: var(--text-secondary, #a6adc8);
@@ -419,12 +340,15 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: all 0.2s;
   }
 
-  .minimize-btn:hover {
+  .icon-btn:hover {
     background: var(--bg-hover, #313244);
+    color: var(--text-primary, #cdd6f4);
   }
 
+  /* Minimized view */
   .mini-display {
     display: flex;
     align-items: center;
@@ -435,7 +359,11 @@
     cursor: pointer;
     font-size: 16px;
     font-weight: 600;
-    font-family: monospace;
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  .mini-icon {
+    font-size: 14px;
   }
 
   .mini-indicator {
@@ -455,6 +383,7 @@
     50% { opacity: 0.5; }
   }
 
+  /* Session tabs */
   .session-tabs {
     display: flex;
     gap: 4px;
@@ -468,7 +397,7 @@
     border: none;
     border-radius: 8px;
     color: var(--text-secondary, #a6adc8);
-    font-size: 12px;
+    font-size: 11px;
     cursor: pointer;
     transition: all 0.2s ease;
   }
@@ -482,6 +411,7 @@
     color: white;
   }
 
+  /* Timer display */
   .timer-display {
     position: relative;
     display: flex;
@@ -493,6 +423,11 @@
   .progress-ring {
     width: 180px;
     height: 180px;
+  }
+
+  .compact .progress-ring {
+    width: 140px;
+    height: 140px;
   }
 
   .progress-bg {
@@ -518,13 +453,19 @@
     letter-spacing: 2px;
   }
 
+  .compact .time {
+    font-size: 28px;
+  }
+
   .session-label {
     font-size: 12px;
     color: var(--text-secondary, #a6adc8);
     text-transform: uppercase;
     letter-spacing: 1px;
+    margin-top: 4px;
   }
 
+  /* Controls */
   .controls {
     display: flex;
     justify-content: center;
@@ -568,6 +509,7 @@
     color: var(--text-primary, #cdd6f4);
   }
 
+  /* Stats */
   .stats {
     display: flex;
     justify-content: space-around;
@@ -590,6 +532,110 @@
     margin-left: 2px;
   }
 
+  /* Settings panel */
+  .settings-panel {
+    animation: slideIn 0.2s ease;
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateX(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+
+  .settings-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+  }
+
+  .settings-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .settings-content {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .setting-group {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .setting-group label {
+    font-size: 12px;
+    color: var(--text-secondary, #a6adc8);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+  }
+
+  .setting-group label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--session-color);
+  }
+
+  .duration-inputs {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .input-group {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .input-group span {
+    font-size: 11px;
+    color: var(--text-secondary, #a6adc8);
+  }
+
+  .input-group input {
+    background: var(--bg-tertiary, #313244);
+    border: 1px solid var(--border, #45475a);
+    border-radius: 6px;
+    padding: 8px;
+    color: var(--text-primary, #cdd6f4);
+    font-size: 14px;
+    text-align: center;
+  }
+
+  .input-group input:focus {
+    outline: none;
+    border-color: var(--session-color);
+  }
+
+  .save-btn {
+    background: var(--session-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .save-btn:hover {
+    filter: brightness(1.1);
+  }
+
   /* Reduced motion */
   @media (prefers-reduced-motion: reduce) {
     .mini-indicator.running {
@@ -598,6 +644,10 @@
     
     .control-btn:hover {
       transform: none;
+    }
+
+    .progress-bar {
+      transition: none;
     }
   }
 </style>
