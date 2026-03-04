@@ -299,3 +299,6 @@ export { default as RegexTesterWidget } from './RegexTesterWidget.svelte';
 
 // Daily digest widget - provides morning/evening summary of notifications, focus time, and events
 export { default as DailyDigestWidget } from './DailyDigestWidget.svelte';
+
+// Custom titlebar - native window controls with connection status and quick menu
+export { default as CustomTitlebar } from './CustomTitlebar.svelte';
