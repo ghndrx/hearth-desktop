@@ -31,7 +31,7 @@ describe('ChannelHeader', () => {
 				}
 			});
 
-			const heading = screen.getByRole('heading', { level: 1 });
+			const heading = screen.getByRole('heading', { level: 2 });
 			expect(heading).toHaveTextContent('announcements');
 		});
 	});
@@ -418,14 +418,14 @@ describe('ChannelHeader', () => {
 	});
 
 	describe('accessibility', () => {
-		it('uses h1 for channel name', () => {
+		it('uses h2 for channel name', () => {
 			render(ChannelHeader, {
 				props: {
 					channelName: 'general'
 				}
 			});
 
-			const heading = screen.getByRole('heading', { level: 1 });
+			const heading = screen.getByRole('heading', { level: 2 });
 			expect(heading).toBeInTheDocument();
 		});
 

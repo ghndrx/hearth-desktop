@@ -85,7 +85,8 @@ describe('Message', () => {
 				props: { message: mockMessage }
 			});
 
-			const authorName = container.querySelector('.author-name');
+			// Author name is a button with font-medium class (distinct from avatar button)
+			const authorName = container.querySelector('button.font-medium[aria-label^="View profile of"]');
 			expect(authorName?.textContent).toBe('Test User');
 		});
 
@@ -99,7 +100,7 @@ describe('Message', () => {
 				props: { message: messageWithoutDisplayName }
 			});
 
-			const authorName = container.querySelector('.author-name');
+			const authorName = container.querySelector('button.font-medium[aria-label^="View profile of"]');
 			expect(authorName?.textContent).toBe('testuser');
 		});
 
@@ -113,7 +114,7 @@ describe('Message', () => {
 				props: { message: messageWithoutAuthor }
 			});
 
-			const authorName = container.querySelector('.author-name');
+			const authorName = container.querySelector('button.font-medium[aria-label^="View profile of"]');
 			expect(authorName?.textContent).toBe('Unknown');
 		});
 
@@ -122,7 +123,10 @@ describe('Message', () => {
 				props: { message: mockMessageWithAvatar }
 			});
 
-			const avatar = container.querySelector('img[alt="Test User"]');
+			// Avatar img is inside the avatar button with aria-label
+			const avatarButton = container.querySelector('button[aria-label^="View profile of"]');
+			const avatar = avatarButton?.querySelector('img.w-10.h-10');
+			expect(avatar).toBeInTheDocument();
 			expect(avatar).toHaveAttribute('src', 'https://example.com/avatar.png');
 		});
 
@@ -412,7 +416,9 @@ describe('Message', () => {
 				props: { message: mockMessageReply }
 			});
 
-			expect(container.textContent).toContain('Replying to');
+			// Reply context shows username and content, with aria-label="Reply to..."
+			const replyContext = container.querySelector('[aria-label^="Reply to"]');
+			expect(replyContext).toBeInTheDocument();
 			expect(container.textContent).toContain('otheruser');
 			expect(container.textContent).toContain('Original message');
 		});
@@ -427,8 +433,8 @@ describe('Message', () => {
 			const messageDiv = container.querySelector('.flex.relative');
 			if (messageDiv) {
 				await fireEvent.mouseEnter(messageDiv);
-				// Actions should become visible
-				const actions = container.querySelector('.absolute.right-4');
+				// Actions should become visible (action-bar component)
+				const actions = container.querySelector('.action-bar');
 				expect(actions).toBeInTheDocument();
 			}
 		});
@@ -442,9 +448,16 @@ describe('Message', () => {
 			expect(messageDiv).toBeInTheDocument();
 			await fireEvent.mouseEnter(messageDiv!);
 
-			const editButton = container.querySelector('button[title="Edit"]');
-			const deleteButton = container.querySelector('button[title="Delete"]');
+			// Edit button is directly visible in the action bar
+			const editButton = container.querySelector('button[aria-label="Edit"]');
 			expect(editButton).toBeInTheDocument();
+
+			// Delete button is in the "More" dropdown menu
+			const moreButton = container.querySelector('button[aria-label="More actions"]');
+			expect(moreButton).toBeInTheDocument();
+			await fireEvent.click(moreButton!);
+
+			const deleteButton = container.querySelector('button.menu-item.danger');
 			expect(deleteButton).toBeInTheDocument();
 		});
 
@@ -464,7 +477,12 @@ describe('Message', () => {
 			expect(messageDiv).toBeInTheDocument();
 			await fireEvent.mouseEnter(messageDiv!);
 
-			const deleteButton = container.querySelector('button[title="Delete"]');
+			// Delete button is in the "More" dropdown menu
+			const moreButton = container.querySelector('button[aria-label="More actions"]');
+			expect(moreButton).toBeInTheDocument();
+			await fireEvent.click(moreButton!);
+
+			const deleteButton = container.querySelector('button.menu-item.danger');
 			expect(deleteButton).toBeInTheDocument();
 			await fireEvent.click(deleteButton!);
 
@@ -485,7 +503,7 @@ describe('Message', () => {
 			expect(messageDiv).toBeInTheDocument();
 			await fireEvent.mouseEnter(messageDiv!);
 
-			const editButton = container.querySelector('button[title="Edit"]');
+			const editButton = container.querySelector('button[aria-label="Edit"]');
 			expect(editButton).toBeInTheDocument();
 			await fireEvent.click(editButton!);
 
@@ -506,7 +524,7 @@ describe('Message', () => {
 			expect(messageDiv).toBeInTheDocument();
 			await fireEvent.mouseEnter(messageDiv!);
 
-			const editButton = container.querySelector('button[title="Edit"]');
+			const editButton = container.querySelector('button[aria-label="Edit"]');
 			expect(editButton).toBeInTheDocument();
 			await fireEvent.click(editButton!);
 

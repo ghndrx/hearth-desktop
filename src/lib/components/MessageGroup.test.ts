@@ -266,8 +266,13 @@ describe('MessageGroup', () => {
 			expect(messageDiv).toBeTruthy();
 			await fireEvent.mouseEnter(messageDiv!);
 
-			// Click the delete button (isOwn = true since currentUserId matches author_id)
-			const deleteButton = container.querySelector('button[title="Delete"]');
+			// First click the "More actions" button to open the dropdown
+			const moreButton = container.querySelector('button[aria-label="More actions"]');
+			expect(moreButton).toBeTruthy();
+			await fireEvent.click(moreButton!);
+
+			// Click the delete button in the dropdown menu (isOwn = true since currentUserId matches author_id)
+			const deleteButton = container.querySelector('button.menu-item.danger');
 			expect(deleteButton).toBeTruthy();
 			await fireEvent.click(deleteButton!);
 
@@ -299,8 +304,8 @@ describe('MessageGroup', () => {
 			expect(messageDiv).toBeTruthy();
 			await fireEvent.mouseEnter(messageDiv!);
 
-			// Click the reply button (it has title="Reply")
-			const replyButton = container.querySelector('button[title="Reply"]');
+			// Click the reply button (it has aria-label="Reply")
+			const replyButton = container.querySelector('button[aria-label="Reply"]');
 			expect(replyButton).toBeTruthy();
 			await fireEvent.click(replyButton!);
 

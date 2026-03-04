@@ -53,10 +53,12 @@
   
   onMount(() => {
     document.addEventListener('click', handleClick);
+    document.addEventListener('keydown', handleKeydown);
   });
   
   onDestroy(() => {
     document.removeEventListener('click', handleClick);
+    document.removeEventListener('keydown', handleKeydown);
   });
   
   // Focus first item when menu opens

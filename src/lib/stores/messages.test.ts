@@ -1,56 +1,65 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { get } from 'svelte/store';
 
-// Mock ApiError class
-class MockApiError extends Error {
-	status: number;
-	data: unknown;
-	constructor(message: string, status: number, data?: unknown) {
-		super(message);
-		this.name = 'ApiError';
-		this.status = status;
-		this.data = data;
+// Use vi.hoisted so mock variables are available in vi.mock factories (which are hoisted)
+const { mockApi, MockApiError, mockGateway, mockOp } = vi.hoisted(() => {
+	// Mock ApiError class
+	class MockApiErrorClass extends Error {
+		status: number;
+		data: unknown;
+		constructor(message: string, status: number, data?: unknown) {
+			super(message);
+			this.name = 'ApiError';
+			this.status = status;
+			this.data = data;
+		}
 	}
-}
+
+	return {
+		mockApi: {
+			get: vi.fn(),
+			post: vi.fn(),
+			put: vi.fn(),
+			patch: vi.fn(),
+			delete: vi.fn()
+		},
+		MockApiError: MockApiErrorClass,
+		mockGateway: {
+			send: vi.fn(),
+			subscribe: vi.fn(() => () => {}),
+			connect: vi.fn(),
+			disconnect: vi.fn(),
+			on: vi.fn()
+		},
+		mockOp: {
+			DISPATCH: 0,
+			HEARTBEAT: 1,
+			IDENTIFY: 2,
+			PRESENCE_UPDATE: 3,
+			VOICE_STATE_UPDATE: 4,
+			RESUME: 6,
+			RECONNECT: 7,
+			REQUEST_GUILD_MEMBERS: 8,
+			INVALID_SESSION: 9,
+			HELLO: 10,
+			HEARTBEAT_ACK: 11
+		}
+	};
+});
 
 // Mock $lib/api
 vi.mock('$lib/api', () => ({
-	api: {
-		get: vi.fn(),
-		post: vi.fn(),
-		put: vi.fn(),
-		patch: vi.fn(),
-		delete: vi.fn()
-	},
+	api: mockApi,
 	ApiError: MockApiError
 }));
 
 // Mock ./gateway
 vi.mock('./gateway', () => ({
-	gateway: {
-		send: vi.fn(),
-		subscribe: vi.fn(() => () => {}),
-		connect: vi.fn(),
-		disconnect: vi.fn(),
-		on: vi.fn()
-	},
-	Op: {
-		DISPATCH: 0,
-		HEARTBEAT: 1,
-		IDENTIFY: 2,
-		PRESENCE_UPDATE: 3,
-		VOICE_STATE_UPDATE: 4,
-		RESUME: 6,
-		RECONNECT: 7,
-		REQUEST_GUILD_MEMBERS: 8,
-		INVALID_SESSION: 9,
-		HELLO: 10,
-		HEARTBEAT_ACK: 11
-	}
+	gateway: mockGateway,
+	Op: mockOp
 }));
 
 import { api } from '$lib/api';
-import { gateway, Op } from './gateway';
 import {
 	messages,
 	loadingMessages,
@@ -304,7 +313,7 @@ describe('Messages Store', () => {
 			vi.mocked(api.get).mockRejectedValue(new Error('Network error'));
 			const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
 
-			await loadMessages('ch-1');
+			await expect(loadMessages('ch-1')).rejects.toThrow('Network error');
 
 			expect(get(loadingMessages)['ch-1']).toBe(false);
 			expect(consoleSpy).toHaveBeenCalledWith('Failed to load messages:', expect.any(Error));
@@ -316,7 +325,7 @@ describe('Messages Store', () => {
 			vi.mocked(api.get).mockRejectedValue(new Error('Fail'));
 			vi.spyOn(console, 'error').mockImplementation(() => {});
 
-			await loadMessages('ch-1');
+			await expect(loadMessages('ch-1')).rejects.toThrow('Fail');
 
 			const state = get(messages);
 			expect(state['ch-1']).toHaveLength(1);

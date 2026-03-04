@@ -39,7 +39,8 @@
 			.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
 			.replace(/\*(.+?)\*/g, '<em>$1</em>')
 			.replace(/`(.+?)`/g, '<code class="bg-[#2b2d31] px-1 py-0.5 rounded text-sm">$1</code>')
-			.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener" class="text-[#00a8fc] hover:underline">$1</a>')
+			// Match URLs but strip trailing punctuation that's likely not part of the URL
+			.replace(/(https?:\/\/[^\s<>"]+?)([)\].,;:!?]?)(?=\s|$|<)/g, '<a href="$1" target="_blank" rel="noopener" class="text-[#00a8fc] hover:underline">$1</a>$2')
 			.replace(/\n/g, '<br>');
 		
 		return html;
@@ -252,7 +253,7 @@
 					aria-hidden="true"
 				>
 					<span class="text-white font-semibold text-base">
-						{displayName.charAt(0).toUpperCase()}
+						{[...displayName][0]?.toUpperCase() || '?'}
 					</span>
 				</div>
 			{/if}
