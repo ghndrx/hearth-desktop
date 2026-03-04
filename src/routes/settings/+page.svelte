@@ -8,6 +8,7 @@
 	import { isAuthenticated } from '$lib/stores/auth';
 	import Avatar from '$lib/components/Avatar.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
+	import ThemePreviewCard from '$lib/components/ThemePreviewCard.svelte';
 	
 	// Get section from URL query param
 	$: activeSection = $page.url.searchParams.get('section') || 'account';
@@ -153,16 +154,17 @@
 					
 					<div class="setting-group">
 						<h2>Theme</h2>
-						<div class="theme-grid">
+						<p class="setting-description">Choose a theme that fits your style. The preview shows how your interface will look.</p>
+						<div class="theme-preview-grid">
 							{#each themes as theme}
-								<button
-									class="theme-option"
-									class:active={$appSettings.theme === theme.value}
-									on:click={() => settings.updateApp({ theme: theme.value })}
-								>
-									<div class="theme-preview" style="background: {theme.preview}"></div>
-									<span class="theme-label">{theme.label}</span>
-								</button>
+								<ThemePreviewCard
+									theme={theme.value}
+									messageDisplay={$appSettings.messageDisplay}
+									compactMode={$appSettings.compactMode}
+									fontSize={$appSettings.fontSize}
+									selected={$appSettings.theme === theme.value}
+									on:select={(e) => settings.updateApp({ theme: e.detail.theme })}
+								/>
 							{/each}
 						</div>
 					</div>
@@ -980,6 +982,22 @@
 		text-decoration: underline;
 	}
 	
+	/* Setting Description */
+	.setting-description {
+		color: var(--text-muted, #b5bac1);
+		font-size: 14px;
+		margin: -8px 0 16px 0;
+		line-height: 1.5;
+	}
+	
+	/* Theme Preview Grid */
+	.theme-preview-grid {
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+		gap: 16px;
+		margin-top: 8px;
+	}
+	
 	/* Responsive */
 	@media (max-width: 768px) {
 		.settings-sidebar {
@@ -992,6 +1010,10 @@
 		
 		.theme-grid {
 			flex-wrap: wrap;
+		}
+		
+		.theme-preview-grid {
+			grid-template-columns: 1fr;
 		}
 	}
 	
