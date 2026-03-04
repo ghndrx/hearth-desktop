@@ -314,7 +314,7 @@ describe('ChannelList', () => {
 			expect(goto).toHaveBeenCalledWith('/channels/srv-1/ch-123');
 		});
 
-		it('should NOT show text channels category if no text channels', async () => {
+		it('should show text channels category even if no text channels (for creation)', async () => {
 			const server = createMockServer();
 			mockCurrentServerStore.set(server);
 			const voiceChannel = createMockChannel({ type: 2, server_id: 'server-1' });
@@ -323,10 +323,11 @@ describe('ChannelList', () => {
 
 			render(ChannelList);
 
-			expect(screen.queryByText('TEXT CHANNELS')).toBeFalsy();
+			// Category is always shown to allow creating first channel (CSS uppercase)
+			expect(screen.queryByText('TEXT CHANNELS')).toBeTruthy();
 		});
 
-		it('should NOT show voice channels category if no voice channels', async () => {
+		it('should show voice channels category even if no voice channels (for creation)', async () => {
 			const server = createMockServer();
 			mockCurrentServerStore.set(server);
 			const textChannel = createMockChannel({ type: 0, server_id: 'server-1' });
@@ -335,7 +336,8 @@ describe('ChannelList', () => {
 
 			render(ChannelList);
 
-			expect(screen.queryByText('VOICE CHANNELS')).toBeFalsy();
+			// Category is always shown to allow creating first channel (CSS uppercase)
+			expect(screen.queryByText('VOICE CHANNELS')).toBeTruthy();
 		});
 	});
 

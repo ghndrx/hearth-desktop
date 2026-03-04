@@ -4,7 +4,7 @@
 	import { user } from '$lib/stores/auth';
 	import { settings } from '$lib/stores/settings';
 	import { voiceChannelStates, voiceState, voiceActions, isInVoice } from '$lib/stores/voice';
-	import { getVoiceConnectionManager } from '$lib/voice';
+	import { getVoiceConnectionManager } from '$lib/voice/connection';
 	import { api } from '$lib/api';
 	import { createEventDispatcher, onMount } from 'svelte';
 	import { goto } from '$app/navigation';

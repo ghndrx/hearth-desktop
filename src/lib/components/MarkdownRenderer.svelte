@@ -40,9 +40,9 @@
       return text;
     });
     
-    // Auto-link URLs
+    // Auto-link URLs (but not URLs already inside href attributes)
     html = html.replace(
-      /(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g,
+      /(?<!href=")(https?:\/\/[^\s<]+[^<.,:;"')\]\s])/g,
       '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>'
     );
     

@@ -69,7 +69,7 @@ describe('ChannelCategory', () => {
 		const addButton = container.querySelector('.add-channel');
 		expect(addButton).toBeInTheDocument();
 		expect(addButton).toHaveAttribute('title', 'Create Channel');
-		expect(addButton).toHaveAttribute('aria-label', 'Create new channel in Text Channels');
+		expect(addButton).toHaveAttribute('aria-label', 'Create channel in Text Channels');
 	});
 
 	it('can hide add button', () => {
@@ -140,7 +140,8 @@ describe('ChannelCategory', () => {
 
 		const header = container.querySelector('.category-header');
 		expect(header).toHaveAttribute('aria-expanded', 'true');
-		expect(header).toHaveAttribute('aria-controls', 'category-channels-Text Channels');
+		// Category has aria-label describing its state
+		expect(header).toHaveAttribute('aria-label', 'Text Channels category, expanded');
 	});
 
 	it('renders children in slot', () => {

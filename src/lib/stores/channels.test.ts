@@ -14,7 +14,7 @@ interface MockServer {
 }
 
 // Use vi.hoisted so mock variables are available in vi.mock factories (which are hoisted)
-const { mockApi, mockCurrentServer } = vi.hoisted(() => {
+const { mockApi, mockCurrentServer, MockApiError } = vi.hoisted(() => {
 	// Create a minimal writable-like store for hoisted context
 	const createStore = <T>(initial: T) => {
 		let value = initial;
@@ -35,6 +35,19 @@ const { mockApi, mockCurrentServer } = vi.hoisted(() => {
 			}
 		};
 	};
+	
+	// Mock ApiError class for tests
+	class MockApiErrorClass extends Error {
+		status: number;
+		data: unknown;
+		constructor(message: string, status: number, data?: unknown) {
+			super(message);
+			this.name = 'ApiError';
+			this.status = status;
+			this.data = data;
+		}
+	}
+	
 	return {
 		mockApi: {
 			get: vi.fn(),
@@ -43,7 +56,8 @@ const { mockApi, mockCurrentServer } = vi.hoisted(() => {
 			patch: vi.fn(),
 			delete: vi.fn()
 		},
-		mockCurrentServer: createStore<MockServer | null>(null)
+		mockCurrentServer: createStore<MockServer | null>(null),
+		MockApiError: MockApiErrorClass
 	};
 });
 
@@ -51,8 +65,10 @@ const { mockApi, mockCurrentServer } = vi.hoisted(() => {
 // (test-setup.ts globally mocks $lib/stores/channels)
 vi.unmock('$lib/stores/channels');
 
+// Override the global $lib/api mock with our hoisted mockApi
 vi.mock('$lib/api', () => ({
-	api: mockApi
+	api: mockApi,
+	ApiError: MockApiError
 }));
 
 vi.mock('./servers', () => ({

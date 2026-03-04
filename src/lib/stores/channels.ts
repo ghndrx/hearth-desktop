@@ -102,7 +102,7 @@ export const dmChannels = derived(channels, $channels =>
 	$channels.filter(c => c.type === 1 || c.type === 3)
 );
 
-export async function loadServerChannels(serverId: string) {
+export async function loadServerChannels(serverId: string): Promise<Channel[]> {
 	channelsLoading.set(true);
 	channelsError.set(null);
 	
@@ -115,8 +115,10 @@ export async function loadServerChannels(serverId: string) {
 			const other = c.filter(ch => ch.server_id !== serverId);
 			return [...other, ...normalized];
 		});
+		
+		return normalized;
 	} catch (error) {
-		console.error('Failed to load channels:', error);
+		console.error('Failed to load channels for server:', serverId, error);
 		if (error instanceof ApiError) {
 			channelsError.set(error.message);
 		}
@@ -126,7 +128,7 @@ export async function loadServerChannels(serverId: string) {
 	}
 }
 
-export async function loadDMChannels() {
+export async function loadDMChannels(): Promise<Channel[]> {
 	channelsLoading.set(true);
 	channelsError.set(null);
 	
@@ -139,6 +141,8 @@ export async function loadDMChannels() {
 			const serverChs = c.filter(ch => ch.server_id !== null);
 			return [...serverChs, ...normalized];
 		});
+		
+		return normalized;
 	} catch (error) {
 		console.error('Failed to load DM channels:', error);
 		if (error instanceof ApiError) {
