@@ -294,3 +294,4 @@ export { default as HttpStatusWidget } from './HttpStatusWidget.svelte';
 
 // MIME type lookup widget
 export { default as MimeTypeLookupWidget } from './MimeTypeLookupWidget.svelte';
+export { default as ChmodCalculatorWidget } from './ChmodCalculatorWidget.svelte';
