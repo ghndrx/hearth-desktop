@@ -744,6 +744,7 @@ fn main() {
             quickcapture::quick_capture_set_config,
             quickcapture::quick_capture_get_state,
             quickcapture::quick_capture_is_visible,
+            quickcapture::quick_capture_send_message,
             // Touch Bar commands (macOS)
             touchbar::touchbar_check_available,
             touchbar::touchbar_get_presets,
