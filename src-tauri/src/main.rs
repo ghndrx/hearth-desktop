@@ -75,6 +75,12 @@ mod snippets;
 mod proxy;
 mod fontmanager;
 mod analytics;
+mod securevault;
+mod imageoptimizer;
+mod speedtest;
+mod filecompression;
+mod startupmanager;
+mod clipboardpreview;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -531,6 +537,24 @@ fn main() {
 
             // Initialize Analytics
             app.manage(analytics::AnalyticsState::default());
+
+            // Initialize Secure Vault
+            app.manage(securevault::SecureVaultManager::default());
+
+            // Initialize Image Optimizer
+            app.manage(imageoptimizer::ImageOptimizerManager::default());
+
+            // Initialize Speed Test
+            app.manage(speedtest::SpeedTestManager::default());
+
+            // Initialize File Compression
+            app.manage(filecompression::FileCompressionManager::default());
+
+            // Initialize Startup Manager
+            app.manage(startupmanager::StartupManager::default());
+
+            // Initialize Clipboard Preview
+            app.manage(clipboardpreview::ClipboardPreviewManager::default());
 
             Ok(())
         })
@@ -1145,6 +1169,67 @@ fn main() {
             analytics::analytics_get_summary,
             analytics::analytics_get_weekly_report,
             analytics::analytics_reset,
+            // Secure Vault commands
+            securevault::vault_setup_pin,
+            securevault::vault_unlock,
+            securevault::vault_lock,
+            securevault::vault_get_state,
+            securevault::vault_add_entry,
+            securevault::vault_update_entry,
+            securevault::vault_delete_entry,
+            securevault::vault_search,
+            securevault::vault_set_auto_lock,
+            securevault::vault_add_category,
+            securevault::vault_change_pin,
+            securevault::vault_export,
+            securevault::vault_import,
+            // Image Optimizer commands
+            imageoptimizer::image_get_info,
+            imageoptimizer::image_optimize,
+            imageoptimizer::image_optimize_batch,
+            imageoptimizer::image_estimate_size,
+            imageoptimizer::image_get_optimizer_stats,
+            imageoptimizer::image_set_defaults,
+            // Speed Test commands
+            speedtest::speedtest_run,
+            speedtest::speedtest_quick_latency,
+            speedtest::speedtest_get_state,
+            speedtest::speedtest_get_history,
+            speedtest::speedtest_clear_history,
+            speedtest::speedtest_is_running,
+            // File Compression commands
+            filecompression::compress_files,
+            filecompression::extract_archive,
+            filecompression::list_archive,
+            filecompression::compression_get_state,
+            filecompression::compression_is_busy,
+            // Startup Manager commands
+            startupmanager::startup_get_state,
+            startupmanager::startup_get_tasks,
+            startupmanager::startup_toggle_task,
+            startupmanager::startup_set_task_defer,
+            startupmanager::startup_set_task_priority,
+            startupmanager::startup_record_timing,
+            startupmanager::startup_record_boot,
+            startupmanager::startup_get_metrics,
+            startupmanager::startup_get_profiles,
+            startupmanager::startup_set_active_profile,
+            startupmanager::startup_create_profile,
+            startupmanager::startup_delete_profile,
+            startupmanager::startup_set_lazy_load,
+            startupmanager::startup_set_optimization,
+            startupmanager::startup_reset_metrics,
+            // Clipboard Preview commands
+            clipboardpreview::clipboard_preview_add_image,
+            clipboardpreview::clipboard_preview_add_text,
+            clipboardpreview::clipboard_preview_get_state,
+            clipboardpreview::clipboard_preview_get_entries,
+            clipboardpreview::clipboard_preview_pin,
+            clipboardpreview::clipboard_preview_delete,
+            clipboardpreview::clipboard_preview_clear,
+            clipboardpreview::clipboard_preview_set_max,
+            clipboardpreview::clipboard_preview_set_thumbnail_size,
+            clipboardpreview::clipboard_preview_search,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

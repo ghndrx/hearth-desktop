@@ -4446,6 +4446,146 @@ export const analytics = {
   reset: resetAnalytics,
 };
 
+// Secure Vault
+async function vaultSetupPin(pin: string): Promise<boolean> { return invoke("vault_setup_pin", { pin }); }
+async function vaultUnlock(pin: string): Promise<boolean> { return invoke("vault_unlock", { pin }); }
+async function vaultLock(): Promise<void> { return invoke("vault_lock"); }
+async function vaultGetState(): Promise<any> { return invoke("vault_get_state"); }
+async function vaultAddEntry(title: string, content: string, category?: string, isSensitive?: boolean): Promise<any> { return invoke("vault_add_entry", { title, content, category, isSensitive }); }
+async function vaultUpdateEntry(id: string, title?: string, content?: string, category?: string): Promise<any> { return invoke("vault_update_entry", { id, title, content, category }); }
+async function vaultDeleteEntry(id: string): Promise<boolean> { return invoke("vault_delete_entry", { id }); }
+async function vaultSearch(query: string): Promise<any[]> { return invoke("vault_search", { query }); }
+async function vaultSetAutoLock(minutes: number): Promise<void> { return invoke("vault_set_auto_lock", { minutes }); }
+async function vaultAddCategory(name: string): Promise<string[]> { return invoke("vault_add_category", { name }); }
+async function vaultChangePin(oldPin: string, newPin: string): Promise<boolean> { return invoke("vault_change_pin", { oldPin, newPin }); }
+async function vaultExport(): Promise<string> { return invoke("vault_export"); }
+async function vaultImport(data: string): Promise<number> { return invoke("vault_import", { data }); }
+
+export const secureVault = {
+  setupPin: vaultSetupPin,
+  unlock: vaultUnlock,
+  lock: vaultLock,
+  getState: vaultGetState,
+  addEntry: vaultAddEntry,
+  updateEntry: vaultUpdateEntry,
+  deleteEntry: vaultDeleteEntry,
+  search: vaultSearch,
+  setAutoLock: vaultSetAutoLock,
+  addCategory: vaultAddCategory,
+  changePin: vaultChangePin,
+  export: vaultExport,
+  import: vaultImport,
+};
+
+// Image Optimizer
+async function imageGetInfo(path: string): Promise<any> { return invoke("image_get_info", { path }); }
+async function imageOptimize(path: string, options?: any): Promise<any> { return invoke("image_optimize", { path, options }); }
+async function imageOptimizeBatch(paths: string[], options?: any): Promise<any> { return invoke("image_optimize_batch", { paths, options }); }
+async function imageEstimateSize(path: string, quality?: number, maxWidth?: number, maxHeight?: number, format?: string): Promise<any> { return invoke("image_estimate_size", { path, quality, maxWidth, maxHeight, format }); }
+async function imageGetOptimizerStats(): Promise<any> { return invoke("image_get_optimizer_stats"); }
+async function imageSetDefaults(quality?: number, maxWidth?: number, maxHeight?: number, format?: string): Promise<any> { return invoke("image_set_defaults", { quality, maxWidth, maxHeight, format }); }
+
+export const imageOptimizer = {
+  getInfo: imageGetInfo,
+  optimize: imageOptimize,
+  optimizeBatch: imageOptimizeBatch,
+  estimateSize: imageEstimateSize,
+  getStats: imageGetOptimizerStats,
+  setDefaults: imageSetDefaults,
+};
+
+// Speed Test
+async function speedtestRun(): Promise<any> { return invoke("speedtest_run"); }
+async function speedtestQuickLatency(server?: string): Promise<number> { return invoke("speedtest_quick_latency", { server }); }
+async function speedtestGetState(): Promise<any> { return invoke("speedtest_get_state"); }
+async function speedtestGetHistory(): Promise<any[]> { return invoke("speedtest_get_history"); }
+async function speedtestClearHistory(): Promise<void> { return invoke("speedtest_clear_history"); }
+async function speedtestIsRunning(): Promise<boolean> { return invoke("speedtest_is_running"); }
+
+export const speedTest = {
+  run: speedtestRun,
+  quickLatency: speedtestQuickLatency,
+  getState: speedtestGetState,
+  getHistory: speedtestGetHistory,
+  clearHistory: speedtestClearHistory,
+  isRunning: speedtestIsRunning,
+};
+
+// File Compression
+async function compressFilesCmd(paths: string[], outputPath: string): Promise<any> { return invoke("compress_files", { paths, outputPath }); }
+async function extractArchiveCmd(archivePath: string, outputDir: string): Promise<any> { return invoke("extract_archive", { archivePath, outputDir }); }
+async function listArchiveCmd(archivePath: string): Promise<any> { return invoke("list_archive", { archivePath }); }
+async function compressionGetState(): Promise<any> { return invoke("compression_get_state"); }
+async function compressionIsBusy(): Promise<boolean> { return invoke("compression_is_busy"); }
+
+export const fileCompression = {
+  compress: compressFilesCmd,
+  extract: extractArchiveCmd,
+  list: listArchiveCmd,
+  getState: compressionGetState,
+  isBusy: compressionIsBusy,
+};
+
+// Startup Manager
+async function startupGetState(): Promise<any> { return invoke("startup_get_state"); }
+async function startupGetTasks(): Promise<any[]> { return invoke("startup_get_tasks"); }
+async function startupToggleTask(taskId: string): Promise<boolean> { return invoke("startup_toggle_task", { taskId }); }
+async function startupSetTaskDefer(taskId: string, deferMs: number): Promise<void> { return invoke("startup_set_task_defer", { taskId, deferMs }); }
+async function startupSetTaskPriority(taskId: string, priority: number): Promise<void> { return invoke("startup_set_task_priority", { taskId, priority }); }
+async function startupRecordTiming(taskId: string, durationMs: number): Promise<void> { return invoke("startup_record_timing", { taskId, durationMs }); }
+async function startupRecordBoot(totalMs: number, taskTimings: any[]): Promise<any> { return invoke("startup_record_boot", { totalMs, taskTimings }); }
+async function startupGetMetrics(): Promise<any> { return invoke("startup_get_metrics"); }
+async function startupGetProfiles(): Promise<any[]> { return invoke("startup_get_profiles"); }
+async function startupSetActiveProfile(profileId: string): Promise<void> { return invoke("startup_set_active_profile", { profileId }); }
+async function startupCreateProfile(name: string, description: string, taskIds: string[]): Promise<any> { return invoke("startup_create_profile", { name, description, taskIds }); }
+async function startupDeleteProfile(profileId: string): Promise<boolean> { return invoke("startup_delete_profile", { profileId }); }
+async function startupSetLazyLoad(enabled: boolean): Promise<void> { return invoke("startup_set_lazy_load", { enabled }); }
+async function startupSetOptimization(enabled: boolean): Promise<void> { return invoke("startup_set_optimization", { enabled }); }
+async function startupResetMetrics(): Promise<void> { return invoke("startup_reset_metrics"); }
+
+export const startupManager = {
+  getState: startupGetState,
+  getTasks: startupGetTasks,
+  toggleTask: startupToggleTask,
+  setTaskDefer: startupSetTaskDefer,
+  setTaskPriority: startupSetTaskPriority,
+  recordTiming: startupRecordTiming,
+  recordBoot: startupRecordBoot,
+  getMetrics: startupGetMetrics,
+  getProfiles: startupGetProfiles,
+  setActiveProfile: startupSetActiveProfile,
+  createProfile: startupCreateProfile,
+  deleteProfile: startupDeleteProfile,
+  setLazyLoad: startupSetLazyLoad,
+  setOptimization: startupSetOptimization,
+  resetMetrics: startupResetMetrics,
+};
+
+// Clipboard Preview
+async function clipboardPreviewAddImage(imageBase64: string): Promise<any> { return invoke("clipboard_preview_add_image", { imageBase64 }); }
+async function clipboardPreviewAddText(text: string): Promise<any> { return invoke("clipboard_preview_add_text", { text }); }
+async function clipboardPreviewGetState(): Promise<any> { return invoke("clipboard_preview_get_state"); }
+async function clipboardPreviewGetEntries(limit?: number, contentType?: string): Promise<any[]> { return invoke("clipboard_preview_get_entries", { limit, contentType }); }
+async function clipboardPreviewPin(id: string): Promise<boolean> { return invoke("clipboard_preview_pin", { id }); }
+async function clipboardPreviewDelete(id: string): Promise<boolean> { return invoke("clipboard_preview_delete", { id }); }
+async function clipboardPreviewClear(keepPinned?: boolean): Promise<number> { return invoke("clipboard_preview_clear", { keepPinned }); }
+async function clipboardPreviewSetMax(maxEntries: number): Promise<void> { return invoke("clipboard_preview_set_max", { maxEntries }); }
+async function clipboardPreviewSetThumbnailSize(size: number): Promise<void> { return invoke("clipboard_preview_set_thumbnail_size", { size }); }
+async function clipboardPreviewSearchCmd(query: string): Promise<any[]> { return invoke("clipboard_preview_search", { query }); }
+
+export const clipboardPreview = {
+  addImage: clipboardPreviewAddImage,
+  addText: clipboardPreviewAddText,
+  getState: clipboardPreviewGetState,
+  getEntries: clipboardPreviewGetEntries,
+  pin: clipboardPreviewPin,
+  delete: clipboardPreviewDelete,
+  clear: clipboardPreviewClear,
+  setMax: clipboardPreviewSetMax,
+  setThumbnailSize: clipboardPreviewSetThumbnailSize,
+  search: clipboardPreviewSearchCmd,
+};
+
 // Default export
 export default {
   window,
@@ -4527,4 +4667,10 @@ export default {
   proxy,
   fontManager,
   analytics,
+  secureVault,
+  imageOptimizer,
+  speedTest,
+  fileCompression,
+  startupManager,
+  clipboardPreview,
 };
