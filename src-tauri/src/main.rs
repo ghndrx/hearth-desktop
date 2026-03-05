@@ -1230,6 +1230,11 @@ fn main() {
             clipboardpreview::clipboard_preview_set_max,
             clipboardpreview::clipboard_preview_set_thumbnail_size,
             clipboardpreview::clipboard_preview_search,
+            // App Launcher commands
+            applauncher::scan_installed_apps,
+            applauncher::search_apps,
+            applauncher::launch_app,
+            applauncher::get_recent_apps,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
