@@ -45,6 +45,7 @@ url = "2"
 futures = "0.3"
 rusqlite = { version = "0.32", features = ["bundled", "vtab"] }
 dirs = "5"
+zip = { version = "2.6", features = ["deflate"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-sys = { version = "0.52", features = ["Win32_System_Power", "Win32_Graphics_Gdi", "Win32_UI_WindowsAndMessaging"] }
