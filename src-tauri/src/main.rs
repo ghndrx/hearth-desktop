@@ -67,6 +67,7 @@ mod dndsync;
 mod colorpicker;
 mod pomodoro;
 mod connection_status;
+mod zenmode;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -279,6 +280,37 @@ fn main() {
                 })
                 .ok();
 
+            // Toggle Zen Mode with Cmd/Ctrl+Shift+Z
+            shortcut_manager
+                .register("CommandOrControl+Shift+Z", {
+                    let app_handle = app.handle().clone();
+                    move || {
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            let window_clone = window.clone();
+                            tauri::async_runtime::spawn(async move {
+                                match zenmode::toggle_zen_mode(window_clone).await {
+                                    Ok(config) => {
+                                        let message = if config.enabled {
+                                            "Zen Mode enabled - distraction-free chat"
+                                        } else {
+                                            "Zen Mode disabled"
+                                        };
+                                        let _ = window.emit("zen-mode-changed", serde_json::json!({
+                                            "enabled": config.enabled,
+                                            "message": message,
+                                            "config": config
+                                        }));
+                                    }
+                                    Err(e) => {
+                                        log::error!("Failed to toggle Zen Mode: {}", e);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                })
+                .ok();
+
             // Toggle quick capture with Cmd/Ctrl+Shift+C
             shortcut_manager
                 .register("CommandOrControl+Shift+C", {
@@ -455,6 +487,9 @@ fn main() {
             // Initialize connection status manager
             app.manage(connection_status::ConnectionStatusManager::new());
             connection_status::init(app.handle());
+
+            // Initialize Zen Mode
+            zenmode::init_zen_mode(app.handle());
 
             Ok(())
         })
@@ -979,6 +1014,18 @@ fn main() {
             connection_status::connection_get_auto_reconnect,
             connection_status::connection_reset,
             connection_status::connection_simulate_state,
+            // Zen Mode commands
+            zenmode::is_zen_mode_enabled,
+            zenmode::toggle_zen_mode,
+            zenmode::set_zen_mode,
+            zenmode::get_zen_mode_config,
+            zenmode::update_zen_mode_config,
+            zenmode::enter_channel_zen_mode,
+            zenmode::exit_channel_zen_mode,
+            zenmode::is_channel_in_zen_mode,
+            zenmode::get_zen_mode_state,
+            zenmode::reset_zen_mode_config,
+            zenmode::cycle_zen_mode_preset,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
