@@ -68,6 +68,9 @@ mod colorpicker;
 mod pomodoro;
 mod connection_status;
 mod zenmode;
+mod focussessions;
+mod quicknotes;
+mod readinglist;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -322,6 +325,18 @@ fn main() {
                 })
                 .ok();
 
+            // Toggle quick notes with Cmd/Ctrl+Shift+N
+            shortcut_manager
+                .register("CommandOrControl+Shift+N", {
+                    let app_handle = app.handle().clone();
+                    move || {
+                        if let Some(window) = app_handle.get_webview_window("main") {
+                            let _ = window.emit("toggle-quick-notes", ());
+                        }
+                    }
+                })
+                .ok();
+
             // Toggle quick replies with Cmd/Ctrl+Shift+R
             shortcut_manager
                 .register("CommandOrControl+Shift+R", {
@@ -490,6 +505,16 @@ fn main() {
 
             // Initialize Zen Mode
             zenmode::init_zen_mode(app.handle());
+
+            // Initialize Focus Sessions
+            let focus_manager = std::sync::Arc::new(focussessions::FocusSessionManager::default());
+            app.manage(focus_manager);
+
+            // Initialize Quick Notes
+            app.manage(quicknotes::QuickNotesManager::default());
+
+            // Initialize Reading List
+            app.manage(readinglist::ReadingListManager::default());
 
             Ok(())
         })
@@ -1026,6 +1051,44 @@ fn main() {
             zenmode::get_zen_mode_state,
             zenmode::reset_zen_mode_config,
             zenmode::cycle_zen_mode_preset,
+            // Focus Sessions commands
+            focussessions::focus_session_start,
+            focussessions::focus_session_pause,
+            focussessions::focus_session_stop,
+            focussessions::focus_session_skip,
+            focussessions::focus_session_get_state,
+            focussessions::focus_session_get_settings,
+            focussessions::focus_session_update_settings,
+            focussessions::focus_session_get_stats,
+            focussessions::focus_session_get_history,
+            focussessions::focus_session_clear_history,
+            focussessions::focus_session_tick,
+            // Quick Notes commands
+            quicknotes::quicknotes_get_state,
+            quicknotes::quicknotes_create,
+            quicknotes::quicknotes_update,
+            quicknotes::quicknotes_delete,
+            quicknotes::quicknotes_toggle_pin,
+            quicknotes::quicknotes_set_active,
+            quicknotes::quicknotes_toggle_visible,
+            quicknotes::quicknotes_get_all,
+            quicknotes::quicknotes_search,
+            quicknotes::quicknotes_export,
+            quicknotes::quicknotes_import,
+            // Reading List commands
+            readinglist::reading_list_add,
+            readinglist::reading_list_remove,
+            readinglist::reading_list_mark_read,
+            readinglist::reading_list_mark_unread,
+            readinglist::reading_list_archive,
+            readinglist::reading_list_update_tags,
+            readinglist::reading_list_update_priority,
+            readinglist::reading_list_update_notes,
+            readinglist::reading_list_get_all,
+            readinglist::reading_list_get_unread,
+            readinglist::reading_list_get_stats,
+            readinglist::reading_list_search,
+            readinglist::reading_list_clear_read,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
