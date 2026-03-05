@@ -304,3 +304,6 @@ export { default as DailyDigestWidget } from './DailyDigestWidget.svelte';
 
 // Custom titlebar - native window controls with connection status and quick menu
 export { default as CustomTitlebar } from './CustomTitlebar.svelte';
+
+// Usage insights - personal analytics dashboard with Tauri native backend
+export { default as UsageInsightsPanel } from './UsageInsightsPanel.svelte';
