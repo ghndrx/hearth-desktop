@@ -71,6 +71,7 @@ mod zenmode;
 mod focussessions;
 mod quicknotes;
 mod readinglist;
+mod snippets;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -515,6 +516,9 @@ fn main() {
 
             // Initialize Reading List
             app.manage(readinglist::ReadingListManager::default());
+
+            // Initialize Snippet Manager
+            app.manage(snippets::SnippetsManager::default());
 
             Ok(())
         })
@@ -1089,6 +1093,18 @@ fn main() {
             readinglist::reading_list_get_stats,
             readinglist::reading_list_search,
             readinglist::reading_list_clear_read,
+            snippets::snippets_get_state,
+            snippets::snippets_create,
+            snippets::snippets_update,
+            snippets::snippets_delete,
+            snippets::snippets_toggle_favorite,
+            snippets::snippets_record_use,
+            snippets::snippets_search,
+            snippets::snippets_get_by_category,
+            snippets::snippets_get_favorites,
+            snippets::snippets_toggle_visible,
+            snippets::snippets_add_category,
+            snippets::snippets_remove_category,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
