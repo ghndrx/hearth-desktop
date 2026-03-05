@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher, onMount, onDestroy } from 'svelte';
 	import { voiceState, voiceActions, isInVoice, voiceChannel, currentVoiceUsers } from '$lib/stores/voice';
-	import { getLiveKitManager } from '$lib/voice';
+	import { getLiveKitManager } from '$lib/voice/livekit';
 
 	const dispatch = createEventDispatcher<{
 		disconnect: void;

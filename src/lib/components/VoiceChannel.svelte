@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
 	import { voiceState, voiceActions, voiceChannelStates, currentVoiceUsers, isInVoice } from '$lib/stores/voice';
-	import { getLiveKitManager } from '$lib/voice';
+	import { getLiveKitManager } from '$lib/voice/livekit';
 	import { user as authUser } from '$lib/stores/auth';
 	import VoiceParticipant from './VoiceParticipant.svelte';
 	import VoiceIcon from './icons/VoiceIcon.svelte';
