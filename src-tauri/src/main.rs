@@ -869,6 +869,9 @@ fn main() {
             smartstatus::detect_gaming,
             smartstatus::get_idle_time,
             smartstatus::set_user_status,
+            // Tray user status commands
+            tray::tray_get_user_status,
+            tray::tray_set_user_status,
             // Network monitor commands
             network::get_network_status,
             network::is_online,
