@@ -4181,6 +4181,23 @@ export const traySettings = {
 };
 
 // ============================================================================
+// Tray User Status Functions
+// ============================================================================
+
+export async function trayGetUserStatus(): Promise<string> {
+  return invoke("tray_get_user_status");
+}
+
+export async function traySetUserStatus(status: string): Promise<string> {
+  return invoke("tray_set_user_status", { status });
+}
+
+export const trayUserStatus = {
+  get: trayGetUserStatus,
+  set: traySetUserStatus,
+};
+
+// ============================================================================
 // Version Tracking Functions
 // ============================================================================
 
@@ -4603,6 +4620,7 @@ export default {
   fileDrop,
   windowAttention,
   trayBadge,
+  trayUserStatus,
   power,
   screenshot,
   audio,

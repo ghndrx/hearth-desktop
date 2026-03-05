@@ -1,9 +1,10 @@
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    Manager, Runtime, AppHandle,
+    Manager, Runtime, AppHandle, Emitter,
 };
-use std::sync::atomic::{AtomicU32, AtomicBool, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU32, AtomicBool, AtomicU64, AtomicU8, Ordering};
+use serde::{Deserialize, Serialize};
 use crate::snooze::{self, SnoozeDuration};
 
 /// Global unread count for tray updates
@@ -11,6 +12,77 @@ static UNREAD_COUNT: AtomicU32 = AtomicU32::new(0);
 
 /// Global focus mode state
 static FOCUS_MODE_ENABLED: AtomicBool = AtomicBool::new(false);
+
+/// Global user presence status (0=online, 1=idle, 2=dnd, 3=invisible)
+static USER_STATUS: AtomicU8 = AtomicU8::new(0);
+
+/// User presence status matching frontend PresenceStatus type
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum UserPresenceStatus {
+    Online,
+    Idle,
+    Dnd,
+    Invisible,
+}
+
+impl UserPresenceStatus {
+    fn from_atomic(val: u8) -> Self {
+        match val {
+            1 => Self::Idle,
+            2 => Self::Dnd,
+            3 => Self::Invisible,
+            _ => Self::Online,
+        }
+    }
+
+    fn to_atomic(self) -> u8 {
+        match self {
+            Self::Online => 0,
+            Self::Idle => 1,
+            Self::Dnd => 2,
+            Self::Invisible => 3,
+        }
+    }
+
+    fn label(self) -> &'static str {
+        match self {
+            Self::Online => "Online",
+            Self::Idle => "Idle",
+            Self::Dnd => "Do Not Disturb",
+            Self::Invisible => "Invisible",
+        }
+    }
+
+    fn indicator(self) -> &'static str {
+        match self {
+            Self::Online => "●",
+            Self::Idle => "◐",
+            Self::Dnd => "⊘",
+            Self::Invisible => "○",
+        }
+    }
+
+    fn from_str(s: &str) -> Self {
+        match s {
+            "idle" => Self::Idle,
+            "dnd" => Self::Dnd,
+            "invisible" => Self::Invisible,
+            _ => Self::Online,
+        }
+    }
+}
+
+impl std::fmt::Display for UserPresenceStatus {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Online => write!(f, "online"),
+            Self::Idle => write!(f, "idle"),
+            Self::Dnd => write!(f, "dnd"),
+            Self::Invisible => write!(f, "invisible"),
+        }
+    }
+}
 
 /// Global pomodoro tray state
 static POMODORO_TIME_REMAINING: AtomicU64 = AtomicU64::new(0);
@@ -96,6 +168,25 @@ pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::er
                         .title("Hearth")
                         .body(message)
                         .show();
+                }
+                // User status menu items
+                id if id.starts_with("status_") => {
+                    let status_str = &id[7..]; // strip "status_"
+                    let new_status = UserPresenceStatus::from_str(status_str);
+                    USER_STATUS.store(new_status.to_atomic(), Ordering::Relaxed);
+
+                    // Update tray menu to reflect new status
+                    let is_muted = crate::commands::is_muted().unwrap_or(false);
+                    let focus_mode = FOCUS_MODE_ENABLED.load(Ordering::Relaxed);
+                    let _ = update_tray_menu(app, is_muted, focus_mode);
+
+                    // Emit status change to frontend
+                    if let Some(window) = app.get_webview_window("main") {
+                        let _ = window.emit("tray:status-changed", serde_json::json!({
+                            "status": new_status.to_string(),
+                            "label": new_status.label()
+                        }));
+                    }
                 }
                 "toggle_privacy" => {
                     // Toggle privacy mode (boss key)
@@ -252,6 +343,31 @@ fn create_tray_menu<R: Runtime>(
     };
     let toggle_focus_i = MenuItem::with_id(app, "toggle_focus", focus_text, true, None::<&str>)?;
     
+    // User status submenu
+    let current_status = UserPresenceStatus::from_atomic(USER_STATUS.load(Ordering::Relaxed));
+    let statuses = [
+        UserPresenceStatus::Online,
+        UserPresenceStatus::Idle,
+        UserPresenceStatus::Dnd,
+        UserPresenceStatus::Invisible,
+    ];
+    let status_items: Vec<MenuItem<R>> = statuses
+        .iter()
+        .map(|s| {
+            let check = if *s == current_status { " ✓" } else { "" };
+            let label = format!("{} {}{}", s.indicator(), s.label(), check);
+            MenuItem::with_id(app, &format!("status_{}", s), &label, true, None::<&str>)
+                .expect("failed to create status menu item")
+        })
+        .collect();
+    let status_refs: Vec<&dyn tauri::menu::IsMenuItem<R>> = status_items.iter().map(|i| i as &dyn tauri::menu::IsMenuItem<R>).collect();
+    let status_submenu = Submenu::with_items(
+        app,
+        &format!("Status: {}", current_status.label()),
+        true,
+        &status_refs,
+    )?;
+
     // Snooze submenu
     let snooze_status = snooze::get_snooze_status();
     let snooze_submenu = if snooze_status.active {
@@ -318,13 +434,14 @@ fn create_tray_menu<R: Runtime>(
         &quick_capture_i,
         &settings_i,
         &separator,
+        &status_submenu,
         &toggle_mute_i,
-        &toggle_focus_i, 
-        &snooze_submenu, 
+        &toggle_focus_i,
+        &snooze_submenu,
         &pomodoro_submenu,
-        &toggle_privacy_i, 
-        &check_updates_i, 
-        &separator2, 
+        &toggle_privacy_i,
+        &check_updates_i,
+        &separator2,
         &quit_i
     ])?;
     Ok(menu)
@@ -423,6 +540,22 @@ pub fn update_pomodoro_state(
     POMODORO_SESSION_TYPE.store(session_num, Ordering::Relaxed);
 }
 
+/// Get current user presence status
+pub fn get_user_status() -> UserPresenceStatus {
+    UserPresenceStatus::from_atomic(USER_STATUS.load(Ordering::Relaxed))
+}
+
+/// Set user presence status from frontend and update tray
+pub fn set_user_status_value<R: Runtime>(
+    app: &AppHandle<R>,
+    status: UserPresenceStatus,
+) -> Result<(), Box<dyn std::error::Error>> {
+    USER_STATUS.store(status.to_atomic(), Ordering::Relaxed);
+    let is_muted = crate::commands::is_muted().unwrap_or(false);
+    let focus_mode = FOCUS_MODE_ENABLED.load(Ordering::Relaxed);
+    update_tray_menu(app, is_muted, focus_mode)
+}
+
 /// Update tray menu with pomodoro state (call this when pomodoro state changes)
 pub fn update_tray_pomodoro_state<R: Runtime>(
     app: &AppHandle<R>,
@@ -463,10 +596,26 @@ fn update_tray_tooltip_with_pomodoro<R: Runtime>(
     if count > 0 {
         tooltip.push_str(&format!("\n{} unread messages", count));
     }
-    
+
     if let Some(tray) = app.tray_by_id("main") {
         tray.set_tooltip(Some(&tooltip))?;
     }
-    
+
     Ok(())
+}
+
+// --- Tauri commands for user status ---
+
+/// Get the current tray user status
+#[tauri::command]
+pub fn tray_get_user_status() -> String {
+    get_user_status().to_string()
+}
+
+/// Set the tray user status from the frontend
+#[tauri::command]
+pub fn tray_set_user_status(app: AppHandle, status: String) -> Result<String, String> {
+    let parsed = UserPresenceStatus::from_str(&status);
+    set_user_status_value(&app, parsed).map_err(|e| e.to_string())?;
+    Ok(parsed.to_string())
 }

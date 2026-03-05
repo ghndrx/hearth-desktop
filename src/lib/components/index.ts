@@ -157,6 +157,7 @@ export { default as RecentFilesManager } from './RecentFilesManager.svelte';
 export { default as WhatsNewModal } from './WhatsNewModal.svelte';
 export { default as WindowBehaviorSettings } from './WindowBehaviorSettings.svelte';
 export { default as TrayMenuManager } from './TrayMenuManager.svelte';
+export { default as TrayStatusBridge } from './TrayStatusBridge.svelte';
 export { default as SystemTrayContextMenu } from './SystemTrayContextMenu.svelte';
 export { default as SystemTrayBadgeManager } from './SystemTrayBadgeManager.svelte';
 export { default as SystemMonitorWidget } from './SystemMonitorWidget.svelte';
