@@ -4211,6 +4211,241 @@ export const pageHtml = {
   fetch: fetchPageHtml,
 };
 
+// ============================================================================
+// Proxy Settings Functions
+// ============================================================================
+
+export interface ProxyConfig {
+  enabled: boolean;
+  proxy_type: string;
+  host: string;
+  port: number;
+  username: string | null;
+  requires_auth: boolean;
+  bypass_list: string[];
+  auto_detect: boolean;
+  pac_url: string | null;
+}
+
+export interface ProxyTestResult {
+  success: boolean;
+  latency_ms: number | null;
+  error: string | null;
+  ip_address: string | null;
+}
+
+export async function getProxyConfig(): Promise<ProxyConfig> {
+  return invoke("proxy_get_config");
+}
+
+export async function setProxyConfig(config: ProxyConfig): Promise<void> {
+  return invoke("proxy_set_config", { config });
+}
+
+export async function getProxyUrl(): Promise<string | null> {
+  return invoke("proxy_get_url");
+}
+
+export async function testProxyConnection(): Promise<ProxyTestResult> {
+  return invoke("proxy_test_connection");
+}
+
+export async function isProxyEnabled(): Promise<boolean> {
+  return invoke("proxy_is_enabled");
+}
+
+export async function toggleProxy(): Promise<boolean> {
+  return invoke("proxy_toggle");
+}
+
+export async function addProxyBypass(host: string): Promise<string[]> {
+  return invoke("proxy_add_bypass", { host });
+}
+
+export async function removeProxyBypass(host: string): Promise<string[]> {
+  return invoke("proxy_remove_bypass", { host });
+}
+
+export const proxy = {
+  getConfig: getProxyConfig,
+  setConfig: setProxyConfig,
+  getUrl: getProxyUrl,
+  testConnection: testProxyConnection,
+  isEnabled: isProxyEnabled,
+  toggle: toggleProxy,
+  addBypass: addProxyBypass,
+  removeBypass: removeProxyBypass,
+};
+
+// ============================================================================
+// Font Manager Functions
+// ============================================================================
+
+export interface FontInfo {
+  family: string;
+  style: string;
+  path: string | null;
+  is_monospace: boolean;
+  is_system: boolean;
+}
+
+export interface FontPreferences {
+  chat_font: string;
+  code_font: string;
+  ui_font: string;
+  chat_font_size: number;
+  code_font_size: number;
+  ui_font_size: number;
+  line_height: number;
+  letter_spacing: number;
+  custom_css: string | null;
+}
+
+export interface FontCategory {
+  name: string;
+  fonts: FontInfo[];
+}
+
+export async function listSystemFonts(): Promise<FontInfo[]> {
+  return invoke("font_list_system");
+}
+
+export async function listMonospaceFonts(): Promise<FontInfo[]> {
+  return invoke("font_list_monospace");
+}
+
+export async function getFontCategories(): Promise<FontCategory[]> {
+  return invoke("font_get_categories");
+}
+
+export async function getFontPreferences(): Promise<FontPreferences> {
+  return invoke("font_get_preferences");
+}
+
+export async function setFontPreferences(
+  preferences: FontPreferences,
+): Promise<void> {
+  return invoke("font_set_preferences", { preferences });
+}
+
+export async function getFontCSS(): Promise<string> {
+  return invoke("font_get_css");
+}
+
+export async function refreshFontCache(): Promise<number> {
+  return invoke("font_refresh_cache");
+}
+
+export async function searchFonts(query: string): Promise<FontInfo[]> {
+  return invoke("font_search", { query });
+}
+
+export const fontManager = {
+  listSystem: listSystemFonts,
+  listMonospace: listMonospaceFonts,
+  getCategories: getFontCategories,
+  getPreferences: getFontPreferences,
+  setPreferences: setFontPreferences,
+  getCSS: getFontCSS,
+  refreshCache: refreshFontCache,
+  search: searchFonts,
+};
+
+// ============================================================================
+// Usage Analytics Functions
+// ============================================================================
+
+export interface DailyStats {
+  date: string;
+  messages_sent: number;
+  messages_received: number;
+  reactions_sent: number;
+  voice_minutes: number;
+  active_minutes: number;
+  servers_visited: number;
+  channels_visited: number;
+}
+
+export interface UsageSummary {
+  total_messages_sent: number;
+  total_messages_received: number;
+  total_reactions: number;
+  total_voice_minutes: number;
+  total_active_hours: number;
+  member_since: string | null;
+  current_streak_days: number;
+  longest_streak_days: number;
+  hourly_activity: { hour: number; count: number }[];
+  favorite_time: string;
+}
+
+export interface WeeklyReport {
+  week_start: string;
+  week_end: string;
+  total_messages: number;
+  total_voice_minutes: number;
+  total_active_minutes: number;
+  most_active_day: string;
+  most_active_hour: number;
+  top_servers: [string, number][];
+  top_channels: [string, number][];
+  daily_breakdown: DailyStats[];
+}
+
+export async function recordAnalyticsEvent(
+  eventType: string,
+  metadata?: Record<string, string>,
+): Promise<void> {
+  return invoke("analytics_record_event", {
+    eventType,
+    metadata: metadata || null,
+  });
+}
+
+export async function recordVoiceTime(minutes: number): Promise<void> {
+  return invoke("analytics_record_voice_time", { minutes });
+}
+
+export async function recordActiveTime(minutes: number): Promise<void> {
+  return invoke("analytics_record_active_time", { minutes });
+}
+
+export async function getAnalyticsToday(): Promise<DailyStats> {
+  return invoke("analytics_get_today");
+}
+
+export async function getAnalyticsDaily(date: string): Promise<DailyStats> {
+  return invoke("analytics_get_daily", { date });
+}
+
+export async function getAnalyticsRange(days: number): Promise<DailyStats[]> {
+  return invoke("analytics_get_range", { days });
+}
+
+export async function getAnalyticsSummary(): Promise<UsageSummary> {
+  return invoke("analytics_get_summary");
+}
+
+export async function getWeeklyReport(): Promise<WeeklyReport> {
+  return invoke("analytics_get_weekly_report");
+}
+
+export async function resetAnalytics(): Promise<void> {
+  return invoke("analytics_reset");
+}
+
+export const analytics = {
+  recordEvent: recordAnalyticsEvent,
+  recordVoiceTime,
+  recordActiveTime,
+  getToday: getAnalyticsToday,
+  getDaily: getAnalyticsDaily,
+  getRange: getAnalyticsRange,
+  getSummary: getAnalyticsSummary,
+  getWeeklyReport,
+  reset: resetAnalytics,
+};
+
 // Default export
 export default {
   window,
@@ -4289,4 +4524,7 @@ export default {
   pageHtml,
   onMenuEvent,
   onDeepLink,
+  proxy,
+  fontManager,
+  analytics,
 };

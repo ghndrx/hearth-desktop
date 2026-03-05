@@ -72,6 +72,9 @@ mod focussessions;
 mod quicknotes;
 mod readinglist;
 mod snippets;
+mod proxy;
+mod fontmanager;
+mod analytics;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -519,6 +522,15 @@ fn main() {
 
             // Initialize Snippet Manager
             app.manage(snippets::SnippetsManager::default());
+
+            // Initialize Proxy settings
+            app.manage(proxy::ProxyState::default());
+
+            // Initialize Font Manager
+            app.manage(fontmanager::FontManagerState::default());
+
+            // Initialize Analytics
+            app.manage(analytics::AnalyticsState::default());
 
             Ok(())
         })
@@ -1105,6 +1117,34 @@ fn main() {
             snippets::snippets_toggle_visible,
             snippets::snippets_add_category,
             snippets::snippets_remove_category,
+            // Proxy settings commands
+            proxy::proxy_get_config,
+            proxy::proxy_set_config,
+            proxy::proxy_get_url,
+            proxy::proxy_test_connection,
+            proxy::proxy_is_enabled,
+            proxy::proxy_toggle,
+            proxy::proxy_add_bypass,
+            proxy::proxy_remove_bypass,
+            // Font manager commands
+            fontmanager::font_list_system,
+            fontmanager::font_list_monospace,
+            fontmanager::font_get_categories,
+            fontmanager::font_get_preferences,
+            fontmanager::font_set_preferences,
+            fontmanager::font_get_css,
+            fontmanager::font_refresh_cache,
+            fontmanager::font_search,
+            // Analytics commands
+            analytics::analytics_record_event,
+            analytics::analytics_record_voice_time,
+            analytics::analytics_record_active_time,
+            analytics::analytics_get_today,
+            analytics::analytics_get_daily,
+            analytics::analytics_get_range,
+            analytics::analytics_get_summary,
+            analytics::analytics_get_weekly_report,
+            analytics::analytics_reset,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
