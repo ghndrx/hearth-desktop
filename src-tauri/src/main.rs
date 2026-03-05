@@ -95,6 +95,7 @@ mod renderer;
 mod printmanager;
 mod gesturemanager;
 mod contentfilter;
+mod reminders;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -593,6 +594,11 @@ fn main() {
 
             // Initialize Content Filter
             app.manage(contentfilter::ContentFilterState::default());
+
+            // Reminder manager
+            let reminder_manager = std::sync::Arc::new(reminders::ReminderManager::default());
+            app.manage(reminder_manager.clone());
+            reminders::start_reminder_monitor(app.handle().clone(), reminder_manager);
 
             Ok(())
         })
@@ -1399,6 +1405,15 @@ fn main() {
             contentfilter::filter_reset_stats,
             contentfilter::filter_report_false_positive,
             contentfilter::filter_test_content,
+            // Message Reminder commands
+            reminders::reminder_create,
+            reminders::reminder_cancel,
+            reminders::reminder_get_all,
+            reminders::reminder_get_pending_count,
+            reminders::reminder_get_stats,
+            reminders::reminder_clear_fired,
+            reminders::reminder_update_note,
+            reminders::reminder_reschedule,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
