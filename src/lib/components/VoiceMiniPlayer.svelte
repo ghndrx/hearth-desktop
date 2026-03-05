@@ -13,7 +13,7 @@
 	import { createEventDispatcher, onMount, onDestroy } from 'svelte';
 	import { slide, fade } from 'svelte/transition';
 	import { voiceState, voiceActions, isInVoice, voiceChannel, currentVoiceUsers } from '$lib/stores/voice';
-	import { getVoiceConnectionManager } from '$lib/voice';
+	import { getVoiceConnectionManager } from '$lib/voice/connection';
 	import { user as currentUser } from '$lib/stores/auth';
 	import Avatar from './Avatar.svelte';
 	import VoiceParticipant from './VoiceParticipant.svelte';

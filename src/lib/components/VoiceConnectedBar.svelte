@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { voiceState, voiceActions, isInVoice, voiceChannel } from '$lib/stores/voice';
-	import { getLiveKitManager } from '$lib/voice';
+	import { getLiveKitManager } from '$lib/voice/livekit';
 	import { createEventDispatcher, onMount, onDestroy } from 'svelte';
 
 	const dispatch = createEventDispatcher<{

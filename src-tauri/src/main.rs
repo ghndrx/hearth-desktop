@@ -82,6 +82,16 @@ mod filecompression;
 mod startupmanager;
 mod clipboardpreview;
 mod soundprofile;
+mod filedialog;
+mod accentcolor;
+mod windowopacity;
+mod chatexport;
+mod inputmethod;
+mod screenrecord;
+mod windowsnap;
+mod filepreview;
+mod nativecontextmenu;
+mod renderer;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -556,6 +566,21 @@ fn main() {
 
             // Initialize Clipboard Preview
             app.manage(clipboardpreview::ClipboardPreviewManager::default());
+
+            // Initialize Screen Record Manager
+            app.manage(screenrecord::ScreenRecordManager::default());
+
+            // Initialize Window Snap Manager
+            app.manage(windowsnap::WindowSnapManager::default());
+
+            // Initialize File Preview Manager
+            app.manage(filepreview::FilePreviewManager::default());
+
+            // Initialize Context Menu Manager
+            app.manage(nativecontextmenu::ContextMenuManager::default());
+
+            // Initialize Renderer Manager
+            app.manage(renderer::RendererManager::default());
 
             Ok(())
         })
@@ -1248,6 +1273,88 @@ fn main() {
             soundprofile::soundprofile_update,
             soundprofile::soundprofile_get_sound_for_event,
             soundprofile::soundprofile_duplicate,
+            // File dialog commands
+            filedialog::open_file_dialog,
+            filedialog::save_file_dialog,
+            filedialog::write_file,
+            filedialog::write_file_bytes,
+            filedialog::read_file_bytes,
+            filedialog::get_file_metadata,
+            filedialog::pick_folder_dialog,
+            // System accent color commands
+            accentcolor::get_system_accent_color,
+            accentcolor::get_system_theme_info,
+            accentcolor::watch_system_theme,
+            // Window opacity & popout commands
+            windowopacity::set_window_opacity,
+            windowopacity::get_window_opacity,
+            windowopacity::set_window_vibrancy,
+            windowopacity::set_compact_mode,
+            windowopacity::create_popout_window,
+            windowopacity::close_popout_window,
+            windowopacity::list_popout_windows,
+            // Chat export commands
+            chatexport::export_chat,
+            // Input method commands
+            inputmethod::get_current_input_method,
+            inputmethod::list_input_methods,
+            inputmethod::watch_input_method,
+            // Screen recording commands
+            screenrecord::screenrecord_start,
+            screenrecord::screenrecord_stop,
+            screenrecord::screenrecord_pause,
+            screenrecord::screenrecord_resume,
+            screenrecord::screenrecord_cancel,
+            screenrecord::screenrecord_get_state,
+            screenrecord::screenrecord_get_settings,
+            screenrecord::screenrecord_update_settings,
+            screenrecord::screenrecord_list_recordings,
+            screenrecord::screenrecord_delete_recording,
+            screenrecord::screenrecord_get_recording_info,
+            // Window snap commands
+            windowsnap::snap_window,
+            windowsnap::snap_restore,
+            windowsnap::snap_get_zones,
+            windowsnap::snap_get_config,
+            windowsnap::snap_set_config,
+            windowsnap::snap_is_snapped,
+            windowsnap::snap_get_state,
+            windowsnap::snap_cycle_zone,
+            windowsnap::snap_to_monitor,
+            windowsnap::snap_cascade,
+            windowsnap::snap_get_monitors,
+            // File preview commands
+            filepreview::preview_get_info,
+            filepreview::preview_get_thumbnail,
+            filepreview::preview_read_text,
+            filepreview::preview_list_archive,
+            filepreview::preview_get_image_data,
+            filepreview::preview_is_supported,
+            filepreview::preview_get_supported_types,
+            filepreview::preview_get_file_icon,
+            filepreview::preview_extract_metadata,
+            filepreview::preview_get_hex_dump,
+            // Native context menu commands
+            nativecontextmenu::show_context_menu,
+            nativecontextmenu::show_text_edit_menu,
+            nativecontextmenu::show_message_menu,
+            nativecontextmenu::show_image_menu,
+            nativecontextmenu::show_link_menu,
+            nativecontextmenu::show_channel_menu,
+            nativecontextmenu::get_predefined_templates,
+            nativecontextmenu::contextmenu_get_config,
+            nativecontextmenu::contextmenu_set_config,
+            // Renderer/GPU settings commands
+            renderer::renderer_get_info,
+            renderer::renderer_get_settings,
+            renderer::renderer_update_settings,
+            renderer::renderer_apply_preset,
+            renderer::renderer_get_presets,
+            renderer::renderer_get_fps,
+            renderer::renderer_benchmark,
+            renderer::renderer_get_capabilities,
+            renderer::renderer_reset_defaults,
+            renderer::renderer_get_memory_usage,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
