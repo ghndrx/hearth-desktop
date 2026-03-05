@@ -95,6 +95,7 @@ mod renderer;
 mod printmanager;
 mod gesturemanager;
 mod contentfilter;
+mod kanban;
 mod reminders;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
@@ -594,6 +595,9 @@ fn main() {
 
             // Initialize Content Filter
             app.manage(contentfilter::ContentFilterState::default());
+
+            // Initialize Kanban Board
+            app.manage(kanban::KanbanManager::default());
 
             // Reminder manager
             let reminder_manager = std::sync::Arc::new(reminders::ReminderManager::default());
@@ -1405,6 +1409,16 @@ fn main() {
             contentfilter::filter_reset_stats,
             contentfilter::filter_report_false_positive,
             contentfilter::filter_test_content,
+            // Kanban Board commands
+            kanban::kanban_get_board,
+            kanban::kanban_add_card,
+            kanban::kanban_update_card,
+            kanban::kanban_delete_card,
+            kanban::kanban_move_card,
+            kanban::kanban_add_column,
+            kanban::kanban_delete_column,
+            kanban::kanban_rename_column,
+            kanban::kanban_get_stats,
             // Message Reminder commands
             reminders::reminder_create,
             reminders::reminder_cancel,

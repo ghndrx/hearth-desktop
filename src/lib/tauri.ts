@@ -4603,6 +4603,118 @@ export const clipboardPreview = {
   search: clipboardPreviewSearchCmd,
 };
 
+// ============================================================================
+// Kanban Board Functions
+// ============================================================================
+
+export type TaskPriority = "low" | "medium" | "high" | "urgent";
+
+export interface KanbanCard {
+  id: string;
+  title: string;
+  description: string;
+  priority: TaskPriority;
+  color: string | null;
+  tags: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface KanbanColumn {
+  id: string;
+  title: string;
+  cards: KanbanCard[];
+  color: string | null;
+}
+
+export interface KanbanBoardState {
+  columns: KanbanColumn[];
+}
+
+export async function kanbanGetBoard(): Promise<KanbanBoardState> {
+  return invoke("kanban_get_board");
+}
+
+export async function kanbanAddCard(
+  columnId: string,
+  title: string,
+  options?: {
+    description?: string;
+    priority?: TaskPriority;
+    color?: string;
+    tags?: string[];
+  },
+): Promise<KanbanCard> {
+  return invoke("kanban_add_card", {
+    columnId,
+    title,
+    ...options,
+  });
+}
+
+export async function kanbanUpdateCard(
+  cardId: string,
+  updates: {
+    title?: string;
+    description?: string;
+    priority?: TaskPriority;
+    color?: string;
+    tags?: string[];
+  },
+): Promise<KanbanCard> {
+  return invoke("kanban_update_card", { cardId, ...updates });
+}
+
+export async function kanbanDeleteCard(cardId: string): Promise<void> {
+  return invoke("kanban_delete_card", { cardId });
+}
+
+export async function kanbanMoveCard(
+  cardId: string,
+  targetColumnId: string,
+  targetIndex: number,
+): Promise<KanbanBoardState> {
+  return invoke("kanban_move_card", { cardId, targetColumnId, targetIndex });
+}
+
+export async function kanbanAddColumn(
+  title: string,
+  color?: string,
+): Promise<KanbanColumn> {
+  return invoke("kanban_add_column", { title, color });
+}
+
+export async function kanbanDeleteColumn(columnId: string): Promise<void> {
+  return invoke("kanban_delete_column", { columnId });
+}
+
+export async function kanbanRenameColumn(
+  columnId: string,
+  title: string,
+): Promise<KanbanColumn> {
+  return invoke("kanban_rename_column", { columnId, title });
+}
+
+export async function kanbanGetStats(): Promise<{
+  totalCards: number;
+  columnsCount: number;
+  perColumn: { id: string; title: string; count: number }[];
+}> {
+  return invoke("kanban_get_stats");
+}
+
+export const kanban = {
+  getBoard: kanbanGetBoard,
+  addCard: kanbanAddCard,
+  updateCard: kanbanUpdateCard,
+  deleteCard: kanbanDeleteCard,
+  moveCard: kanbanMoveCard,
+  addColumn: kanbanAddColumn,
+  deleteColumn: kanbanDeleteColumn,
+  renameColumn: kanbanRenameColumn,
+  getStats: kanbanGetStats,
+};
+
 // Default export
 export default {
   window,
@@ -4691,4 +4803,5 @@ export default {
   fileCompression,
   startupManager,
   clipboardPreview,
+  kanban,
 };
