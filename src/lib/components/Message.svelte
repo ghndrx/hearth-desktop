@@ -177,6 +177,7 @@
 	$: shortTime = formatTime(message.created_at, 'short');
 	$: isEdited = !!message.edited_at;
 	$: usernameColor = roleColor || message.author?.role_color || '#f2f3f5';
+	$: parsedContent = parseMessage(message.content);
 
 	function handleAuthorClick(event: MouseEvent | KeyboardEvent) {
 		if (!message.author) return;
@@ -316,7 +317,7 @@
 			</div>
 		{:else}
 			<div class="text-[#dbdee1] text-base leading-[1.375rem] break-words">
-				{@html parseMessage(message.content)}
+				{@html parsedContent}
 			</div>
 		{/if}
 		
