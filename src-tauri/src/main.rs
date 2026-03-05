@@ -92,6 +92,9 @@ mod windowsnap;
 mod filepreview;
 mod nativecontextmenu;
 mod renderer;
+mod printmanager;
+mod gesturemanager;
+mod contentfilter;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -581,6 +584,15 @@ fn main() {
 
             // Initialize Renderer Manager
             app.manage(renderer::RendererManager::default());
+
+            // Initialize Print Manager
+            app.manage(printmanager::PrintManagerState::default());
+
+            // Initialize Gesture Manager
+            app.manage(gesturemanager::GestureManagerState::default());
+
+            // Initialize Content Filter
+            app.manage(contentfilter::ContentFilterState::default());
 
             Ok(())
         })
@@ -1355,6 +1367,38 @@ fn main() {
             renderer::renderer_get_capabilities,
             renderer::renderer_reset_defaults,
             renderer::renderer_get_memory_usage,
+            // Print Manager commands
+            printmanager::print_get_settings,
+            printmanager::print_update_settings,
+            printmanager::print_generate_preview,
+            printmanager::print_create_job,
+            printmanager::print_get_jobs,
+            printmanager::print_cancel_job,
+            printmanager::print_clear_jobs,
+            printmanager::print_export_pdf,
+            // Gesture Manager commands
+            gesturemanager::gesture_get_config,
+            gesturemanager::gesture_update_config,
+            gesturemanager::gesture_set_enabled,
+            gesturemanager::gesture_set_sensitivity,
+            gesturemanager::gesture_resolve_action,
+            gesturemanager::gesture_get_stats,
+            gesturemanager::gesture_reset_stats,
+            gesturemanager::gesture_get_available_actions,
+            gesturemanager::gesture_reset_config,
+            // Content Filter commands
+            contentfilter::filter_get_config,
+            contentfilter::filter_update_config,
+            contentfilter::filter_set_enabled,
+            contentfilter::filter_check_content,
+            contentfilter::filter_add_blocked_word,
+            contentfilter::filter_remove_blocked_word,
+            contentfilter::filter_get_stats,
+            contentfilter::filter_get_log,
+            contentfilter::filter_clear_log,
+            contentfilter::filter_reset_stats,
+            contentfilter::filter_report_false_positive,
+            contentfilter::filter_test_content,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
