@@ -45,7 +45,7 @@ class LiveKitManager {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
-				'Authorization': `Bearer ${localStorage.getItem('auth_token')}`,
+				'Authorization': `Bearer ${localStorage.getItem('hearth_token')}`,
 			},
 			body: JSON.stringify({ channel_id: channelId, server_id: serverId }),
 		});
