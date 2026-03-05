@@ -81,6 +81,7 @@ mod speedtest;
 mod filecompression;
 mod startupmanager;
 mod clipboardpreview;
+mod soundprofile;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1235,6 +1236,15 @@ fn main() {
             applauncher::search_apps,
             applauncher::launch_app,
             applauncher::get_recent_apps,
+            // Sound Profile commands
+            soundprofile::soundprofile_get_state,
+            soundprofile::soundprofile_get_active,
+            soundprofile::soundprofile_set_active,
+            soundprofile::soundprofile_create,
+            soundprofile::soundprofile_delete,
+            soundprofile::soundprofile_update,
+            soundprofile::soundprofile_get_sound_for_event,
+            soundprofile::soundprofile_duplicate,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
