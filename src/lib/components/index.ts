@@ -162,6 +162,7 @@ export { default as SystemTrayBadgeManager } from './SystemTrayBadgeManager.svel
 export { default as SystemMonitorWidget } from './SystemMonitorWidget.svelte';
 export { default as ClockWidget } from './ClockWidget.svelte';
 export { default as QuickNotesWidget } from './QuickNotesWidget.svelte';
+export { default as SnippetManager } from './SnippetManager.svelte';
 export { default as ToastManager } from './ToastManager.svelte';
 export { default as PrintManager } from './PrintManager.svelte';
 export { default as BookmarksManager } from './BookmarksManager.svelte';
