@@ -348,3 +348,6 @@ export { default as StatusCountdownPanel } from './StatusCountdownPanel.svelte';
 
 // Daily Journal - persistent daily journal with mood tracking and stats
 export { default as DailyJournalPanel } from './DailyJournalPanel.svelte';
+
+// Eye Break Reminder - 20-20-20 rule wellness timer
+export { default as EyeBreakPanel } from './EyeBreakPanel.svelte';

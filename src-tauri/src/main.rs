@@ -112,6 +112,7 @@ mod messagetemplates;
 mod stickynotes;
 mod statuscountdown;
 mod journal;
+mod eyebreak;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -648,6 +649,9 @@ fn main() {
             // Initialize Status Countdown Timer
             app.manage(statuscountdown::StatusCountdownManager::default());
             app.manage(journal::JournalManager::default());
+
+            // Initialize Eye Break Reminder
+            app.manage(eyebreak::EyeBreakManager::default());
 
             // Reminder manager
             let reminder_manager = std::sync::Arc::new(reminders::ReminderManager::default());
@@ -1668,6 +1672,16 @@ fn main() {
             journal::journal_delete_entry,
             journal::journal_get_stats,
             journal::journal_list_dates,
+            // Eye Break Reminder commands
+            eyebreak::eyebreak_start,
+            eyebreak::eyebreak_stop,
+            eyebreak::eyebreak_begin_break,
+            eyebreak::eyebreak_end_break,
+            eyebreak::eyebreak_skip_break,
+            eyebreak::eyebreak_get_state,
+            eyebreak::eyebreak_get_config,
+            eyebreak::eyebreak_set_config,
+            eyebreak::eyebreak_reset_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
