@@ -354,3 +354,15 @@ export { default as EyeBreakPanel } from './EyeBreakPanel.svelte';
 
 // World Clock - multiple timezone display for remote teams
 export { default as WorldClockPanel } from './WorldClockPanel.svelte';
+
+// Presence Detector - OS idle/lock detection synced to chat presence
+export { default as PresenceDetectorPanel } from './PresenceDetectorPanel.svelte';
+
+// File Preview - native file preview with thumbnails and metadata
+export { default as FilePreviewPanel } from './FilePreviewPanel.svelte';
+
+// Quick Reply Overlay - reply from notifications without focusing app
+export { default as QuickReplyOverlay } from './QuickReplyOverlay.svelte';
+
+// System Resource Widget - compact CPU/RAM/disk monitor
+export { default as SystemResourceWidget } from './SystemResourceWidget.svelte';
