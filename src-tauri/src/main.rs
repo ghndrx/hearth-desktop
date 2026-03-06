@@ -130,6 +130,7 @@ mod passwordgen;
 mod quicktimer;
 mod diceroller;
 mod stopwatch;
+mod colorpalette;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1634,6 +1635,10 @@ fn main() {
             stopwatch::stopwatch_reset,
             stopwatch::stopwatch_lap,
             stopwatch::stopwatch_get_state,
+            // Color Palette commands
+            colorpalette::palette_generate,
+            colorpalette::palette_all_modes,
+            colorpalette::palette_hex_to_hsl,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
