@@ -120,6 +120,12 @@ mod meetingcost;
 mod threadpip;
 mod screentime;
 mod moodtracker;
+mod diskusage;
+mod networkdiag;
+mod texttransform;
+mod systemuptime;
+mod cryptohash;
+mod unitconverter;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -302,6 +308,18 @@ fn main() {
             // Initialize Favorite Channels Manager
             app.manage(favorites::FavoriteChannelsManager::new(app_data_dir.clone())
                 .expect("Failed to initialize favorites"));
+
+            // Initialize Disk Usage Manager
+            app.manage(diskusage::DiskUsageManager::default());
+
+            // Initialize Network Diagnostics Manager
+            app.manage(networkdiag::NetworkDiagManager::default());
+
+            // Initialize System Uptime Manager
+            app.manage(systemuptime::UptimeManager::default());
+
+            // Initialize Crypto Hash Manager
+            app.manage(cryptohash::CryptoHashManager::default());
 
             // Initialize Activity Heatmap Manager
             app.manage(activityheatmap::ActivityHeatmapManager::new(app_data_dir)
@@ -1543,6 +1561,43 @@ fn main() {
             moodtracker::mood_delete,
             moodtracker::mood_get_stats,
             moodtracker::mood_clear,
+            // Disk Usage commands
+            diskusage::disk_get_usage,
+            diskusage::disk_get_info,
+            diskusage::disk_get_threshold,
+            diskusage::disk_set_threshold,
+            diskusage::disk_check_alerts,
+            diskusage::disk_clear_alerts,
+            // Network Diagnostics commands
+            networkdiag::netdiag_ping,
+            networkdiag::netdiag_dns_lookup,
+            networkdiag::netdiag_check_port,
+            networkdiag::netdiag_get_history,
+            networkdiag::netdiag_clear_history,
+            // Text Transform commands
+            texttransform::text_base64_encode,
+            texttransform::text_base64_decode,
+            texttransform::text_url_encode,
+            texttransform::text_url_decode,
+            texttransform::text_hash,
+            texttransform::text_transform_case,
+            texttransform::text_get_stats,
+            texttransform::text_get_available_transforms,
+            // System Uptime commands
+            systemuptime::uptime_get_info,
+            systemuptime::uptime_acknowledge_milestone,
+            systemuptime::uptime_get_sessions,
+            systemuptime::uptime_get_total_app_time,
+            // Crypto Hash commands
+            cryptohash::hash_file,
+            cryptohash::hash_text,
+            cryptohash::hash_compare_files,
+            cryptohash::hash_get_history,
+            cryptohash::hash_clear_history,
+            cryptohash::hash_verify,
+            // Unit Converter commands
+            unitconverter::unit_convert,
+            unitconverter::unit_get_categories,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
