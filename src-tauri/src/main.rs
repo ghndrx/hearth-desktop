@@ -129,6 +129,7 @@ mod unitconverter;
 mod passwordgen;
 mod quicktimer;
 mod diceroller;
+mod stopwatch;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -513,6 +514,11 @@ fn main() {
 
             // Initialize Dice Roller
             app.manage(diceroller::DiceRollerManager::default());
+
+            // Initialize Stopwatch
+            let stopwatch_manager = std::sync::Arc::new(stopwatch::StopwatchManager::default());
+            app.manage(stopwatch_manager.clone());
+            stopwatch::start_stopwatch_loop(app.handle().clone(), stopwatch_manager);
 
             Ok(())
         })
@@ -1622,6 +1628,12 @@ fn main() {
             diceroller::dice_roll_quick,
             diceroller::dice_get_history,
             diceroller::dice_clear_history,
+            // Stopwatch commands
+            stopwatch::stopwatch_start,
+            stopwatch::stopwatch_stop,
+            stopwatch::stopwatch_reset,
+            stopwatch::stopwatch_lap,
+            stopwatch::stopwatch_get_state,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
