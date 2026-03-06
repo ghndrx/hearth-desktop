@@ -1,11 +1,17 @@
 use tauri::{
+    image::Image as TauriImage,
     menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Manager, Runtime, AppHandle, Emitter,
 };
 use std::sync::atomic::{AtomicU32, AtomicBool, AtomicU64, AtomicU8, Ordering};
+use std::sync::Mutex;
 use serde::{Deserialize, Serialize};
 use crate::snooze::{self, SnoozeDuration};
+
+/// Cached original icon RGBA data and dimensions
+static ORIGINAL_ICON: once_cell::sync::Lazy<Mutex<Option<(Vec<u8>, u32, u32)>>> =
+    once_cell::sync::Lazy::new(|| Mutex::new(None));
 
 /// Global unread count for tray updates
 static UNREAD_COUNT: AtomicU32 = AtomicU32::new(0);
@@ -618,4 +624,193 @@ pub fn tray_set_user_status(app: AppHandle, status: String) -> Result<String, St
     let parsed = UserPresenceStatus::from_str(&status);
     set_user_status_value(&app, parsed).map_err(|e| e.to_string())?;
     Ok(parsed.to_string())
+}
+
+// ============================================================================
+// Tray Icon Badge Rendering
+// ============================================================================
+
+/// Cache the original tray icon on first use
+fn cache_original_icon<R: Runtime>(app: &AppHandle<R>) -> Result<(), String> {
+    let mut guard = ORIGINAL_ICON.lock().map_err(|e| e.to_string())?;
+    if guard.is_some() {
+        return Ok(());
+    }
+
+    let icon = app
+        .default_window_icon()
+        .ok_or("No default window icon")?;
+    let rgba = icon.rgba().to_vec();
+    let w = icon.width();
+    let h = icon.height();
+    *guard = Some((rgba, w, h));
+    Ok(())
+}
+
+/// Render a red badge circle with a count number onto an RGBA image buffer.
+/// Returns a new RGBA buffer with the badge composited in the bottom-right corner.
+fn render_badge_on_icon(
+    rgba: &[u8],
+    width: u32,
+    height: u32,
+    count: u32,
+) -> Vec<u8> {
+    let mut out = rgba.to_vec();
+    let w = width as i32;
+    let h = height as i32;
+
+    // Badge occupies roughly 45% of the icon in the bottom-right
+    let badge_radius = (w.min(h) as f64 * 0.22).round() as i32;
+    let cx = w - badge_radius - 1;
+    let cy = h - badge_radius - 1;
+
+    // Draw filled red circle
+    let r2 = (badge_radius * badge_radius) as i64;
+    let aa_r2 = ((badge_radius + 1) * (badge_radius + 1)) as i64;
+
+    for py in (cy - badge_radius - 1).max(0)..=(cy + badge_radius + 1).min(h - 1) {
+        for px in (cx - badge_radius - 1).max(0)..=(cx + badge_radius + 1).min(w - 1) {
+            let dx = (px - cx) as i64;
+            let dy = (py - cy) as i64;
+            let dist2 = dx * dx + dy * dy;
+
+            if dist2 <= aa_r2 {
+                let idx = ((py * w + px) * 4) as usize;
+                if idx + 3 >= out.len() {
+                    continue;
+                }
+
+                // Anti-aliased alpha based on distance from edge
+                let alpha = if dist2 <= r2 {
+                    255u8
+                } else {
+                    let edge_dist = (dist2 as f64).sqrt() - badge_radius as f64;
+                    (255.0 * (1.0 - edge_dist).max(0.0)) as u8
+                };
+
+                // Red badge color (0xED, 0x4245) - Discord-style red
+                let badge_r = 237u8;
+                let badge_g = 66u8;
+                let badge_b = 69u8;
+
+                if alpha == 255 {
+                    out[idx] = badge_r;
+                    out[idx + 1] = badge_g;
+                    out[idx + 2] = badge_b;
+                    out[idx + 3] = 255;
+                } else if alpha > 0 {
+                    // Alpha blend
+                    let a = alpha as f64 / 255.0;
+                    let inv = 1.0 - a;
+                    out[idx] = (badge_r as f64 * a + out[idx] as f64 * inv) as u8;
+                    out[idx + 1] = (badge_g as f64 * a + out[idx + 1] as f64 * inv) as u8;
+                    out[idx + 2] = (badge_b as f64 * a + out[idx + 2] as f64 * inv) as u8;
+                    out[idx + 3] = (alpha as u16 + out[idx + 3] as u16 * (255 - alpha) as u16 / 255) as u8;
+                }
+            }
+        }
+    }
+
+    // Draw the count text as simple pixel digits
+    let text = if count > 99 { "99+".to_string() } else { count.to_string() };
+    draw_badge_text(&mut out, w, h, cx, cy, badge_radius, &text);
+
+    out
+}
+
+/// Draw simple pixel-art digits centered in the badge circle.
+/// Each digit is rendered from a 3x5 bitmap font at a scale appropriate for the badge.
+fn draw_badge_text(
+    buf: &mut [u8],
+    w: i32,
+    h: i32,
+    cx: i32,
+    cy: i32,
+    badge_radius: i32,
+    text: &str,
+) {
+    // 3x5 bitmap font for digits 0-9 and '+'
+    let glyphs: &[(&str, [u8; 5])] = &[
+        ("0", [0b111, 0b101, 0b101, 0b101, 0b111]),
+        ("1", [0b010, 0b110, 0b010, 0b010, 0b111]),
+        ("2", [0b111, 0b001, 0b111, 0b100, 0b111]),
+        ("3", [0b111, 0b001, 0b111, 0b001, 0b111]),
+        ("4", [0b101, 0b101, 0b111, 0b001, 0b001]),
+        ("5", [0b111, 0b100, 0b111, 0b001, 0b111]),
+        ("6", [0b111, 0b100, 0b111, 0b101, 0b111]),
+        ("7", [0b111, 0b001, 0b010, 0b010, 0b010]),
+        ("8", [0b111, 0b101, 0b111, 0b101, 0b111]),
+        ("9", [0b111, 0b101, 0b111, 0b001, 0b111]),
+        ("+", [0b000, 0b010, 0b111, 0b010, 0b000]),
+    ];
+
+    // Scale factor: each font pixel maps to `scale` real pixels
+    let scale = (badge_radius as f64 * 0.28).round().max(1.0) as i32;
+    let char_w = 3 * scale;
+    let char_h = 5 * scale;
+    let gap = scale.max(1);
+    let total_w: i32 = text.len() as i32 * char_w + (text.len() as i32 - 1).max(0) * gap;
+
+    let start_x = cx - total_w / 2;
+    let start_y = cy - char_h / 2;
+
+    for (ci, ch) in text.chars().enumerate() {
+        let ch_str = ch.to_string();
+        let glyph = glyphs.iter().find(|(c, _)| *c == ch_str);
+        let bitmap = match glyph {
+            Some((_, bm)) => bm,
+            None => continue,
+        };
+
+        let ox = start_x + ci as i32 * (char_w + gap);
+
+        for row in 0..5 {
+            for col in 0..3 {
+                if bitmap[row as usize] & (1 << (2 - col)) != 0 {
+                    // Draw a scale x scale block
+                    for sy in 0..scale {
+                        for sx in 0..scale {
+                            let px = ox + col * scale + sx;
+                            let py = start_y + row * scale + sy;
+                            if px >= 0 && px < w && py >= 0 && py < h {
+                                let idx = ((py * w + px) * 4) as usize;
+                                if idx + 3 < buf.len() {
+                                    buf[idx] = 255;     // white text
+                                    buf[idx + 1] = 255;
+                                    buf[idx + 2] = 255;
+                                    buf[idx + 3] = 255;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/// Set tray icon badge with unread count. Count of 0 resets to the original icon.
+#[tauri::command]
+pub fn set_tray_badge(app: AppHandle, count: u32) -> Result<(), String> {
+    cache_original_icon(&app)?;
+
+    let guard = ORIGINAL_ICON.lock().map_err(|e| e.to_string())?;
+    let (rgba, w, h) = guard.as_ref().ok_or("Icon not cached")?;
+
+    let icon_data = if count > 0 {
+        render_badge_on_icon(rgba, *w, *h, count)
+    } else {
+        rgba.clone()
+    };
+
+    let new_icon = TauriImage::new_owned(icon_data, *w, *h);
+
+    if let Some(tray) = app.tray_by_id("main") {
+        tray.set_icon(Some(new_icon)).map_err(|e| e.to_string())?;
+    }
+
+    // Also update tooltip and internal count
+    set_unread_count(&app, count).map_err(|e| e.to_string())?;
+
+    Ok(())
 }

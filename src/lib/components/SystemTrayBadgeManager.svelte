@@ -126,27 +126,11 @@
     if (!tauriWindow) return;
 
     try {
-      // Use Tauri's window API to set badge
-      // This invokes a custom Tauri command for badge management
       const { invoke } = await import('@tauri-apps/api/core');
-      
-      await invoke('set_tray_badge', {
-        count: value ? parseInt(value.replace('+', '')) || 0 : 0,
-        text: value,
-        color: isUrgent ? urgentColor : badgeColor,
-        style: iconStyle,
-        position: position,
-        visible: value !== ''
-      });
+      const count = value ? parseInt(value.replace('+', '')) || 0 : 0;
+      await invoke('set_tray_badge', { count });
     } catch (err) {
-      // Fallback: try setting window badge (macOS dock badge)
-      try {
-        const { invoke } = await import('@tauri-apps/api/core');
-        await invoke('set_dock_badge', { badge: value || null });
-      } catch {
-        // Badge API might not be available on all platforms
-        console.debug('Native badge API not available');
-      }
+      console.debug('Tray badge API not available:', err);
     }
   }
 
