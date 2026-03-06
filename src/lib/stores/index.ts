@@ -164,3 +164,26 @@ export {
 	type StatusCountdown,
 	type StatusPreset
 } from './statusCountdown';
+
+// Presence Detector - OS idle/lock detection synced to chat status
+export {
+	presenceDetector,
+	currentPresence,
+	isIdle,
+	isAway,
+	presenceConfig,
+	formatIdleTime
+} from './presenceDetector';
+
+// File Preview - native file preview with thumbnails and metadata
+export {
+	filePreview,
+	formatFileSize,
+	fileTypeColor
+} from './filePreview';
+
+// Quick Reply - reply from notifications without focusing app
+export { quickReply } from './quickReply';
+
+// System Resources - compact CPU/RAM/disk monitor
+export { systemResources } from './systemResources';

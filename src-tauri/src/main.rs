@@ -114,6 +114,7 @@ mod statuscountdown;
 mod journal;
 mod eyebreak;
 mod worldclock;
+mod presencedetector;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1690,6 +1691,12 @@ fn main() {
             worldclock::worldclock_get_times,
             worldclock::worldclock_add_clock,
             worldclock::worldclock_remove_clock,
+            // Presence Detector commands
+            presencedetector::get_presence_state,
+            presencedetector::set_presence_config,
+            presencedetector::start_presence_detector,
+            presencedetector::stop_presence_detector,
+            presencedetector::set_manual_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
