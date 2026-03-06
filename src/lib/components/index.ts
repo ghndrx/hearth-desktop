@@ -372,3 +372,6 @@ export { default as SystemResourceWidget } from './SystemResourceWidget.svelte';
 
 // Meeting Cost Timer - track meeting duration and real-time cost
 export { default as MeetingCostPanel } from './MeetingCostPanel.svelte';
+
+// Mood Tracker - daily wellbeing check-ins with history and stats
+export { default as MoodTrackerPanel } from './MoodTrackerPanel.svelte';
