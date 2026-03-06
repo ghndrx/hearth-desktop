@@ -307,3 +307,18 @@ export { default as CustomTitlebar } from './CustomTitlebar.svelte';
 
 // Usage insights - personal analytics dashboard with Tauri native backend
 export { default as UsageInsightsPanel } from './UsageInsightsPanel.svelte';
+
+// File Indexer - native SQLite FTS5 full-text search for shared files
+export { default as FileIndexPanel } from './FileIndexPanel.svelte';
+
+// Notification Groups - smart notification grouping and batching
+export { default as NotificationGroupPanel } from './NotificationGroupPanel.svelte';
+
+// Workspace Layouts - save and restore window arrangements
+export { default as WorkspaceLayoutPanel } from './WorkspaceLayoutPanel.svelte';
+
+// Voice Memos - record, manage, and search voice notes
+export { default as VoiceMemoPanel } from './VoiceMemoPanel.svelte';
+
+// Widget Dashboard - configurable grid of desktop widgets
+export { default as WidgetDashboardPanel } from './WidgetDashboardPanel.svelte';

@@ -98,6 +98,11 @@ mod contentfilter;
 mod kanban;
 mod reminders;
 mod bookmarks;
+mod fileindexer;
+mod notificationgroups;
+mod voicememos;
+mod widgetdashboard;
+mod workspacelayouts;
 mod polls;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
@@ -613,6 +618,23 @@ fn main() {
             let reminder_manager = std::sync::Arc::new(reminders::ReminderManager::default());
             app.manage(reminder_manager.clone());
             reminders::start_reminder_monitor(app.handle().clone(), reminder_manager);
+
+            // Initialize File Indexer (SQLite FTS5)
+            let app_data_dir2 = app.path().app_data_dir().map_err(|e| e.to_string())?;
+            app.manage(fileindexer::FileIndexerManager::new(app_data_dir2)
+                .expect("Failed to initialize file indexer"));
+
+            // Initialize Notification Groups
+            app.manage(notificationgroups::NotificationGroupManager::default());
+
+            // Initialize Voice Memos
+            app.manage(voicememos::VoiceMemoManager::default());
+
+            // Initialize Widget Dashboard
+            app.manage(widgetdashboard::WidgetDashboardManager::default());
+
+            // Initialize Workspace Layouts
+            app.manage(workspacelayouts::WorkspaceLayoutManager::default());
 
             Ok(())
         })
@@ -1455,6 +1477,75 @@ fn main() {
             polls::poll_get,
             polls::poll_list_by_channel,
             polls::poll_delete,
+            // File Indexer commands (SQLite FTS5)
+            fileindexer::file_index_add,
+            fileindexer::file_index_remove,
+            fileindexer::file_index_search,
+            fileindexer::file_index_get_recent,
+            fileindexer::file_index_get_by_channel,
+            fileindexer::file_index_get_by_type,
+            fileindexer::file_index_get_stats,
+            fileindexer::file_index_clear,
+            fileindexer::file_index_rebuild,
+            // Notification Groups commands
+            notificationgroups::notifgroup_add,
+            notificationgroups::notifgroup_get_all,
+            notificationgroups::notifgroup_get_group,
+            notificationgroups::notifgroup_mark_read,
+            notificationgroups::notifgroup_mark_all_read,
+            notificationgroups::notifgroup_dismiss,
+            notificationgroups::notifgroup_dismiss_all,
+            notificationgroups::notifgroup_mute_group,
+            notificationgroups::notifgroup_unmute_group,
+            notificationgroups::notifgroup_get_config,
+            notificationgroups::notifgroup_set_config,
+            notificationgroups::notifgroup_get_unread_count,
+            notificationgroups::notifgroup_get_summary,
+            // Voice Memos commands
+            voicememos::memo_start_recording,
+            voicememos::memo_stop_recording,
+            voicememos::memo_cancel_recording,
+            voicememos::memo_get_recording_state,
+            voicememos::memo_save,
+            voicememos::memo_delete,
+            voicememos::memo_get_all,
+            voicememos::memo_get_by_channel,
+            voicememos::memo_search,
+            voicememos::memo_toggle_favorite,
+            voicememos::memo_update_title,
+            voicememos::memo_update_transcript,
+            voicememos::memo_update_tags,
+            voicememos::memo_get_stats,
+            voicememos::memo_export,
+            // Widget Dashboard commands
+            widgetdashboard::dashboard_get_state,
+            widgetdashboard::dashboard_set_visible,
+            widgetdashboard::dashboard_toggle_visible,
+            widgetdashboard::dashboard_add_widget,
+            widgetdashboard::dashboard_remove_widget,
+            widgetdashboard::dashboard_update_widget,
+            widgetdashboard::dashboard_move_widget,
+            widgetdashboard::dashboard_resize_widget,
+            widgetdashboard::dashboard_toggle_widget_pin,
+            widgetdashboard::dashboard_get_config,
+            widgetdashboard::dashboard_set_config,
+            widgetdashboard::dashboard_reset,
+            widgetdashboard::dashboard_get_available_widgets,
+            widgetdashboard::dashboard_export,
+            widgetdashboard::dashboard_import,
+            // Workspace Layouts commands
+            workspacelayouts::layout_save,
+            workspacelayouts::layout_load,
+            workspacelayouts::layout_delete,
+            workspacelayouts::layout_rename,
+            workspacelayouts::layout_get_all,
+            workspacelayouts::layout_get_active,
+            workspacelayouts::layout_set_default,
+            workspacelayouts::layout_get_presets,
+            workspacelayouts::layout_apply_preset,
+            workspacelayouts::layout_export,
+            workspacelayouts::layout_import,
+            workspacelayouts::layout_duplicate,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
