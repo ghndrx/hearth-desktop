@@ -4,11 +4,15 @@
 	import { ui, searchOpen, helpOpen } from '$lib/stores/ui';
 	import { goto } from '$app/navigation';
 	import { writable } from 'svelte/store';
+	import { invoke } from '@tauri-apps/api/core';
+	import { servers } from '$lib/stores/servers';
+	import { isSettingsOpen, settings } from '$lib/stores/settings';
+	import { splitViewStore } from '$lib/stores/splitView';
 
 	const dispatch = createEventDispatcher();
 
 	export let isOpen = writable(false);
-	
+
 	let searchInput: HTMLInputElement;
 	let query = '';
 	let selectedIndex = 0;
@@ -18,30 +22,30 @@
 		id: string;
 		label: string;
 		description?: string;
-		category: 'navigation' | 'action' | 'view' | 'settings' | 'help';
+		category: 'navigation' | 'action' | 'view' | 'settings' | 'help' | 'status' | 'tools' | 'servers';
 		icon: string;
 		shortcut?: string[];
 		action: () => void | Promise<void>;
 	}
 
-	const commands: Command[] = [
+	const staticCommands: Command[] = [
 		// Navigation
 		{
 			id: 'goto-home',
 			label: 'Go to Home',
-			description: 'Navigate to home/friends view',
+			description: 'Navigate to direct messages',
 			category: 'navigation',
 			icon: '🏠',
-			action: () => goto('/')
+			action: () => goto('/channels/@me')
 		},
 		{
 			id: 'goto-settings',
 			label: 'Open Settings',
-			description: 'Open user settings',
+			description: 'User preferences and account settings',
 			category: 'settings',
 			icon: '⚙️',
 			shortcut: ['Ctrl', ','],
-			action: () => dispatch('openSettings')
+			action: () => settings.open()
 		},
 		{
 			id: 'goto-dms',
@@ -49,7 +53,7 @@
 			description: 'View your direct messages',
 			category: 'navigation',
 			icon: '💬',
-			action: () => dispatch('openDMs')
+			action: () => goto('/channels/@me')
 		},
 		// Actions
 		{
@@ -93,7 +97,7 @@
 			category: 'view',
 			icon: '📱',
 			shortcut: ['Ctrl', '\\'],
-			action: () => dispatch('toggleSidebar')
+			action: () => ui.toggleSidebar()
 		},
 		{
 			id: 'toggle-members',
@@ -102,7 +106,7 @@
 			category: 'view',
 			icon: '👥',
 			shortcut: ['Ctrl', 'Shift', 'I'],
-			action: () => dispatch('toggleMembers')
+			action: () => ui.toggleMemberList()
 		},
 		{
 			id: 'toggle-pins',
@@ -120,24 +124,57 @@
 			icon: '🧵',
 			action: () => dispatch('showThreads')
 		},
-		// Settings/Preferences
 		{
-			id: 'toggle-mute',
-			label: 'Toggle Mute',
-			description: 'Mute/unmute your microphone',
-			category: 'action',
-			icon: '🎤',
-			shortcut: ['Ctrl', 'Shift', 'M'],
-			action: () => dispatch('toggleMute')
+			id: 'toggle-split-view',
+			label: 'Toggle Split View',
+			description: 'Side-by-side channel view',
+			category: 'view',
+			icon: '⬛',
+			shortcut: ['Alt', 'Shift', 'P'],
+			action: () => splitViewStore.toggle()
+		},
+		// Status (Tauri-powered)
+		{
+			id: 'status-online',
+			label: 'Set Status: Online',
+			description: 'Show as online',
+			category: 'status',
+			icon: '🟢',
+			action: () => invoke('tray_set_user_status', { status: 'online' }).catch(() => {})
 		},
 		{
-			id: 'toggle-deafen',
-			label: 'Toggle Deafen',
-			description: 'Deafen/undeafen audio',
+			id: 'status-idle',
+			label: 'Set Status: Idle',
+			description: 'Show as away',
+			category: 'status',
+			icon: '🌙',
+			action: () => invoke('tray_set_user_status', { status: 'idle' }).catch(() => {})
+		},
+		{
+			id: 'status-dnd',
+			label: 'Set Status: Do Not Disturb',
+			description: 'Suppress all notifications',
+			category: 'status',
+			icon: '⛔',
+			action: () => invoke('tray_set_user_status', { status: 'dnd' }).catch(() => {})
+		},
+		{
+			id: 'status-invisible',
+			label: 'Set Status: Invisible',
+			description: 'Appear offline to others',
+			category: 'status',
+			icon: '👻',
+			action: () => invoke('tray_set_user_status', { status: 'invisible' }).catch(() => {})
+		},
+		// Notifications (Tauri-powered)
+		{
+			id: 'toggle-mute',
+			label: 'Toggle Mute Notifications',
+			description: 'Mute or unmute all notifications',
 			category: 'action',
-			icon: '🎧',
-			shortcut: ['Ctrl', 'Shift', 'D'],
-			action: () => dispatch('toggleDeafen')
+			icon: '🔇',
+			shortcut: ['Ctrl', 'Shift', 'M'],
+			action: () => invoke('toggle_mute').catch(() => {})
 		},
 		{
 			id: 'focus-mode',
@@ -145,7 +182,74 @@
 			description: 'Only show mentions and DMs',
 			category: 'action',
 			icon: '🎯',
-			action: () => dispatch('toggleFocusMode')
+			shortcut: ['Ctrl', 'Shift', 'F'],
+			action: () => invoke('toggle_focus_mode').catch(() => {})
+		},
+		{
+			id: 'toggle-dnd-notifs',
+			label: 'Toggle Do Not Disturb',
+			description: 'Suppress notification popups',
+			category: 'action',
+			icon: '🔕',
+			action: () => invoke('set_notification_dnd', { active: true }).catch(() => {})
+		},
+		// Tools (Tauri-powered)
+		{
+			id: 'zen-mode',
+			label: 'Toggle Zen Mode',
+			description: 'Distraction-free view',
+			category: 'tools',
+			icon: '🧘',
+			shortcut: ['Ctrl', 'Shift', 'Z'],
+			action: () => invoke('toggle_zen_mode').catch(() => {})
+		},
+		{
+			id: 'privacy-mode',
+			label: 'Toggle Privacy Mode',
+			description: 'Hide sensitive content (boss key)',
+			category: 'tools',
+			icon: '🔒',
+			shortcut: ['Ctrl', 'Shift', 'L'],
+			action: () => invoke('toggle_privacy_mode').catch(() => {})
+		},
+		{
+			id: 'quick-capture',
+			label: 'Quick Capture',
+			description: 'Capture a quick note',
+			category: 'tools',
+			icon: '📝',
+			action: () => invoke('toggle_quick_capture').catch(() => {})
+		},
+		{
+			id: 'screenshot',
+			label: 'Take Screenshot',
+			description: 'Capture a screenshot',
+			category: 'tools',
+			icon: '📸',
+			action: () => invoke('take_screenshot', { options: {} }).catch(() => {})
+		},
+		{
+			id: 'color-picker',
+			label: 'Open Color Picker',
+			description: 'Pick a color from screen',
+			category: 'tools',
+			icon: '🎨',
+			action: () => invoke('open_color_picker').catch(() => {})
+		},
+		// Window
+		{
+			id: 'minimize',
+			label: 'Minimize Window',
+			category: 'view',
+			icon: '➖',
+			action: () => invoke('minimize_window').catch(() => {})
+		},
+		{
+			id: 'maximize',
+			label: 'Toggle Maximize',
+			category: 'view',
+			icon: '⬜',
+			action: () => invoke('toggle_maximize').catch(() => {})
 		},
 		// Help
 		{
@@ -158,20 +262,20 @@
 			action: () => ui.setHelpOpen(true)
 		},
 		{
+			id: 'check-updates',
+			label: 'Check for Updates',
+			description: 'Check if a new version is available',
+			category: 'help',
+			icon: '🔄',
+			action: () => invoke('check_for_updates_cmd').catch(() => {})
+		},
+		{
 			id: 'about',
 			label: 'About Hearth',
 			description: 'View version and credits',
 			category: 'help',
 			icon: 'ℹ️',
 			action: () => dispatch('showAbout')
-		},
-		{
-			id: 'check-updates',
-			label: 'Check for Updates',
-			description: 'Check if a new version is available',
-			category: 'help',
-			icon: '🔄',
-			action: () => dispatch('checkUpdates')
 		},
 		{
 			id: 'report-bug',
@@ -183,36 +287,54 @@
 		}
 	];
 
-	function fuzzyMatch(text: string, query: string): boolean {
-		const lowerText = text.toLowerCase();
-		const lowerQuery = query.toLowerCase();
-		
-		let queryIndex = 0;
-		for (let i = 0; i < lowerText.length && queryIndex < lowerQuery.length; i++) {
-			if (lowerText[i] === lowerQuery[queryIndex]) {
-				queryIndex++;
-			}
-		}
-		return queryIndex === lowerQuery.length;
+	// Build dynamic server navigation commands from the store
+	function getAllCommands(): Command[] {
+		const serverCommands: Command[] = ($servers || []).map((server) => ({
+			id: `server-${server.id}`,
+			label: `Go to ${server.name}`,
+			description: `Navigate to ${server.name} server`,
+			category: 'servers' as const,
+			icon: '🖥️',
+			action: () => goto(`/channels/${server.id}`)
+		}));
+		return [...staticCommands, ...serverCommands];
 	}
 
-	function filterCommands(query: string): Command[] {
-		if (!query.trim()) {
-			return commands;
-		}
-		
-		return commands.filter(cmd => 
-			fuzzyMatch(cmd.label, query) || 
-			fuzzyMatch(cmd.description || '', query) ||
-			fuzzyMatch(cmd.category, query)
-		).sort((a, b) => {
-			// Prioritize exact prefix matches
-			const aStartsWith = a.label.toLowerCase().startsWith(query.toLowerCase());
-			const bStartsWith = b.label.toLowerCase().startsWith(query.toLowerCase());
-			if (aStartsWith && !bStartsWith) return -1;
-			if (!aStartsWith && bStartsWith) return 1;
-			return 0;
-		});
+	function getCategoryLabel(category: string): string {
+		const labels: Record<string, string> = {
+			navigation: 'Navigation',
+			action: 'Actions',
+			view: 'View',
+			settings: 'Settings',
+			status: 'Status',
+			tools: 'Tools',
+			servers: 'Servers',
+			help: 'Help'
+		};
+		return labels[category] || category;
+	}
+
+	function filterCommands(q: string): Command[] {
+		const allCommands = getAllCommands();
+		if (!q.trim()) return allCommands;
+
+		const lower = q.toLowerCase();
+		const terms = lower.split(/\s+/);
+
+		return allCommands
+			.map((cmd) => {
+				const text = `${cmd.label} ${cmd.description || ''} ${cmd.category}`.toLowerCase();
+				let score = 0;
+				for (const term of terms) {
+					if (text.includes(term)) score++;
+					else return { cmd, score: -1 };
+				}
+				if (cmd.label.toLowerCase().startsWith(lower)) score += 10;
+				return { cmd, score };
+			})
+			.filter((r) => r.score >= 0)
+			.sort((a, b) => b.score - a.score)
+			.map((r) => r.cmd);
 	}
 
 	$: filteredCommands = filterCommands(query);
@@ -224,7 +346,6 @@
 		$isOpen = true;
 		query = '';
 		selectedIndex = 0;
-		// Focus input after the modal renders
 		requestAnimationFrame(() => {
 			searchInput?.focus();
 		});
@@ -243,8 +364,8 @@
 
 	function handleKeydown(e: KeyboardEvent) {
 		if (!$isOpen) {
-			// Open command palette with Ctrl+Shift+P
-			if (e.ctrlKey && e.shiftKey && e.key === 'P') {
+			// Open command palette with Ctrl+.
+			if ((e.ctrlKey || e.metaKey) && e.key === '.') {
 				e.preventDefault();
 				open();
 			}
@@ -284,17 +405,6 @@
 		if (e.target === e.currentTarget) close();
 	}
 
-	function getCategoryLabel(category: string): string {
-		const labels: Record<string, string> = {
-			navigation: 'Navigation',
-			action: 'Actions',
-			view: 'View',
-			settings: 'Settings',
-			help: 'Help'
-		};
-		return labels[category] || category;
-	}
-
 	// Group commands by category for display
 	function groupByCategory(cmds: Command[]): Map<string, Command[]> {
 		const groups = new Map<string, Command[]>();
@@ -332,20 +442,21 @@
 			<div class="palette-header">
 				<div class="search-icon">
 					<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-						<path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 001.48-5.34c-.47-2.78-2.79-5-5.59-5.34a6.505 6.505 0 00-7.27 7.27c.34 2.8 2.56 5.12 5.34 5.59a6.5 6.5 0 005.34-1.48l.27.28v.79l4.25 4.25c.41.41 1.08.41 1.49 0 .41-.41.41-1.08 0-1.49L15.5 14zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+						<path d="M4 6h16M4 12h16M4 18h7" stroke="currentColor" stroke-width="2" fill="none" />
 					</svg>
 				</div>
 				<input
 					bind:this={searchInput}
 					bind:value={query}
 					type="text"
-					placeholder="Type a command or search..."
+					placeholder="Type a command..."
 					class="palette-input"
 					aria-label="Command palette search"
 					autocomplete="off"
+					spellcheck="false"
 				/>
 				<div class="shortcut-hint">
-					<kbd>Esc</kbd> to close
+					<kbd>Esc</kbd>
 				</div>
 			</div>
 
@@ -356,16 +467,16 @@
 						<span>No commands found for "{query}"</span>
 					</div>
 				{:else}
-					{#each [...groupedCommands] as [category, cmds], categoryIndex}
+					{#each [...groupedCommands] as [category, cmds]}
 						<div class="command-category">
 							<div class="category-label">{getCategoryLabel(category)}</div>
-							{#each cmds as command, i (command.id)}
-								{@const globalIndex = filteredCommands.indexOf(command)}
+							{#each cmds as command (command.id)}
+								{@const globalIdx = filteredCommands.indexOf(command)}
 								<button
 									class="command-item"
-									class:selected={globalIndex === selectedIndex}
+									class:selected={globalIdx === selectedIndex}
 									onclick={() => executeCommand(command)}
-									onmouseenter={() => selectedIndex = globalIndex}
+									onmouseenter={() => selectedIndex = globalIdx}
 								>
 									<span class="command-icon">{command.icon}</span>
 									<div class="command-info">
@@ -391,8 +502,9 @@
 
 			<div class="palette-footer">
 				<div class="footer-hint">
-					<kbd>↑</kbd><kbd>↓</kbd> to navigate
-					<kbd>Enter</kbd> to select
+					<kbd>↑</kbd><kbd>↓</kbd> navigate
+					<kbd>↵</kbd> select
+					<span class="footer-trigger">Ctrl+.</span>
 				</div>
 			</div>
 		</div>
@@ -415,10 +527,10 @@
 		width: 560px;
 		max-width: 90vw;
 		max-height: 60vh;
-		background: var(--bg-primary, #313338);
-		border-radius: 8px;
+		background: var(--bg-floating, #111214);
+		border-radius: 12px;
 		box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.15),
-		            0 16px 32px rgba(0, 0, 0, 0.4);
+		            0 16px 48px rgba(0, 0, 0, 0.4);
 		overflow: hidden;
 		display: flex;
 		flex-direction: column;
@@ -428,8 +540,8 @@
 		display: flex;
 		align-items: center;
 		gap: 12px;
-		padding: 16px;
-		border-bottom: 1px solid var(--bg-modifier-accent, #3f4147);
+		padding: 16px 20px;
+		border-bottom: 1px solid var(--border-faint, rgba(255, 255, 255, 0.06));
 	}
 
 	.search-icon {
@@ -443,7 +555,7 @@
 		border: none;
 		outline: none;
 		font-size: 16px;
-		color: var(--text-normal, #f2f3f5);
+		color: var(--text-primary, #f2f3f5);
 		font-family: inherit;
 	}
 
@@ -456,6 +568,7 @@
 		gap: 4px;
 		color: var(--text-muted, #949ba4);
 		font-size: 12px;
+		flex-shrink: 0;
 	}
 
 	.palette-content {
@@ -480,11 +593,7 @@
 	}
 
 	.command-category {
-		margin-bottom: 8px;
-	}
-
-	.command-category:last-child {
-		margin-bottom: 0;
+		margin-bottom: 4px;
 	}
 
 	.category-label {
@@ -504,19 +613,21 @@
 		padding: 10px 12px;
 		background: transparent;
 		border: none;
-		border-radius: 4px;
+		border-radius: 6px;
 		cursor: pointer;
 		text-align: left;
 		transition: background 0.1s ease;
+		color: var(--text-secondary, #b5bac1);
 	}
 
 	.command-item:hover,
 	.command-item.selected {
-		background: var(--bg-modifier-hover, #2e3035);
+		background: var(--bg-modifier-hover, rgba(79, 84, 92, 0.24));
+		color: var(--text-primary, #f2f3f5);
 	}
 
 	.command-item.selected {
-		background: var(--brand-experiment, #5865f2);
+		background: var(--brand-primary, #5865f2);
 	}
 
 	.command-item.selected .command-label {
@@ -534,7 +645,7 @@
 	}
 
 	.command-icon {
-		font-size: 18px;
+		font-size: 16px;
 		width: 24px;
 		text-align: center;
 		flex-shrink: 0;
@@ -545,13 +656,13 @@
 		min-width: 0;
 		display: flex;
 		flex-direction: column;
-		gap: 2px;
+		gap: 1px;
 	}
 
 	.command-label {
 		font-size: 14px;
 		font-weight: 500;
-		color: var(--text-normal, #f2f3f5);
+		color: var(--text-primary, #f2f3f5);
 		white-space: nowrap;
 		overflow: hidden;
 		text-overflow: ellipsis;
@@ -584,16 +695,16 @@
 		font-family: inherit;
 		font-weight: 600;
 		color: var(--text-muted, #949ba4);
-		background: var(--bg-tertiary, #1e1f22);
-		border: 1px solid var(--bg-modifier-accent, #3f4147);
-		border-radius: 3px;
+		background: var(--bg-modifier-accent, rgba(79, 84, 92, 0.48));
+		border: 1px solid var(--border-faint, rgba(255, 255, 255, 0.06));
+		border-radius: 4px;
 		min-width: 16px;
 		text-align: center;
 	}
 
 	.palette-footer {
 		padding: 8px 16px;
-		border-top: 1px solid var(--bg-modifier-accent, #3f4147);
+		border-top: 1px solid var(--border-faint, rgba(255, 255, 255, 0.06));
 		background: var(--bg-secondary, #2b2d31);
 	}
 
@@ -610,7 +721,11 @@
 		font-size: 10px;
 	}
 
-	/* Scrollbar styling */
+	.footer-trigger {
+		margin-left: auto;
+		opacity: 0.6;
+	}
+
 	.palette-content::-webkit-scrollbar {
 		width: 8px;
 	}
@@ -620,7 +735,7 @@
 	}
 
 	.palette-content::-webkit-scrollbar-thumb {
-		background: var(--bg-modifier-accent, #3f4147);
+		background: var(--bg-modifier-accent, rgba(79, 84, 92, 0.48));
 		border-radius: 4px;
 	}
 

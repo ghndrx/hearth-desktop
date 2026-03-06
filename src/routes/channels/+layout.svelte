@@ -24,6 +24,7 @@
 	import QuickSwitcher from '$lib/components/QuickSwitcher.svelte';
 	import SearchResults from '$lib/components/SearchResults.svelte';
 	import SplitView from '$lib/components/SplitView.svelte';
+	import CommandPalette from '$lib/components/CommandPalette.svelte';
 
 	let quickSwitcherOpen = false;
 
@@ -211,10 +212,13 @@
 </div>
 
 <!-- Quick Switcher Modal (Ctrl+K) -->
-<QuickSwitcher 
+<QuickSwitcher
 	bind:open={quickSwitcherOpen}
 	on:close={() => quickSwitcherOpen = false}
 />
+
+<!-- Command Palette (Ctrl+.) -->
+<CommandPalette />
 
 <!-- User Popout -->
 {#if $popoutStore.isOpen && $popoutStore.user}
