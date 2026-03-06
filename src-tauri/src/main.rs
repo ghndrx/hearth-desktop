@@ -105,6 +105,11 @@ mod widgetdashboard;
 mod workspacelayouts;
 mod polls;
 mod favorites;
+mod activityheatmap;
+mod habittracker;
+mod fileorganizer;
+mod messagetemplates;
+mod stickynotes;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -487,9 +492,17 @@ fn main() {
             app.manage(polls::PollManager::new(app_data_dir.clone())
                 .expect("Failed to initialize polls"));
 
+            // Initialize Habit Tracker Manager
+            app.manage(habittracker::HabitTrackerManager::new(app_data_dir.clone())
+                .expect("Failed to initialize habit tracker"));
+
             // Initialize Favorite Channels Manager
-            app.manage(favorites::FavoriteChannelsManager::new(app_data_dir)
+            app.manage(favorites::FavoriteChannelsManager::new(app_data_dir.clone())
                 .expect("Failed to initialize favorites"));
+
+            // Initialize Activity Heatmap Manager
+            app.manage(activityheatmap::ActivityHeatmapManager::new(app_data_dir)
+                .expect("Failed to initialize activity heatmap"));
 
             // Load custom spell check dictionary
             spellcheck::load_custom_dictionary(app.handle());
@@ -618,6 +631,17 @@ fn main() {
 
             // Initialize Kanban Board
             app.manage(kanban::KanbanManager::default());
+
+            // Initialize File Organizer
+            app.manage(fileorganizer::FileOrganizerManager::default());
+
+            // Initialize Message Templates
+            let templates_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+            app.manage(messagetemplates::MessageTemplateManager::new(templates_dir)
+                .expect("Failed to initialize message templates"));
+
+            // Initialize Sticky Notes
+            app.manage(stickynotes::StickyNotesManager::default());
 
             // Reminder manager
             let reminder_manager = std::sync::Arc::new(reminders::ReminderManager::default());
@@ -1476,6 +1500,18 @@ fn main() {
             bookmarks::bookmark_is_bookmarked,
             bookmarks::bookmark_get_count,
             bookmarks::bookmark_clear_all,
+            // Habit Tracker commands
+            habittracker::habit_create,
+            habittracker::habit_update,
+            habittracker::habit_delete,
+            habittracker::habit_get_all,
+            habittracker::habit_complete,
+            habittracker::habit_uncomplete,
+            habittracker::habit_get_completions,
+            habittracker::habit_get_stats,
+            habittracker::habit_get_all_stats,
+            habittracker::habit_get_streak,
+            habittracker::habit_reset,
             polls::poll_create,
             polls::poll_vote,
             polls::poll_close,
@@ -1559,6 +1595,56 @@ fn main() {
             favorites::favorites_toggle,
             favorites::favorites_reorder,
             favorites::favorites_clear,
+            // Activity Heatmap commands
+            activityheatmap::heatmap_record_activity,
+            activityheatmap::heatmap_get_range,
+            activityheatmap::heatmap_get_year,
+            activityheatmap::heatmap_get_today,
+            activityheatmap::heatmap_get_streak,
+            activityheatmap::heatmap_get_stats,
+            activityheatmap::heatmap_get_peak_hours,
+            activityheatmap::heatmap_get_server_breakdown,
+            activityheatmap::heatmap_clear,
+            // File Organizer commands
+            fileorganizer::organizer_get_config,
+            fileorganizer::organizer_set_config,
+            fileorganizer::organizer_categorize_file,
+            fileorganizer::organizer_organize_file,
+            fileorganizer::organizer_organize_directory,
+            fileorganizer::organizer_get_history,
+            fileorganizer::organizer_undo_last,
+            fileorganizer::organizer_get_stats,
+            fileorganizer::organizer_add_rule,
+            fileorganizer::organizer_remove_rule,
+            fileorganizer::organizer_get_rules,
+            fileorganizer::organizer_set_enabled,
+            fileorganizer::organizer_preview_organize,
+            // Message Template commands
+            messagetemplates::template_create,
+            messagetemplates::template_update,
+            messagetemplates::template_delete,
+            messagetemplates::template_get_all,
+            messagetemplates::template_get_by_category,
+            messagetemplates::template_search,
+            messagetemplates::template_apply,
+            messagetemplates::template_record_use,
+            messagetemplates::template_get_frequent,
+            messagetemplates::template_export,
+            messagetemplates::template_import,
+            // Sticky Notes commands
+            stickynotes::sticky_create,
+            stickynotes::sticky_update,
+            stickynotes::sticky_delete,
+            stickynotes::sticky_get_all,
+            stickynotes::sticky_set_color,
+            stickynotes::sticky_set_position,
+            stickynotes::sticky_set_size,
+            stickynotes::sticky_toggle_pin,
+            stickynotes::sticky_archive,
+            stickynotes::sticky_get_archived,
+            stickynotes::sticky_restore,
+            stickynotes::sticky_link_to_message,
+            stickynotes::sticky_clear_archived,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
