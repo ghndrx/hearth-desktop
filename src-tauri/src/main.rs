@@ -113,9 +113,11 @@ mod stickynotes;
 mod statuscountdown;
 mod journal;
 mod eyebreak;
+mod hydration;
 mod worldclock;
 mod presencedetector;
 mod meetingcost;
+mod threadpip;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -655,6 +657,9 @@ fn main() {
 
             // Initialize Eye Break Reminder
             app.manage(eyebreak::EyeBreakManager::default());
+
+            // Initialize Hydration Reminder
+            app.manage(hydration::HydrationManager::default());
 
             // Initialize World Clock
             app.manage(worldclock::WorldClockManager::default());
@@ -1689,6 +1694,14 @@ fn main() {
             eyebreak::eyebreak_get_config,
             eyebreak::eyebreak_set_config,
             eyebreak::eyebreak_reset_stats,
+            hydration::hydration_start,
+            hydration::hydration_stop,
+            hydration::hydration_log_drink,
+            hydration::hydration_dismiss_reminder,
+            hydration::hydration_get_state,
+            hydration::hydration_get_config,
+            hydration::hydration_set_config,
+            hydration::hydration_reset_today,
             worldclock::worldclock_get_clocks,
             worldclock::worldclock_get_times,
             worldclock::worldclock_add_clock,
@@ -1709,6 +1722,16 @@ fn main() {
             meetingcost::meeting_get_config,
             meetingcost::meeting_set_config,
             meetingcost::meeting_reset_daily,
+            // Thread PiP commands
+            threadpip::pip_open_window,
+            threadpip::pip_close_window,
+            threadpip::pip_close_all,
+            threadpip::pip_list_windows,
+            threadpip::pip_set_opacity,
+            threadpip::pip_set_always_on_top,
+            threadpip::pip_set_compact,
+            threadpip::pip_get_config,
+            threadpip::pip_set_config,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
