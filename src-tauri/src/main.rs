@@ -98,6 +98,7 @@ mod contentfilter;
 mod kanban;
 mod reminders;
 mod bookmarks;
+mod polls;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -473,8 +474,12 @@ fn main() {
                 .expect("Failed to initialize search index"));
 
             // Initialize Bookmarks Manager
-            app.manage(bookmarks::BookmarkManager::new(app_data_dir)
+            app.manage(bookmarks::BookmarkManager::new(app_data_dir.clone())
                 .expect("Failed to initialize bookmarks"));
+
+            // Initialize Polls Manager
+            app.manage(polls::PollManager::new(app_data_dir)
+                .expect("Failed to initialize polls"));
 
             // Load custom spell check dictionary
             spellcheck::load_custom_dictionary(app.handle());
@@ -1444,6 +1449,12 @@ fn main() {
             bookmarks::bookmark_is_bookmarked,
             bookmarks::bookmark_get_count,
             bookmarks::bookmark_clear_all,
+            polls::poll_create,
+            polls::poll_vote,
+            polls::poll_close,
+            polls::poll_get,
+            polls::poll_list_by_channel,
+            polls::poll_delete,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
