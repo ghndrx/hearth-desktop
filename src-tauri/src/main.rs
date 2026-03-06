@@ -113,6 +113,7 @@ mod stickynotes;
 mod statuscountdown;
 mod journal;
 mod eyebreak;
+mod worldclock;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -652,6 +653,9 @@ fn main() {
 
             // Initialize Eye Break Reminder
             app.manage(eyebreak::EyeBreakManager::default());
+
+            // Initialize World Clock
+            app.manage(worldclock::WorldClockManager::default());
 
             // Reminder manager
             let reminder_manager = std::sync::Arc::new(reminders::ReminderManager::default());
@@ -1682,6 +1686,10 @@ fn main() {
             eyebreak::eyebreak_get_config,
             eyebreak::eyebreak_set_config,
             eyebreak::eyebreak_reset_stats,
+            worldclock::worldclock_get_clocks,
+            worldclock::worldclock_get_times,
+            worldclock::worldclock_add_clock,
+            worldclock::worldclock_remove_clock,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
