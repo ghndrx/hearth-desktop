@@ -97,6 +97,7 @@ mod gesturemanager;
 mod contentfilter;
 mod kanban;
 mod reminders;
+mod bookmarks;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -468,8 +469,12 @@ fn main() {
             // Initialize local search manager with FTS5
             let app_data_dir = app.path().app_data_dir()
                 .expect("Failed to get app data directory");
-            app.manage(localsearch::SearchManager::new(app_data_dir)
+            app.manage(localsearch::SearchManager::new(app_data_dir.clone())
                 .expect("Failed to initialize search index"));
+
+            // Initialize Bookmarks Manager
+            app.manage(bookmarks::BookmarkManager::new(app_data_dir)
+                .expect("Failed to initialize bookmarks"));
 
             // Load custom spell check dictionary
             spellcheck::load_custom_dictionary(app.handle());
@@ -1428,6 +1433,17 @@ fn main() {
             reminders::reminder_clear_fired,
             reminders::reminder_update_note,
             reminders::reminder_reschedule,
+            // Bookmark commands
+            bookmarks::bookmark_add,
+            bookmarks::bookmark_remove,
+            bookmarks::bookmark_remove_by_message,
+            bookmarks::bookmark_get_all,
+            bookmarks::bookmark_search,
+            bookmarks::bookmark_update_note,
+            bookmarks::bookmark_update_tags,
+            bookmarks::bookmark_is_bookmarked,
+            bookmarks::bookmark_get_count,
+            bookmarks::bookmark_clear_all,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
