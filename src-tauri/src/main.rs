@@ -104,6 +104,7 @@ mod voicememos;
 mod widgetdashboard;
 mod workspacelayouts;
 mod polls;
+mod favorites;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -483,8 +484,12 @@ fn main() {
                 .expect("Failed to initialize bookmarks"));
 
             // Initialize Polls Manager
-            app.manage(polls::PollManager::new(app_data_dir)
+            app.manage(polls::PollManager::new(app_data_dir.clone())
                 .expect("Failed to initialize polls"));
+
+            // Initialize Favorite Channels Manager
+            app.manage(favorites::FavoriteChannelsManager::new(app_data_dir)
+                .expect("Failed to initialize favorites"));
 
             // Load custom spell check dictionary
             spellcheck::load_custom_dictionary(app.handle());
@@ -1546,6 +1551,14 @@ fn main() {
             workspacelayouts::layout_export,
             workspacelayouts::layout_import,
             workspacelayouts::layout_duplicate,
+            // Favorite Channels commands
+            favorites::favorites_add,
+            favorites::favorites_remove,
+            favorites::favorites_list,
+            favorites::favorites_is_favorited,
+            favorites::favorites_toggle,
+            favorites::favorites_reorder,
+            favorites::favorites_clear,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
