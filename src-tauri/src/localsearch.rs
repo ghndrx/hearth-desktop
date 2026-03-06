@@ -421,10 +421,10 @@ impl SearchManager {
         ).ok();
 
         // Get database file size
-        let db_path = conn.path().map(|p| p.to_path_buf());
+        let db_path = conn.path().map(|p| std::path::PathBuf::from(p));
         let index_size_bytes = db_path
             .and_then(|p| std::fs::metadata(p).ok())
-            .map(|m| m.len())
+            .map(|m: std::fs::Metadata| m.len())
             .unwrap_or(0);
 
         Ok(IndexStats {

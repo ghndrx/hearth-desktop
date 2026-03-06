@@ -148,6 +148,10 @@ fn get_linux_events(lookahead_secs: u64) -> Result<Vec<CalendarEvent>, String> {
     let end = now + lookahead_secs;
 
     // Try gnome-calendar via busctl
+    let time_range = format!(
+        "occur-in-time-range?start={}&end={}",
+        now, end
+    );
     let output = Command::new("busctl")
         .args([
             "--user",
@@ -157,10 +161,7 @@ fn get_linux_events(lookahead_secs: u64) -> Result<Vec<CalendarEvent>, String> {
             "org.gnome.evolution.dataserver.Calendar",
             "GetObjectList",
             "s",
-            &format!(
-                "occur-in-time-range?start={}&end={}",
-                now, end
-            ),
+            &time_range as &str,
         ])
         .output();
 

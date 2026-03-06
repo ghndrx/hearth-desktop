@@ -99,13 +99,19 @@ pub struct NotificationGroupManager {
     config: Mutex<GroupConfig>,
 }
 
-impl NotificationGroupManager {
-    pub fn new() -> Self {
+impl Default for NotificationGroupManager {
+    fn default() -> Self {
         Self {
             groups: Mutex::new(Vec::new()),
             notifications: Mutex::new(Vec::new()),
             config: Mutex::new(GroupConfig::default()),
         }
+    }
+}
+
+impl NotificationGroupManager {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

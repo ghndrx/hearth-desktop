@@ -4,7 +4,7 @@
 //! when activated. Can be triggered via keyboard shortcut or tray menu.
 
 use std::sync::atomic::{AtomicBool, Ordering};
-use tauri::{AppHandle, Manager, Runtime};
+use tauri::{AppHandle, Emitter, Manager, Runtime};
 
 /// Global privacy mode state
 static PRIVACY_MODE_ACTIVE: AtomicBool = AtomicBool::new(false);

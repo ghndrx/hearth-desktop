@@ -4,6 +4,7 @@ use tauri::{
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     Manager, Runtime, AppHandle, Emitter,
 };
+use tauri_plugin_notification::NotificationExt;
 use std::sync::atomic::{AtomicU32, AtomicBool, AtomicU64, AtomicU8, Ordering};
 use std::sync::Mutex;
 use serde::{Deserialize, Serialize};
@@ -95,7 +96,7 @@ static POMODORO_TIME_REMAINING: AtomicU64 = AtomicU64::new(0);
 static POMODORO_IS_RUNNING: AtomicBool = AtomicBool::new(false);
 static POMODORO_SESSION_TYPE: AtomicU32 = AtomicU32::new(0); // 0=work, 1=short_break, 2=long_break
 
-pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::error::Error>> {
+pub fn setup_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
     let handle = app.handle().clone();
     let menu = create_tray_menu(&handle, false)?;
 

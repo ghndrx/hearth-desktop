@@ -315,8 +315,7 @@ fn cleanup_old_backups(app: &AppHandle, keep_count: u32) -> Result<(), String> {
     Ok(())
 }
 
-#[tauri::command]
-pub fn get_app_version() -> String {
+pub fn _backup_get_app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
 }
 

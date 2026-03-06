@@ -211,9 +211,9 @@ pub async fn translate_text(
     })
 }
 
-/// Get the list of supported languages
+/// Get the list of supported translation languages
 #[command]
-pub fn get_supported_languages() -> Vec<HashMap<String, String>> {
+pub fn get_translation_languages() -> Vec<HashMap<String, String>> {
     let languages = vec![
         ("en", "English", "English"),
         ("es", "Spanish", "Español"),

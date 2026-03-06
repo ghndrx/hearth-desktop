@@ -4,7 +4,7 @@
 use serde::{Deserialize, Serialize};
 use std::sync::{atomic::{AtomicBool, Ordering}, RwLock};
 use tauri::{AppHandle, Emitter, Manager};
-use chrono::{Local, NaiveTime, Timelike, Weekday};
+use chrono::{Datelike, Local, NaiveTime, Timelike, Weekday};
 
 // ============================================================================
 // DND State

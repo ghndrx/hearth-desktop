@@ -7,7 +7,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
-use tauri::{AppHandle, Manager, Runtime, Window};
+use tauri::{AppHandle, Emitter, Manager, Runtime, Window};
 
 /// Current badge state
 static BADGE_COUNT: AtomicU32 = AtomicU32::new(0);
@@ -112,9 +112,9 @@ pub fn set_badge_muted<R: Runtime>(app: AppHandle<R>, muted: bool) -> Result<(),
 pub fn request_attention<R: Runtime>(app: AppHandle<R>, critical: bool) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("main") {
         let attention_type = if critical {
-            tauri::window::UserAttentionType::Critical
+            tauri::UserAttentionType::Critical
         } else {
-            tauri::window::UserAttentionType::Informational
+            tauri::UserAttentionType::Informational
         };
         window.request_user_attention(Some(attention_type))
             .map_err(|e| e.to_string())?;
@@ -234,6 +234,7 @@ fn set_badge_linux<R: Runtime>(_app: &AppHandle<R>, count: u32) -> Result<(), St
     let count_visible = if count > 0 { "true" } else { "false" };
 
     // Using gdbus to set Unity launcher badge
+    let dbus_dict = format!("{{'count': <int64 {}>, 'count-visible': <{}>, 'urgent': <{}>}}", count, count_visible, urgent);
     let _ = Command::new("gdbus")
         .args([
             "call",
@@ -242,7 +243,7 @@ fn set_badge_linux<R: Runtime>(_app: &AppHandle<R>, count: u32) -> Result<(), St
             "--object-path", "/com/canonical/Unity/LauncherEntry/hearth_desktop",
             "--method", "com.canonical.Unity.LauncherEntry.Update",
             "application://hearth-desktop.desktop",
-            &format!("{{'count': <int64 {}>, 'count-visible': <{}>, 'urgent': <{}>}}", count, count_visible, urgent),
+            &dbus_dict,
         ])
         .output();
 

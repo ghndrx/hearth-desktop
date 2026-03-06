@@ -272,8 +272,9 @@ pub fn set_input_volume(volume: u8) -> Result<(), String> {
     
     #[cfg(target_os = "macos")]
     {
+        let script = format!("set volume input volume {}", volume);
         let output = Command::new("osascript")
-            .args(&["-e", &format!("set volume input volume {}", volume)])
+            .args(&["-e", &script])
             .output()
             .map_err(|e| format!("Failed to set input volume: {}", e))?;
         
@@ -320,8 +321,9 @@ pub fn set_output_volume(volume: u8) -> Result<(), String> {
     
     #[cfg(target_os = "macos")]
     {
+        let script = format!("set volume output volume {}", volume);
         let output = Command::new("osascript")
-            .args(&["-e", &format!("set volume output volume {}", volume)])
+            .args(&["-e", &script])
             .output()
             .map_err(|e| format!("Failed to set output volume: {}", e))?;
         
@@ -366,8 +368,9 @@ pub fn toggle_output_mute() -> Result<bool, String> {
     
     #[cfg(target_os = "macos")]
     {
+        let script = format!("set volume with output muted {}", new_state);
         let output = Command::new("osascript")
-            .args(&["-e", &format!("set volume with output muted {}", new_state)])
+            .args(&["-e", &script])
             .output()
             .map_err(|e| format!("Failed to toggle mute: {}", e))?;
         

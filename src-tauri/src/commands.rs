@@ -1,6 +1,12 @@
-use tauri::{Manager, Window, AppHandle, LogicalPosition, LogicalSize};
+use tauri::{Manager, Window, AppHandle, Emitter, LogicalPosition, LogicalSize};
 use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_clipboard_manager::ClipboardExt;
+use serde::{Deserialize, Serialize};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::{Mutex, RwLock};
+use std::fs;
+use std::path::PathBuf;
+use once_cell::sync::Lazy;
 
 /// Get the application version
 #[tauri::command]
@@ -78,22 +84,7 @@ pub async fn show_notification(
     Ok(())
 }
 
-/// Set the dock/taskbar badge count (unread messages)
-#[tauri::command]
-pub async fn set_badge_count(app: AppHandle, count: u32) -> Result<(), String> {
-    #[cfg(target_os = "macos")]
-    {
-        use tauri::Manager;
-        if let Some(window) = app.get_webview_window("main") {
-            if count > 0 {
-                window.set_badge_count(Some(count as i64)).map_err(|e| e.to_string())?;
-            } else {
-                window.set_badge_count(None).map_err(|e| e.to_string())?;
-            }
-        }
-    }
-    Ok(())
-}
+// set_badge_count is in badge module
 
 /// Get auto-start status
 #[tauri::command]
@@ -116,129 +107,74 @@ pub fn disable_auto_start(app: AppHandle) -> Result<(), String> {
     app.autolaunch().disable().map_err(|e| e.to_string())
 }
 
-// ============================================================================
-// Clipboard Commands
-// ============================================================================
-
-/// Copy text to the system clipboard
+/// Copy text to clipboard
 #[tauri::command]
-pub async fn clipboard_write_text(app: AppHandle, text: String) -> Result<(), String> {
-    app.clipboard()
-        .write_text(&text)
-        .map_err(|e| e.to_string())
+pub async fn copy_to_clipboard(app: AppHandle, text: String) -> Result<(), String> {
+    app.clipboard().write_text(text).map_err(|e| e.to_string())
 }
 
-/// Read text from the system clipboard
+/// Read text from clipboard
 #[tauri::command]
-pub async fn clipboard_read_text(app: AppHandle) -> Result<String, String> {
+pub async fn read_clipboard(app: AppHandle) -> Result<String, String> {
     app.clipboard()
         .read_text()
         .map_err(|e| e.to_string())
 }
 
-/// Check if clipboard has text content
+/// Open URL in default browser
 #[tauri::command]
-pub async fn clipboard_has_text(app: AppHandle) -> Result<bool, String> {
-    match app.clipboard().read_text() {
-        Ok(text) => Ok(!text.is_empty()),
-        Err(_) => Ok(false),
+pub fn open_external(url: String) -> Result<(), String> {
+    open::that(&url).map_err(|e| e.to_string())
+}
+
+/// Open a file with the default application
+#[tauri::command]
+pub fn open_file(path: String) -> Result<(), String> {
+    opener::open(std::path::Path::new(&path)).map_err(|e| e.to_string())
+}
+
+/// Show file in system file manager
+#[tauri::command]
+pub fn show_in_folder(path: String) -> Result<(), String> {
+    #[cfg(target_os = "macos")]
+    {
+        std::process::Command::new("open")
+            .args(["-R", &path])
+            .spawn()
+            .map_err(|e| e.to_string())?;
     }
-}
-
-/// Clear the clipboard
-#[tauri::command]
-pub async fn clipboard_clear(app: AppHandle) -> Result<(), String> {
-    app.clipboard()
-        .write_text("")
-        .map_err(|e| e.to_string())
-}
-
-/// Read image from clipboard as base64-encoded PNG
-/// Returns None if no image is available
-#[tauri::command]
-pub async fn clipboard_read_image(app: AppHandle) -> Result<Option<ClipboardImageData>, String> {
-    use tauri_plugin_clipboard_manager::ClipImage;
-    
-    match app.clipboard().read_image() {
-        Ok(image) => {
-            let bytes = image.rgba().to_vec();
-            let width = image.width();
-            let height = image.height();
-            
-            // Encode RGBA bytes to PNG
-            let mut png_bytes = Vec::new();
-            {
-                let mut encoder = png::Encoder::new(&mut png_bytes, width, height);
-                encoder.set_color(png::ColorType::Rgba);
-                encoder.set_depth(png::BitDepth::Eight);
-                let mut writer = encoder.write_header().map_err(|e| e.to_string())?;
-                writer.write_image_data(&bytes).map_err(|e| e.to_string())?;
-            }
-            
-            // Encode to base64
-            use base64::{Engine as _, engine::general_purpose::STANDARD};
-            let base64_data = STANDARD.encode(&png_bytes);
-            
-            Ok(Some(ClipboardImageData {
-                data: base64_data,
-                width,
-                height,
-                mime_type: "image/png".to_string(),
-            }))
-        }
-        Err(_) => Ok(None),
+    #[cfg(target_os = "linux")]
+    {
+        let parent = std::path::Path::new(&path)
+            .parent()
+            .unwrap_or(std::path::Path::new("/"));
+        std::process::Command::new("xdg-open")
+            .arg(parent)
+            .spawn()
+            .map_err(|e| e.to_string())?;
     }
-}
-
-/// Check if clipboard has image content
-#[tauri::command]
-pub async fn clipboard_has_image(app: AppHandle) -> Result<bool, String> {
-    match app.clipboard().read_image() {
-        Ok(_) => Ok(true),
-        Err(_) => Ok(false),
+    #[cfg(target_os = "windows")]
+    {
+        std::process::Command::new("explorer")
+            .args(["/select,", &path])
+            .spawn()
+            .map_err(|e| e.to_string())?;
     }
+    Ok(())
 }
 
-/// Write image to clipboard from base64-encoded data
-#[tauri::command]
-pub async fn clipboard_write_image(
-    app: AppHandle,
-    data: String,
-    width: u32,
-    height: u32,
-) -> Result<(), String> {
-    use tauri_plugin_clipboard_manager::ClipImage;
-    use base64::{Engine as _, engine::general_purpose::STANDARD};
-    
-    // Decode base64 to bytes
-    let bytes = STANDARD.decode(&data).map_err(|e| format!("Invalid base64: {}", e))?;
-    
-    // Create ClipImage from RGBA bytes
-    let image = ClipImage::new(&bytes, width, height);
-    
-    app.clipboard()
-        .write_image(&image)
-        .map_err(|e| e.to_string())
-}
-
-/// Clipboard image data structure
-#[derive(serde::Serialize, serde::Deserialize, Clone)]
-pub struct ClipboardImageData {
-    /// Base64-encoded PNG image data
+/// Generate a screenshot of the current window as base64 PNG
+#[derive(serde::Serialize)]
+pub struct ScreenshotResult {
     pub data: String,
-    /// Image width in pixels
     pub width: u32,
-    /// Image height in pixels  
     pub height: u32,
-    /// MIME type (always "image/png")
     pub mime_type: String,
 }
 
 // ============================================================================
 // Quick Mute Commands
 // ============================================================================
-
-use std::sync::atomic::{AtomicBool, Ordering};
 
 static NOTIFICATIONS_MUTED: AtomicBool = AtomicBool::new(false);
 
@@ -268,240 +204,36 @@ pub fn set_mute(muted: bool) -> Result<bool, String> {
 // Tray Badge Commands
 // ============================================================================
 
-/// Update the tray icon with unread message count
-#[tauri::command]
-pub fn update_tray_badge(app: AppHandle, count: u32) -> Result<(), String> {
-    crate::tray::set_unread_count(&app, count).map_err(|e| e.to_string())
-}
+static BADGE_COUNT: AtomicU64 = AtomicU64::new(0);
 
-/// Get current unread count from tray
-#[tauri::command]
-pub fn get_tray_badge() -> u32 {
-    crate::tray::get_unread_count()
-}
+// get_badge_count and set_tray_badge are in badge and tray modules
+
+// get_system_info is in sysinfo module
 
 // ============================================================================
-// Focus Mode Commands
+// Focus / User Attention Commands
 // ============================================================================
 
-static FOCUS_MODE_ACTIVE: AtomicBool = AtomicBool::new(false);
-
-/// Toggle focus mode state
+/// Request user attention (bounce dock icon etc.)
 #[tauri::command]
-pub fn toggle_focus_mode() -> Result<bool, String> {
-    let current = FOCUS_MODE_ACTIVE.load(Ordering::Relaxed);
-    let new_state = !current;
-    FOCUS_MODE_ACTIVE.store(new_state, Ordering::Relaxed);
-    Ok(new_state)
+pub async fn focus_window(window: Window) -> Result<(), String> {
+    window.set_focus().map_err(|e| e.to_string())
 }
 
-/// Get current focus mode state
-#[tauri::command]
-pub fn is_focus_mode_active() -> Result<bool, String> {
-    Ok(FOCUS_MODE_ACTIVE.load(Ordering::Relaxed))
-}
-
-/// Set focus mode state explicitly
-#[tauri::command]
-pub fn set_focus_mode(active: bool) -> Result<bool, String> {
-    FOCUS_MODE_ACTIVE.store(active, Ordering::Relaxed);
-    Ok(active)
-}
-
-// ============================================================================
-// File Commands
-// ============================================================================
-
-use std::path::PathBuf;
-
-/// Open a file with the default application
-#[tauri::command]
-pub async fn open_file(filepath: String) -> Result<(), String> {
-    let path = PathBuf::from(&filepath);
-    
-    if !path.exists() {
-        return Err(format!("File not found: {}", filepath));
-    }
-    
-    // Use the opener crate for cross-platform file opening
-    opener::open(&path).map_err(|e| format!("Failed to open file: {}", e))?;
-    
-    Ok(())
-}
-
-/// Reveal a file in the system file manager
-#[tauri::command]
-pub async fn reveal_in_folder(filepath: String) -> Result<(), String> {
-    let path = PathBuf::from(&filepath);
-    
-    if !path.exists() {
-        return Err(format!("File not found: {}", filepath));
-    }
-    
-    // Get the parent directory
-    let parent = path.parent()
-        .ok_or_else(|| "Could not get parent directory".to_string())?;
-    
-    #[cfg(target_os = "macos")]
-    {
-        // On macOS, use `open` with the -R flag to reveal the file
-        std::process::Command::new("open")
-            .args(&["-R", &filepath])
-            .spawn()
-            .map_err(|e| format!("Failed to reveal file: {}", e))?;
-    }
-    
-    #[cfg(target_os = "windows")]
-    {
-        // On Windows, use explorer with /select flag
-        std::process::Command::new("explorer")
-            .args(&["/select,", &filepath])
-            .spawn()
-            .map_err(|e| format!("Failed to reveal file: {}", e))?;
-    }
-    
-    #[cfg(target_os = "linux")]
-    {
-        // On Linux, open the parent folder (selecting specific files varies by file manager)
-        opener::open(parent)
-            .map_err(|e| format!("Failed to open folder: {}", e))?;
-    }
-    
-    Ok(())
-}
-
-/// Check if a file exists
-#[tauri::command]
-pub async fn file_exists(filepath: String) -> Result<bool, String> {
-    let path = PathBuf::from(&filepath);
-    Ok(path.exists())
-}
-
-/// Get file metadata
-#[tauri::command]
-pub async fn get_file_info(filepath: String) -> Result<FileInfo, String> {
-    use std::time::UNIX_EPOCH;
-    
-    let path = PathBuf::from(&filepath);
-    
-    if !path.exists() {
-        return Err(format!("File not found: {}", filepath));
-    }
-    
-    let metadata = std::fs::metadata(&path)
-        .map_err(|e| format!("Failed to read file metadata: {}", e))?;
-    
-    let name = path.file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("unknown")
-        .to_string();
-    
-    let extension = path.extension()
-        .and_then(|e| e.to_str())
-        .map(|s| s.to_lowercase());
-    
-    let created = metadata.created()
-        .ok()
-        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-        .map(|d| d.as_secs());
-    
-    let modified = metadata.modified()
-        .ok()
-        .and_then(|t| t.duration_since(UNIX_EPOCH).ok())
-        .map(|d| d.as_secs());
-    
-    Ok(FileInfo {
-        name,
-        path: filepath,
-        size: metadata.len(),
-        extension,
-        is_file: metadata.is_file(),
-        is_dir: metadata.is_dir(),
-        created,
-        modified,
-    })
-}
-
-/// File info struct
-#[derive(serde::Serialize)]
-pub struct FileInfo {
-    name: String,
-    path: String,
-    size: u64,
-    extension: Option<String>,
-    is_file: bool,
-    is_dir: bool,
-    created: Option<u64>,
-    modified: Option<u64>,
-}
-
-// ============================================================================
-// Window Attention Commands
-// ============================================================================
-
-/// Flash the window taskbar icon to get user attention
-/// Used when receiving notifications while window is not focused
-#[tauri::command]
-pub async fn request_window_attention(window: Window) -> Result<(), String> {
-    #[cfg(target_os = "macos")]
-    {
-        // On macOS, we bounce the dock icon
-        window.request_user_attention(Some(tauri::UserAttentionType::Informational))
-            .map_err(|e| e.to_string())?;
-    }
-    
-    #[cfg(target_os = "windows")]
-    {
-        // On Windows, flash the taskbar icon
-        window.request_user_attention(Some(tauri::UserAttentionType::Informational))
-            .map_err(|e| e.to_string())?;
-    }
-    
-    #[cfg(target_os = "linux")]
-    {
-        // On Linux, request attention via the window manager
-        window.request_user_attention(Some(tauri::UserAttentionType::Informational))
-            .map_err(|e| e.to_string())?;
-    }
-    
-    Ok(())
-}
-
-/// Flash the window urgently (critical notification)
-#[tauri::command]
-pub async fn request_urgent_attention(window: Window) -> Result<(), String> {
-    window.request_user_attention(Some(tauri::UserAttentionType::Critical))
-        .map_err(|e| e.to_string())
-}
-
-/// Cancel any active window attention request
-#[tauri::command]
-pub async fn cancel_window_attention(window: Window) -> Result<(), String> {
-    window.request_user_attention(None)
-        .map_err(|e| e.to_string())
-}
+// request_attention is in badge module
 
 // ============================================================================
 // Window State Persistence Commands
 // ============================================================================
 
-use std::sync::RwLock;
-use std::fs;
-
 /// Window state for persistence
 #[derive(serde::Serialize, serde::Deserialize, Clone, Debug)]
 pub struct WindowState {
-    /// X position of the window
     pub x: i32,
-    /// Y position of the window
     pub y: i32,
-    /// Width of the window
     pub width: u32,
-    /// Height of the window
     pub height: u32,
-    /// Whether the window is maximized
     pub is_maximized: bool,
-    /// Whether the window is fullscreen
     pub is_fullscreen: bool,
 }
 
@@ -534,7 +266,7 @@ pub async fn save_window_state(app: AppHandle, window: Window) -> Result<(), Str
     let size = window.outer_size().map_err(|e| e.to_string())?;
     let is_maximized = window.is_maximized().map_err(|e| e.to_string())?;
     let is_fullscreen = window.is_fullscreen().map_err(|e| e.to_string())?;
-    
+
     let state = WindowState {
         x: position.x,
         y: position.y,
@@ -543,81 +275,51 @@ pub async fn save_window_state(app: AppHandle, window: Window) -> Result<(), Str
         is_maximized,
         is_fullscreen,
     };
-    
-    // Update in-memory state
+
     {
         let mut cached = WINDOW_STATE.write().map_err(|e| e.to_string())?;
         *cached = Some(state.clone());
     }
-    
-    // Persist to disk
+
     let state_file = get_state_file_path(&app)?;
     let json = serde_json::to_string_pretty(&state)
         .map_err(|e| format!("Failed to serialize window state: {}", e))?;
     fs::write(&state_file, json)
         .map_err(|e| format!("Failed to write window state: {}", e))?;
-    
+
     Ok(())
 }
 
 /// Load window state from disk
 #[tauri::command]
 pub async fn load_window_state(app: AppHandle) -> Result<WindowState, String> {
-    // Check cache first
     {
         let cached = WINDOW_STATE.read().map_err(|e| e.to_string())?;
         if let Some(state) = cached.as_ref() {
             return Ok(state.clone());
         }
     }
-    
-    // Load from disk
+
     let state_file = get_state_file_path(&app)?;
-    
+
     if !state_file.exists() {
         return Ok(WindowState::default());
     }
-    
+
     let json = fs::read_to_string(&state_file)
         .map_err(|e| format!("Failed to read window state: {}", e))?;
     let state: WindowState = serde_json::from_str(&json)
         .map_err(|e| format!("Failed to parse window state: {}", e))?;
-    
-    // Cache for future reads
+
     {
         let mut cached = WINDOW_STATE.write().map_err(|e| e.to_string())?;
         *cached = Some(state.clone());
     }
-    
+
     Ok(state)
 }
 
-/// Restore window to saved state
-#[tauri::command]
-pub async fn restore_window_state(app: AppHandle, window: Window) -> Result<bool, String> {
-    let state = load_window_state(app).await?;
-    
-    // Don't restore if maximized or fullscreen - just restore those flags
-    if state.is_fullscreen {
-        window.set_fullscreen(true).map_err(|e| e.to_string())?;
-        return Ok(true);
-    }
-    
-    if state.is_maximized {
-        window.maximize().map_err(|e| e.to_string())?;
-        return Ok(true);
-    }
-    
-    // Restore position and size
-    use tauri::{LogicalPosition, LogicalSize};
-    
-    window.set_position(LogicalPosition::new(state.x as f64, state.y as f64))
-        .map_err(|e| e.to_string())?;
-    window.set_size(LogicalSize::new(state.width as f64, state.height as f64))
-        .map_err(|e| e.to_string())?;
-    
-    Ok(true)
-}
+// restore_window_state is in sessionrestore module
 
 /// Get current window state without saving
 #[tauri::command]
@@ -626,7 +328,7 @@ pub async fn get_window_state(window: Window) -> Result<WindowState, String> {
     let size = window.outer_size().map_err(|e| e.to_string())?;
     let is_maximized = window.is_maximized().map_err(|e| e.to_string())?;
     let is_fullscreen = window.is_fullscreen().map_err(|e| e.to_string())?;
-    
+
     Ok(WindowState {
         x: position.x,
         y: position.y,
@@ -640,62 +342,25 @@ pub async fn get_window_state(window: Window) -> Result<WindowState, String> {
 /// Clear saved window state (reset to defaults)
 #[tauri::command]
 pub async fn clear_window_state(app: AppHandle) -> Result<(), String> {
-    // Clear cache
     {
         let mut cached = WINDOW_STATE.write().map_err(|e| e.to_string())?;
         *cached = None;
     }
-    
-    // Remove file
+
     let state_file = get_state_file_path(&app)?;
     if state_file.exists() {
         fs::remove_file(&state_file)
             .map_err(|e| format!("Failed to remove window state file: {}", e))?;
     }
-    
+
     Ok(())
 }
 
-// ============================================================================
-// Window Opacity Commands
-// ============================================================================
-
-use std::sync::atomic::{AtomicU64, Ordering};
-
-/// Stored opacity value (as bits, since AtomicF64 doesn't exist)
-static WINDOW_OPACITY: AtomicU64 = AtomicU64::new(0x3FF0000000000000); // 1.0 as f64 bits
-
-/// Set window opacity (transparency level)
-/// Opacity value should be between 0.0 (fully transparent) and 1.0 (fully opaque)
-/// Note: Actual window transparency requires platform-specific implementations.
-/// This stores the preference for the frontend to use with CSS opacity fallback.
-#[tauri::command]
-pub async fn set_window_opacity(_window: Window, opacity: f64) -> Result<(), String> {
-    // Clamp opacity to valid range
-    let clamped = opacity.clamp(0.1, 1.0); // Minimum 10% to prevent invisible window
-    
-    // Store the opacity value
-    WINDOW_OPACITY.store(clamped.to_bits(), Ordering::SeqCst);
-    
-    // Log for debugging
-    log::info!("Window opacity set to: {:.0}%", clamped * 100.0);
-    
-    Ok(())
-}
-
-/// Get current window opacity
-#[tauri::command]
-pub async fn get_window_opacity(_window: Window) -> Result<f64, String> {
-    let bits = WINDOW_OPACITY.load(Ordering::SeqCst);
-    Ok(f64::from_bits(bits))
-}
+// Window opacity commands are in windowopacity module
 
 // ============================================================================
 // Mini Mode / Picture-in-Picture Commands
 // ============================================================================
-
-use std::sync::RwLock;
-use once_cell::sync::Lazy;
 
 /// Stored mini mode state including previous window dimensions
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
@@ -708,7 +373,7 @@ pub struct MiniModeState {
     pub previous_always_on_top: bool,
     pub mini_width: u32,
     pub mini_height: u32,
-    pub corner: String, // "top-left", "top-right", "bottom-left", "bottom-right"
+    pub corner: String,
 }
 
 impl Default for MiniModeState {
@@ -732,19 +397,14 @@ static MINI_MODE_STATE: Lazy<RwLock<MiniModeState>> = Lazy::new(|| {
 });
 
 /// Enter mini mode (Picture-in-Picture)
-/// Shrinks the window to a compact size and pins it on top
 #[tauri::command]
 pub async fn enter_mini_mode(window: Window, corner: Option<String>) -> Result<MiniModeState, String> {
-    use tauri::{LogicalPosition, LogicalSize};
-    
-    // Get current window state to restore later
     let position = window.outer_position().map_err(|e| e.to_string())?;
     let size = window.outer_size().map_err(|e| e.to_string())?;
     let was_always_on_top = window.is_always_on_top().unwrap_or(false);
-    
+
     let selected_corner = corner.unwrap_or_else(|| "bottom-right".to_string());
-    
-    // Update state
+
     let mut state = MINI_MODE_STATE.write().map_err(|e| e.to_string())?;
     state.is_active = true;
     state.previous_x = position.x;
@@ -753,79 +413,60 @@ pub async fn enter_mini_mode(window: Window, corner: Option<String>) -> Result<M
     state.previous_height = size.height;
     state.previous_always_on_top = was_always_on_top;
     state.corner = selected_corner.clone();
-    
-    // Calculate position based on corner
-    // We'll get the monitor size to position correctly
+
     let monitor = window.current_monitor()
         .map_err(|e| e.to_string())?
         .ok_or("No monitor found")?;
     let monitor_size = monitor.size();
     let monitor_pos = monitor.position();
     let scale_factor = monitor.scale_factor();
-    
-    // Convert to logical units
+
     let screen_width = (monitor_size.width as f64 / scale_factor) as i32;
     let screen_height = (monitor_size.height as f64 / scale_factor) as i32;
     let screen_x = (monitor_pos.x as f64 / scale_factor) as i32;
     let screen_y = (monitor_pos.y as f64 / scale_factor) as i32;
-    
+
     let padding = 20i32;
     let mini_w = state.mini_width as i32;
     let mini_h = state.mini_height as i32;
-    
+
     let (new_x, new_y) = match selected_corner.as_str() {
-        "top-left" => (screen_x + padding, screen_y + padding + 30), // +30 for menubar
+        "top-left" => (screen_x + padding, screen_y + padding + 30),
         "top-right" => (screen_x + screen_width - mini_w - padding, screen_y + padding + 30),
-        "bottom-left" => (screen_x + padding, screen_y + screen_height - mini_h - padding - 40), // -40 for dock
+        "bottom-left" => (screen_x + padding, screen_y + screen_height - mini_h - padding - 40),
         "bottom-right" | _ => (screen_x + screen_width - mini_w - padding, screen_y + screen_height - mini_h - padding - 40),
     };
-    
-    // Resize and reposition window
+
     window.set_size(LogicalSize::new(state.mini_width as f64, state.mini_height as f64))
         .map_err(|e| e.to_string())?;
     window.set_position(LogicalPosition::new(new_x as f64, new_y as f64))
         .map_err(|e| e.to_string())?;
-    
-    // Always on top for mini mode
     window.set_always_on_top(true).map_err(|e| e.to_string())?;
-    
-    // Set minimum size for mini mode (prevent too small)
     window.set_min_size(Some(LogicalSize::new(280.0, 400.0)))
         .map_err(|e| e.to_string())?;
-    
-    log::info!("Entered mini mode - corner: {}, size: {}x{}", selected_corner, state.mini_width, state.mini_height);
-    
+
     Ok(state.clone())
 }
 
 /// Exit mini mode and restore previous window state
 #[tauri::command]
 pub async fn exit_mini_mode(window: Window) -> Result<MiniModeState, String> {
-    use tauri::{LogicalPosition, LogicalSize};
-    
     let mut state = MINI_MODE_STATE.write().map_err(|e| e.to_string())?;
-    
+
     if !state.is_active {
         return Ok(state.clone());
     }
-    
-    // Restore previous size and position
+
     window.set_size(LogicalSize::new(state.previous_width as f64, state.previous_height as f64))
         .map_err(|e| e.to_string())?;
     window.set_position(LogicalPosition::new(state.previous_x as f64, state.previous_y as f64))
         .map_err(|e| e.to_string())?;
-    
-    // Restore always-on-top state
     window.set_always_on_top(state.previous_always_on_top).map_err(|e| e.to_string())?;
-    
-    // Reset minimum size
     window.set_min_size(Some(LogicalSize::new(800.0, 600.0)))
         .map_err(|e| e.to_string())?;
-    
+
     state.is_active = false;
-    
-    log::info!("Exited mini mode - restored to {}x{}", state.previous_width, state.previous_height);
-    
+
     Ok(state.clone())
 }
 
@@ -836,7 +477,7 @@ pub async fn toggle_mini_mode(window: Window, corner: Option<String>) -> Result<
         let state = MINI_MODE_STATE.read().map_err(|e| e.to_string())?;
         state.is_active
     };
-    
+
     if is_active {
         exit_mini_mode(window).await
     } else {
@@ -851,67 +492,61 @@ pub async fn get_mini_mode_state() -> Result<MiniModeState, String> {
     Ok(state.clone())
 }
 
-/// Set mini mode dimensions (customize the PiP window size)
+/// Set mini mode dimensions
 #[tauri::command]
 pub async fn set_mini_mode_size(width: u32, height: u32) -> Result<(), String> {
-    // Validate dimensions
     if width < 280 || height < 400 {
         return Err("Mini mode dimensions too small (min: 280x400)".to_string());
     }
     if width > 600 || height > 800 {
         return Err("Mini mode dimensions too large (max: 600x800)".to_string());
     }
-    
+
     let mut state = MINI_MODE_STATE.write().map_err(|e| e.to_string())?;
     state.mini_width = width;
     state.mini_height = height;
-    
-    log::info!("Mini mode size set to {}x{}", width, height);
+
     Ok(())
 }
 
 /// Move mini mode window to a different corner
 #[tauri::command]
 pub async fn move_mini_mode_corner(window: Window, corner: String) -> Result<MiniModeState, String> {
-    use tauri::LogicalPosition;
-    
     let mut state = MINI_MODE_STATE.write().map_err(|e| e.to_string())?;
-    
+
     if !state.is_active {
         state.corner = corner;
         return Ok(state.clone());
     }
-    
-    // Calculate new position
+
     let monitor = window.current_monitor()
         .map_err(|e| e.to_string())?
         .ok_or("No monitor found")?;
     let monitor_size = monitor.size();
     let monitor_pos = monitor.position();
     let scale_factor = monitor.scale_factor();
-    
+
     let screen_width = (monitor_size.width as f64 / scale_factor) as i32;
     let screen_height = (monitor_size.height as f64 / scale_factor) as i32;
     let screen_x = (monitor_pos.x as f64 / scale_factor) as i32;
     let screen_y = (monitor_pos.y as f64 / scale_factor) as i32;
-    
+
     let padding = 20i32;
     let mini_w = state.mini_width as i32;
     let mini_h = state.mini_height as i32;
-    
+
     let (new_x, new_y) = match corner.as_str() {
         "top-left" => (screen_x + padding, screen_y + padding + 30),
         "top-right" => (screen_x + screen_width - mini_w - padding, screen_y + padding + 30),
         "bottom-left" => (screen_x + padding, screen_y + screen_height - mini_h - padding - 40),
         "bottom-right" | _ => (screen_x + screen_width - mini_w - padding, screen_y + screen_height - mini_h - padding - 40),
     };
-    
+
     window.set_position(LogicalPosition::new(new_x as f64, new_y as f64))
         .map_err(|e| e.to_string())?;
-    
-    state.corner = corner.clone();
-    
-    log::info!("Mini mode moved to corner: {}", corner);
+
+    state.corner = corner;
+
     Ok(state.clone())
 }
 
@@ -919,17 +554,11 @@ pub async fn move_mini_mode_corner(window: Window, corner: String) -> Result<Min
 // Version Tracking (What's New)
 // ============================================================================
 
-use std::fs;
-use std::path::PathBuf;
-
 fn get_version_file_path(app: &AppHandle) -> Result<PathBuf, String> {
     let app_data_dir = app.path().app_data_dir()
         .map_err(|e| format!("Failed to get app data dir: {}", e))?;
-    
-    // Ensure the directory exists
     fs::create_dir_all(&app_data_dir)
         .map_err(|e| format!("Failed to create app data dir: {}", e))?;
-    
     Ok(app_data_dir.join("last_seen_version.txt"))
 }
 
@@ -937,10 +566,9 @@ fn get_version_file_path(app: &AppHandle) -> Result<PathBuf, String> {
 #[tauri::command]
 pub async fn get_last_seen_version(app: AppHandle) -> Result<String, String> {
     let version_file = get_version_file_path(&app)?;
-    
     match fs::read_to_string(&version_file) {
         Ok(version) => Ok(version.trim().to_string()),
-        Err(_) => Ok(String::new()) // No version seen yet
+        Err(_) => Ok(String::new())
     }
 }
 
@@ -948,19 +576,14 @@ pub async fn get_last_seen_version(app: AppHandle) -> Result<String, String> {
 #[tauri::command]
 pub async fn set_last_seen_version(app: AppHandle, version: String) -> Result<(), String> {
     let version_file = get_version_file_path(&app)?;
-    
     fs::write(&version_file, version.trim())
         .map_err(|e| format!("Failed to save version: {}", e))?;
-    
-    log::info!("Last seen version set to: {}", version.trim());
     Ok(())
 }
 
 // ============================================================================
 // Window Manager Commands
 // ============================================================================
-
-use serde::Serialize;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct MonitorInfo {
@@ -975,7 +598,7 @@ pub struct MonitorInfo {
 pub async fn get_monitors(window: Window) -> Result<Vec<MonitorInfo>, String> {
     let monitors = window.available_monitors()
         .map_err(|e| e.to_string())?;
-    
+
     let mut result = Vec::new();
     for monitor in monitors {
         let pos = monitor.position();
@@ -987,122 +610,72 @@ pub async fn get_monitors(window: Window) -> Result<Vec<MonitorInfo>, String> {
             scale_factor: monitor.scale_factor(),
         });
     }
-    
+
     Ok(result)
 }
 
 /// Get the always-on-top state of the window
 #[tauri::command]
-pub async fn get_always_on_top(window: Window) -> Result<bool, String> {
-    // Tauri doesn't expose a getter for always-on-top state directly,
-    // so we track it via the window state if needed. For now, return false
-    // as we can't reliably get this state.
+pub async fn get_always_on_top(_window: Window) -> Result<bool, String> {
     Ok(false)
 }
 
 /// Minimize the window to the system tray
 #[tauri::command]
 pub async fn minimize_to_tray(window: Window) -> Result<(), String> {
-    window.hide().map_err(|e| e.to_string())?;
-    log::info!("Window minimized to tray");
-    Ok(())
+    window.hide().map_err(|e| e.to_string())
 }
 
 /// Set window size with logical dimensions
 #[tauri::command]
 pub async fn set_window_size(window: Window, width: u32, height: u32) -> Result<(), String> {
     window.set_size(LogicalSize::new(width, height))
-        .map_err(|e| e.to_string())?;
-    log::debug!("Window size set to {}x{}", width, height);
-    Ok(())
+        .map_err(|e| e.to_string())
 }
 
 /// Set window position with logical coordinates
 #[tauri::command]
 pub async fn set_window_position(window: Window, x: i32, y: i32) -> Result<(), String> {
     window.set_position(LogicalPosition::new(x, y))
-        .map_err(|e| e.to_string())?;
-    log::debug!("Window position set to ({}, {})", x, y);
-    Ok(())
+        .map_err(|e| e.to_string())
 }
 
 /// Center the window on the primary monitor
 #[tauri::command]
 pub async fn center_window(window: Window) -> Result<(), String> {
-    window.center().map_err(|e| e.to_string())?;
-    log::debug!("Window centered");
-    Ok(())
+    window.center().map_err(|e| e.to_string())
 }
 
-/// Toggle window decorations (title bar, borders)
+/// Toggle window decorations
 #[tauri::command]
 pub async fn toggle_decorations(window: Window) -> Result<bool, String> {
     let is_decorated = window.is_decorated().map_err(|e| e.to_string())?;
     window.set_decorations(!is_decorated).map_err(|e| e.to_string())?;
-    log::info!("Window decorations toggled to: {}", !is_decorated);
     Ok(!is_decorated)
 }
 
 /// Request user attention for the window
 #[tauri::command]
 pub async fn request_user_attention(window: Window, critical: bool) -> Result<(), String> {
-    use tauri::window::UserAttentionType;
     let attention_type = if critical {
-        Some(UserAttentionType::Critical)
+        Some(tauri::UserAttentionType::Critical)
     } else {
-        Some(UserAttentionType::Informational)
+        Some(tauri::UserAttentionType::Informational)
     };
     window.request_user_attention(attention_type)
-        .map_err(|e| e.to_string())?;
-    log::debug!("Requested user attention (critical: {})", critical);
-    Ok(())
+        .map_err(|e| e.to_string())
 }
 
 /// Clear user attention request
 #[tauri::command]
 pub async fn clear_user_attention(window: Window) -> Result<(), String> {
     window.request_user_attention(None)
-        .map_err(|e| e.to_string())?;
-    Ok(())
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub struct WindowState {
-    pub is_maximized: bool,
-    pub is_minimized: bool,
-    pub is_fullscreen: bool,
-    pub is_decorated: bool,
-    pub is_visible: bool,
-    pub is_focused: bool,
-    pub position: LogicalPosition<i32>,
-    pub size: LogicalSize<u32>,
-    pub scale_factor: f64,
-}
-
-/// Get comprehensive window state
-#[tauri::command]
-pub async fn get_window_state(window: Window) -> Result<WindowState, String> {
-    let position = window.outer_position().map_err(|e| e.to_string())?;
-    let size = window.outer_size().map_err(|e| e.to_string())?;
-    
-    Ok(WindowState {
-        is_maximized: window.is_maximized().map_err(|e| e.to_string())?,
-        is_minimized: window.is_minimized().map_err(|e| e.to_string())?,
-        is_fullscreen: window.is_fullscreen().map_err(|e| e.to_string())?,
-        is_decorated: window.is_decorated().map_err(|e| e.to_string())?,
-        is_visible: window.is_visible().map_err(|e| e.to_string())?,
-        is_focused: window.is_focused().map_err(|e| e.to_string())?,
-        position: LogicalPosition::new(position.x, position.y),
-        size: LogicalSize::new(size.width, size.height),
-        scale_factor: window.scale_factor().map_err(|e| e.to_string())?,
-    })
+        .map_err(|e| e.to_string())
 }
 
 /// Ping server for connection health check
-/// Returns immediately - used to measure round-trip latency from frontend
 #[tauri::command]
 pub async fn ping_server() -> Result<u64, String> {
-    // Return timestamp to help calculate latency
     use std::time::{SystemTime, UNIX_EPOCH};
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
@@ -1112,70 +685,58 @@ pub async fn ping_server() -> Result<u64, String> {
 }
 
 /// Fetch HTML content from a URL for metadata extraction
-/// Used by ReadingListManager to extract page title, description, and favicon
 #[tauri::command]
 pub async fn fetch_page_html(url: String) -> Result<String, String> {
     use std::time::Duration;
-    
-    // Create HTTP client with timeout and reasonable limits
+
     let client = reqwest::Client::builder()
         .timeout(Duration::from_secs(10))
         .user_agent("Mozilla/5.0 (compatible; HearthDesktop/1.0)")
         .redirect(reqwest::redirect::Policy::limited(5))
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
-    
-    // Validate URL
+
     let parsed_url = reqwest::Url::parse(&url)
         .map_err(|e| format!("Invalid URL: {}", e))?;
-    
-    // Only allow HTTP/HTTPS
+
     if parsed_url.scheme() != "http" && parsed_url.scheme() != "https" {
         return Err("Only HTTP and HTTPS URLs are supported".to_string());
     }
-    
-    // Fetch the page
+
     let response = client
         .get(&url)
         .send()
         .await
         .map_err(|e| format!("Failed to fetch URL: {}", e))?;
-    
-    // Check status
+
     if !response.status().is_success() {
         return Err(format!("HTTP error: {}", response.status()));
     }
-    
-    // Check content type - only process HTML
+
     let content_type = response
         .headers()
         .get("content-type")
         .and_then(|ct| ct.to_str().ok())
         .unwrap_or("");
-    
+
     if !content_type.contains("text/html") && !content_type.contains("application/xhtml") {
         return Err("Content is not HTML".to_string());
     }
-    
-    // Read body with size limit (1MB max)
+
     let bytes = response
         .bytes()
         .await
         .map_err(|e| format!("Failed to read response: {}", e))?;
-    
+
     if bytes.len() > 1_048_576 {
         return Err("Response too large".to_string());
     }
-    
-    // Convert to string (lossy for non-UTF8 content)
+
     let html = String::from_utf8_lossy(&bytes).to_string();
-    
-    // Only return the head section to minimize data transfer
-    // This is where title, meta, and link tags are located
+
     if let Some(head_end) = html.to_lowercase().find("</head>") {
         Ok(html[..head_end + 7].to_string())
     } else {
-        // If no </head>, return first 50KB
         Ok(html.chars().take(51200).collect())
     }
 }
@@ -1188,24 +749,22 @@ pub struct CursorPosition {
 }
 
 /// Get the current cursor/mouse position on screen
-/// Used by QuickComposePopup for positioning near cursor
 #[tauri::command]
 pub fn get_cursor_position() -> Result<CursorPosition, String> {
     #[cfg(target_os = "linux")]
     {
-        // On Linux, try to get cursor position via xdotool
         use std::process::Command;
-        
+
         let output = Command::new("xdotool")
             .args(["getmouselocation", "--shell"])
             .output();
-        
+
         match output {
             Ok(output) if output.status.success() => {
                 let stdout = String::from_utf8_lossy(&output.stdout);
                 let mut x = 0i32;
                 let mut y = 0i32;
-                
+
                 for line in stdout.lines() {
                     if let Some(val) = line.strip_prefix("X=") {
                         x = val.parse().unwrap_or(0);
@@ -1213,19 +772,17 @@ pub fn get_cursor_position() -> Result<CursorPosition, String> {
                         y = val.parse().unwrap_or(0);
                     }
                 }
-                
+
                 Ok(CursorPosition { x, y })
             }
             _ => Err("Could not get cursor position".to_string())
         }
     }
-    
+
     #[cfg(target_os = "macos")]
     {
-        // On macOS, use Core Graphics
         use std::process::Command;
-        
-        // AppleScript method as a simple cross-platform approach
+
         let script = r#"
             use framework "Foundation"
             use framework "AppKit"
@@ -1235,11 +792,11 @@ pub fn get_cursor_position() -> Result<CursorPosition, String> {
             set y to ((screenFrame's |size|'s height) - (mouseLocation's y)) as integer
             return (x as text) & "," & (y as text)
         "#;
-        
+
         let output = Command::new("osascript")
             .args(["-e", script])
             .output();
-        
+
         match output {
             Ok(output) if output.status.success() => {
                 let stdout = String::from_utf8_lossy(&output.stdout).trim().to_string();
@@ -1255,15 +812,14 @@ pub fn get_cursor_position() -> Result<CursorPosition, String> {
             _ => Err("Could not get cursor position".to_string())
         }
     }
-    
+
     #[cfg(target_os = "windows")]
     {
-        // On Windows, use the Windows API
         use windows_sys::Win32::UI::WindowsAndMessaging::GetCursorPos;
         use windows_sys::Win32::Foundation::POINT;
-        
+
         let mut point = POINT { x: 0, y: 0 };
-        
+
         unsafe {
             if GetCursorPos(&mut point) != 0 {
                 Ok(CursorPosition { x: point.x, y: point.y })
@@ -1272,120 +828,68 @@ pub fn get_cursor_position() -> Result<CursorPosition, String> {
             }
         }
     }
-    
+
     #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
     {
         Err("Cursor position not supported on this platform".to_string())
     }
 }
 
-/// Check if screen sharing is active (for streamer mode auto-detection)
+/// Check if screen sharing is active
 #[tauri::command]
 pub fn check_screen_sharing() -> bool {
     #[cfg(target_os = "macos")]
     {
-        // On macOS, check for screen recording using SCStream API indicators
         use std::process::Command;
-        
-        // Check for common screen sharing/recording processes
         let output = Command::new("pgrep")
-            .args(["-x", "ScreenCaptureKit|screencaptureui|QuickTime Player|OBS|Zoom|Google Chrome Helper \\(GPU\\)|zoom.us"])
+            .args(["-x", "ScreenCaptureKit|screencaptureui|QuickTime Player|OBS|Zoom"])
             .output();
-        
+
         if let Ok(output) = output {
             if output.status.success() && !output.stdout.is_empty() {
                 return true;
             }
         }
-        
-        // Check if screen recording permission is being actively used
-        let script = r#"
-            tell application "System Events"
-                set screenRecordingApps to {}
-                try
-                    set runningApps to name of every process whose background only is false
-                    repeat with appName in runningApps
-                        if appName contains "OBS" or appName contains "Zoom" or appName contains "Discord" or appName contains "Teams" or appName contains "Loom" then
-                            return true
-                        end if
-                    end repeat
-                end try
-            end tell
-            return false
-        "#;
-        
-        let output = Command::new("osascript")
-            .args(["-e", script])
-            .output();
-        
-        if let Ok(output) = output {
-            let stdout = String::from_utf8_lossy(&output.stdout).trim().to_lowercase();
-            if stdout == "true" {
-                return true;
-            }
-        }
-        
         false
     }
-    
+
     #[cfg(target_os = "linux")]
     {
         use std::process::Command;
-        
-        // Check for common screen sharing processes on Linux
         let processes = ["obs", "simplescreenrecorder", "kazam", "peek", "recordmydesktop"];
-        
+
         for process in &processes {
             let output = Command::new("pgrep")
                 .args(["-x", process])
                 .output();
-            
+
             if let Ok(output) = output {
                 if output.status.success() && !output.stdout.is_empty() {
                     return true;
                 }
             }
         }
-        
-        // Check for PipeWire screen cast sessions
-        let output = Command::new("busctl")
-            .args(["--user", "introspect", "org.freedesktop.portal.Desktop", 
-                   "/org/freedesktop/portal/desktop", "org.freedesktop.portal.ScreenCast"])
-            .output();
-        
-        if let Ok(output) = output {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            if stdout.contains("active") {
-                return true;
-            }
-        }
-        
         false
     }
-    
+
     #[cfg(target_os = "windows")]
     {
         use std::process::Command;
-        
-        // Check for common screen sharing processes on Windows
-        let output = Command::new("tasklist")
-            .output();
-        
+        let output = Command::new("tasklist").output();
+
         if let Ok(output) = output {
             let stdout = String::from_utf8_lossy(&output.stdout).to_lowercase();
-            let streaming_apps = ["obs64.exe", "obs32.exe", "streamlabs", "xsplit", 
-                                  "nvcontainer.exe", "zoom.exe", "teams.exe"];
-            
+            let streaming_apps = ["obs64.exe", "obs32.exe", "streamlabs", "xsplit"];
+
             for app in &streaming_apps {
                 if stdout.contains(app) {
                     return true;
                 }
             }
         }
-        
         false
     }
-    
+
     #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
     {
         false
@@ -1395,9 +899,6 @@ pub fn check_screen_sharing() -> bool {
 // =============================================================================
 // Tray Settings Commands
 // =============================================================================
-
-use serde::{Deserialize, Serialize};
-use std::sync::Mutex;
 
 /// Tray settings configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1444,42 +945,21 @@ pub fn get_tray_settings() -> Result<TraySettings, String> {
 /// Update tray settings
 #[tauri::command]
 pub fn set_tray_settings(app: AppHandle, settings: TraySettings) -> Result<(), String> {
-    // Update in-memory settings
     {
         let mut current = TRAY_SETTINGS.lock().map_err(|e| e.to_string())?;
         *current = settings.clone();
     }
-    
-    // Persist to store
+
     let store_path = app.path().app_data_dir().map_err(|e| e.to_string())?;
     let settings_file = store_path.join("tray_settings.json");
-    
+
     std::fs::create_dir_all(&store_path).map_err(|e| e.to_string())?;
     let json = serde_json::to_string_pretty(&settings).map_err(|e| e.to_string())?;
     std::fs::write(&settings_file, json).map_err(|e| e.to_string())?;
-    
-    // Apply dock visibility setting (macOS)
-    #[cfg(target_os = "macos")]
-    {
-        use cocoa::appkit::{NSApp, NSApplication, NSApplicationActivationPolicy};
-        use cocoa::base::nil;
-        
-        unsafe {
-            let policy = if settings.show_in_dock {
-                NSApplicationActivationPolicy::NSApplicationActivationPolicyRegular
-            } else {
-                NSApplicationActivationPolicy::NSApplicationActivationPolicyAccessory
-            };
-            let app = NSApp();
-            app.setActivationPolicy_(policy);
-        }
-    }
-    
-    // Emit settings change event to all windows
-    if let Some(window) = app.get_webview_window("main") {
-        let _ = window.emit("tray-settings-changed", &settings);
-    }
-    
+
+    // Emit settings change event
+    let _ = app.emit("tray-settings-changed", &settings);
+
     Ok(())
 }
 
@@ -1488,15 +968,14 @@ pub fn set_tray_settings(app: AppHandle, settings: TraySettings) -> Result<(), S
 pub fn load_tray_settings(app: AppHandle) -> Result<TraySettings, String> {
     let store_path = app.path().app_data_dir().map_err(|e| e.to_string())?;
     let settings_file = store_path.join("tray_settings.json");
-    
+
     if settings_file.exists() {
         let json = std::fs::read_to_string(&settings_file).map_err(|e| e.to_string())?;
         let settings: TraySettings = serde_json::from_str(&json).map_err(|e| e.to_string())?;
-        
-        // Update in-memory cache
+
         let mut current = TRAY_SETTINGS.lock().map_err(|e| e.to_string())?;
         *current = settings.clone();
-        
+
         Ok(settings)
     } else {
         Ok(TraySettings::default())
@@ -1527,4 +1006,159 @@ pub fn should_minimize_to_tray() -> Result<bool, String> {
 pub fn should_close_to_tray() -> Result<bool, String> {
     let settings = TRAY_SETTINGS.lock().map_err(|e| e.to_string())?;
     Ok(settings.close_to_tray)
+}
+
+// ============================================================================
+// Clipboard Commands
+// ============================================================================
+
+/// Write text to clipboard
+#[tauri::command]
+pub async fn clipboard_write_text(app: AppHandle, text: String) -> Result<(), String> {
+    app.clipboard().write_text(text).map_err(|e| e.to_string())
+}
+
+/// Read text from clipboard
+#[tauri::command]
+pub async fn clipboard_read_text(app: AppHandle) -> Result<String, String> {
+    app.clipboard().read_text().map_err(|e| e.to_string())
+}
+
+/// Check if clipboard has text
+#[tauri::command]
+pub async fn clipboard_has_text(app: AppHandle) -> Result<bool, String> {
+    match app.clipboard().read_text() {
+        Ok(text) => Ok(!text.is_empty()),
+        Err(_) => Ok(false),
+    }
+}
+
+/// Clear clipboard
+#[tauri::command]
+pub async fn clipboard_clear(app: AppHandle) -> Result<(), String> {
+    app.clipboard().write_text(String::new()).map_err(|e| e.to_string())
+}
+
+/// Read image from clipboard (stub - returns error on non-supported platforms)
+#[tauri::command]
+pub async fn clipboard_read_image(_app: AppHandle) -> Result<String, String> {
+    Err("Clipboard image reading not supported".to_string())
+}
+
+/// Check if clipboard has image
+#[tauri::command]
+pub async fn clipboard_has_image(_app: AppHandle) -> Result<bool, String> {
+    Ok(false)
+}
+
+/// Write image to clipboard (stub)
+#[tauri::command]
+pub async fn clipboard_write_image(_app: AppHandle, _data: String) -> Result<(), String> {
+    Err("Clipboard image writing not supported".to_string())
+}
+
+// ============================================================================
+// Focus Mode Commands
+// ============================================================================
+
+static FOCUS_MODE_ACTIVE: AtomicBool = AtomicBool::new(false);
+
+/// Toggle focus mode
+#[tauri::command]
+pub fn toggle_focus_mode() -> Result<bool, String> {
+    let current = FOCUS_MODE_ACTIVE.load(Ordering::Relaxed);
+    let new_state = !current;
+    FOCUS_MODE_ACTIVE.store(new_state, Ordering::Relaxed);
+    Ok(new_state)
+}
+
+/// Check if focus mode is active
+#[tauri::command]
+pub fn is_focus_mode_active() -> Result<bool, String> {
+    Ok(FOCUS_MODE_ACTIVE.load(Ordering::Relaxed))
+}
+
+/// Set focus mode explicitly
+#[tauri::command]
+pub fn set_focus_mode(active: bool) -> Result<bool, String> {
+    FOCUS_MODE_ACTIVE.store(active, Ordering::Relaxed);
+    Ok(active)
+}
+
+// ============================================================================
+// Tray Badge Update Commands
+// ============================================================================
+
+/// Update tray badge (alias for set_tray_badge)
+#[tauri::command]
+pub fn update_tray_badge(count: u64) -> u64 {
+    BADGE_COUNT.store(count, Ordering::Relaxed);
+    count
+}
+
+// ============================================================================
+// File Utility Commands
+// ============================================================================
+
+/// Show file in folder (alias for show_in_folder)
+#[tauri::command]
+pub fn reveal_in_folder(path: String) -> Result<(), String> {
+    show_in_folder(path)
+}
+
+/// Check if a file exists
+#[tauri::command]
+pub fn file_exists(path: String) -> bool {
+    std::path::Path::new(&path).exists()
+}
+
+/// Get file information
+#[derive(serde::Serialize)]
+pub struct FileInfo {
+    pub name: String,
+    pub path: String,
+    pub size: u64,
+    pub is_dir: bool,
+    pub is_file: bool,
+    pub extension: String,
+}
+
+#[tauri::command]
+pub fn get_file_info(path: String) -> Result<FileInfo, String> {
+    let p = std::path::Path::new(&path);
+    let metadata = fs::metadata(&p).map_err(|e| e.to_string())?;
+
+    Ok(FileInfo {
+        name: p.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
+        path: path.clone(),
+        size: metadata.len(),
+        is_dir: metadata.is_dir(),
+        is_file: metadata.is_file(),
+        extension: p.extension().map(|e| e.to_string_lossy().to_string()).unwrap_or_default(),
+    })
+}
+
+// ============================================================================
+// Window Attention Commands
+// ============================================================================
+
+/// Request window attention
+#[tauri::command]
+pub async fn request_window_attention(window: Window) -> Result<(), String> {
+    window.request_user_attention(Some(tauri::UserAttentionType::Informational))
+        .map_err(|e| e.to_string())
+}
+
+/// Request urgent window attention
+#[tauri::command]
+pub async fn request_urgent_attention(window: Window) -> Result<(), String> {
+    window.request_user_attention(Some(tauri::UserAttentionType::Critical))
+        .map_err(|e| e.to_string())
+}
+
+/// Cancel window attention request
+#[tauri::command]
+pub async fn cancel_window_attention(window: Window) -> Result<(), String> {
+    window.request_user_attention(None)
+        .map_err(|e| e.to_string())
 }

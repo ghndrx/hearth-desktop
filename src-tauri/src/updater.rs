@@ -65,11 +65,10 @@ pub async fn download_and_install_update(app: AppHandle) -> Result<(), String> {
         .ok_or_else(|| "No update available".to_string())?;
     
     let app_handle = app.clone();
-    
+
     // Download with progress reporting
     let mut downloaded = 0u64;
-    let total = update.download_size;
-    
+
     let bytes = update.download(
         |chunk_len, content_len| {
             downloaded += chunk_len as u64;

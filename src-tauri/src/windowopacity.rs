@@ -8,10 +8,13 @@ pub struct WindowOpacitySettings {
 }
 
 /// Set window opacity (0.0 to 1.0)
+/// Note: set_opacity is not available in Tauri v2 Window API.
+/// This is a no-op stub; real opacity control requires platform-specific code.
 #[tauri::command]
-pub async fn set_window_opacity(window: Window, opacity: f64) -> Result<(), String> {
-    let clamped = opacity.clamp(0.1, 1.0);
-    window.set_opacity(clamped).map_err(|e| e.to_string())
+pub async fn set_window_opacity(_window: Window, _opacity: f64) -> Result<(), String> {
+    // Tauri v2 does not expose set_opacity on Window.
+    // On supported platforms, opacity can be set via window creation config or platform APIs.
+    Ok(())
 }
 
 /// Get current window opacity
@@ -22,36 +25,19 @@ pub async fn get_window_opacity(window: Window) -> Result<f64, String> {
 }
 
 /// Enable window vibrancy/blur effect (macOS)
+/// Note: set_opacity is not available in Tauri v2. Vibrancy should be configured
+/// at window creation time. This command is kept as a stub for API compatibility.
 #[tauri::command]
-pub async fn set_window_vibrancy(window: Window, effect: String) -> Result<(), String> {
-    #[cfg(target_os = "macos")]
-    {
-        use tauri::utils::TitleBarStyle;
-        // macOS vibrancy effects
-        match effect.as_str() {
-            "sidebar" | "header" | "content" | "under-window" | "hud" | "titlebar"
-            | "menu" | "popover" | "selection" => {
-                // Vibrancy is set through window configuration in Tauri 2
-                // For runtime changes, we adjust opacity to simulate the effect
-                window.set_opacity(0.92).map_err(|e| e.to_string())?;
-            }
-            "none" => {
-                window.set_opacity(1.0).map_err(|e| e.to_string())?;
-            }
-            _ => return Err(format!("Unknown vibrancy effect: {}", effect)),
+pub async fn set_window_vibrancy(_window: Window, effect: String) -> Result<(), String> {
+    match effect.as_str() {
+        "sidebar" | "header" | "content" | "under-window" | "hud" | "titlebar"
+        | "menu" | "popover" | "selection" | "none" => {
+            // Vibrancy/opacity is configured at window creation in Tauri v2.
+            // Runtime changes are not supported via this API.
+            Ok(())
         }
+        _ => Err(format!("Unknown vibrancy effect: {}", effect)),
     }
-
-    #[cfg(not(target_os = "macos"))]
-    {
-        // On Windows/Linux, simulate with opacity
-        match effect.as_str() {
-            "none" => window.set_opacity(1.0).map_err(|e| e.to_string())?,
-            _ => window.set_opacity(0.95).map_err(|e| e.to_string())?,
-        }
-    }
-
-    Ok(())
 }
 
 /// Set window to compact/mini mode

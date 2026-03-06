@@ -5,7 +5,7 @@
 
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::RwLock;
-use tauri::{AppHandle, Manager, Runtime};
+use tauri::{AppHandle, Emitter, Manager, Runtime};
 use tauri_plugin_notification::NotificationExt;
 use chrono::{DateTime, Duration, Local, NaiveTime, Timelike};
 use serde::{Deserialize, Serialize};

@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use tauri::{AppHandle, Emitter, Manager, Runtime};
+use tauri_plugin_notification::NotificationExt;
 use tokio::time::{interval, Duration};
 
 /// Pomodoro session types

@@ -218,8 +218,8 @@ fn available_widget_types() -> Vec<AvailableWidget> {
     ]
 }
 
-impl WidgetDashboardManager {
-    pub fn new() -> Self {
+impl Default for WidgetDashboardManager {
+    fn default() -> Self {
         Self {
             state: Mutex::new(DashboardState {
                 widgets: default_widgets(),
@@ -227,6 +227,12 @@ impl WidgetDashboardManager {
                 is_visible: false,
             }),
         }
+    }
+}
+
+impl WidgetDashboardManager {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

@@ -3,7 +3,7 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::Mutex;
 use std::time::{Duration, Instant};
-use tauri::{AppHandle, Manager, State, Window};
+use tauri::{AppHandle, Emitter, Manager, State, Window};
 
 /// Recording state enum
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -630,19 +630,4 @@ pub async fn screenrecord_get_recording_info(
     })
 }
 
-/// Register screen record commands
-pub fn init() -> impl Fn(tauri::Invoke) {
-    tauri::generate_handler![
-        screenrecord_start,
-        screenrecord_stop,
-        screenrecord_pause,
-        screenrecord_resume,
-        screenrecord_cancel,
-        screenrecord_get_state,
-        screenrecord_get_settings,
-        screenrecord_update_settings,
-        screenrecord_list_recordings,
-        screenrecord_delete_recording,
-        screenrecord_get_recording_info,
-    ]
-}
+// Commands are registered via tauri::generate_handler! in main.rs

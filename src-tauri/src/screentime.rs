@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use once_cell::sync::Lazy;
-use chrono::{Local, NaiveDate, Datelike, Duration as ChronoDuration};
+use chrono::{Local, NaiveDate, Datelike, Timelike, Duration as ChronoDuration};
 
 /// A single usage session
 #[derive(Debug, Clone, Serialize, Deserialize)]

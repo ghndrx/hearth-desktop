@@ -3,6 +3,7 @@
 //! Provides persistent habit storage and completion tracking using SQLite,
 //! with streak calculations, weekly/monthly statistics, and color-coded categories.
 
+use chrono::Datelike;
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::State;

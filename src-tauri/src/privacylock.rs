@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Emitter, State};
 
 /// Lock state
 #[derive(Debug, Default)]
@@ -229,15 +229,4 @@ pub fn setup_system_lock_monitor(app: AppHandle) {
     }
 }
 
-/// Register privacy lock commands
-pub fn init() -> impl Fn(tauri::Invoke) {
-    tauri::generate_handler![
-        check_biometrics_available,
-        authenticate_biometrics,
-        set_app_password,
-        verify_password,
-        lock_app,
-        unlock_app,
-        get_lock_state,
-    ]
-}
+// Commands are registered via tauri::generate_handler! in main.rs

@@ -182,8 +182,7 @@ async fn save_to_files<R: Runtime>(
     app: &AppHandle<R>,
     item: &ShareItem,
 ) -> Result<ShareResult, String> {
-    use tauri::api::dialog::FileDialogBuilder;
-
+    // In Tauri v2, dialog is handled by tauri-plugin-dialog
     // For file paths, we'd copy them
     if let Some(paths) = &item.file_paths {
         if !paths.is_empty() {

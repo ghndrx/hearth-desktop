@@ -55,12 +55,18 @@ pub struct WorkspaceLayoutManager {
     active_layout_id: Mutex<Option<String>>,
 }
 
-impl WorkspaceLayoutManager {
-    pub fn new() -> Self {
+impl Default for WorkspaceLayoutManager {
+    fn default() -> Self {
         Self {
             layouts: Mutex::new(Vec::new()),
             active_layout_id: Mutex::new(None),
         }
+    }
+}
+
+impl WorkspaceLayoutManager {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

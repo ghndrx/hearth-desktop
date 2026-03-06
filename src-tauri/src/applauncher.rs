@@ -145,10 +145,11 @@ fn discover_applications() -> Result<Vec<InstalledApp>, String> {
     
     #[cfg(target_os = "macos")]
     {
+        let home_apps = format!("{}/Applications", std::env::var("HOME").unwrap_or_default());
         let app_dirs = vec![
             "/Applications",
             "/System/Applications",
-            &format!("{}/Applications", std::env::var("HOME").unwrap_or_default()),
+            &home_apps,
         ];
         
         for dir in app_dirs {
@@ -174,10 +175,11 @@ fn discover_applications() -> Result<Vec<InstalledApp>, String> {
     
     #[cfg(target_os = "linux")]
     {
+        let local_apps = format!("{}/.local/share/applications", std::env::var("HOME").unwrap_or_default());
         let desktop_dirs = vec![
             "/usr/share/applications",
             "/usr/local/share/applications",
-            &format!("{}/.local/share/applications", std::env::var("HOME").unwrap_or_default()),
+            &local_apps,
         ];
         
         for dir in desktop_dirs {

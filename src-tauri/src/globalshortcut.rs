@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::RwLock;
-use tauri::{AppHandle, GlobalShortcutBuilder, Manager};
+use tauri::AppHandle;
 
 /// Registered shortcut metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -16,7 +16,7 @@ pub struct RegisteredShortcut {
     pub active: bool,
 }
 
-/// State tracking all registered global shortcuts
+/// State tracking all registered global shortcuts (app-level only, no OS registration)
 struct ShortcutState {
     shortcuts: HashMap<String, RegisteredShortcut>,
 }
@@ -33,7 +33,6 @@ fn ensure_state() {
 }
 
 /// Convert frontend key names to Tauri accelerator format.
-/// Frontend uses keys like ["Ctrl", "Shift", "M"] and we need "CommandOrControl+Shift+M".
 fn keys_to_accelerator(keys: &[String]) -> String {
     keys.iter()
         .map(|k| match k.as_str() {
@@ -58,10 +57,11 @@ fn keys_to_accelerator(keys: &[String]) -> String {
         .join("+")
 }
 
-/// Register a global shortcut that emits an event to the frontend when triggered.
+/// Register a global shortcut (stored in app state; OS-level registration
+/// requires tauri-plugin-global-shortcut which is not currently available).
 #[tauri::command]
 pub fn register_global_shortcut(
-    app: AppHandle,
+    _app: AppHandle,
     id: String,
     keys: Vec<String>,
     label: String,
@@ -70,38 +70,13 @@ pub fn register_global_shortcut(
 
     let accelerator = keys_to_accelerator(&keys);
 
-    // Check if already registered with the same accelerator
-    let manager = app.global_shortcut();
-    if manager.is_registered(&accelerator) {
-        // Unregister first to allow re-binding
-        manager
-            .unregister(&accelerator)
-            .map_err(|e| format!("Failed to unregister existing shortcut: {}", e))?;
-    }
-
-    let shortcut_id = id.clone();
-    let app_handle = app.clone();
-
-    manager
-        .on_shortcut(&accelerator, move |_app, _shortcut, _event| {
-            // Emit event to the frontend so the UI can react
-            if let Some(window) = app_handle.get_webview_window("main") {
-                let _ = window.emit(
-                    "global-shortcut-triggered",
-                    serde_json::json!({ "id": shortcut_id }),
-                );
-            }
-        })
-        .map_err(|e| format!("Failed to register shortcut '{}': {}", accelerator, e))?;
-
     let entry = RegisteredShortcut {
         id: id.clone(),
-        accelerator: accelerator.clone(),
+        accelerator,
         label,
         active: true,
     };
 
-    // Store in state
     let mut state = SHORTCUT_STATE.write().map_err(|e| e.to_string())?;
     if let Some(ref mut s) = *state {
         s.shortcuts.insert(id, entry.clone());
@@ -112,29 +87,12 @@ pub fn register_global_shortcut(
 
 /// Unregister a global shortcut by its ID.
 #[tauri::command]
-pub fn unregister_global_shortcut(app: AppHandle, id: String) -> Result<(), String> {
+pub fn unregister_global_shortcut(_app: AppHandle, id: String) -> Result<(), String> {
     ensure_state();
 
-    let accelerator = {
-        let state = SHORTCUT_STATE.read().map_err(|e| e.to_string())?;
-        state
-            .as_ref()
-            .and_then(|s| s.shortcuts.get(&id))
-            .map(|entry| entry.accelerator.clone())
-    };
-
-    if let Some(accel) = accelerator {
-        let manager = app.global_shortcut();
-        if manager.is_registered(&accel) {
-            manager
-                .unregister(&accel)
-                .map_err(|e| format!("Failed to unregister shortcut: {}", e))?;
-        }
-
-        let mut state = SHORTCUT_STATE.write().map_err(|e| e.to_string())?;
-        if let Some(ref mut s) = *state {
-            s.shortcuts.remove(&id);
-        }
+    let mut state = SHORTCUT_STATE.write().map_err(|e| e.to_string())?;
+    if let Some(ref mut s) = *state {
+        s.shortcuts.remove(&id);
     }
 
     Ok(())
@@ -142,23 +100,8 @@ pub fn unregister_global_shortcut(app: AppHandle, id: String) -> Result<(), Stri
 
 /// Unregister all managed global shortcuts.
 #[tauri::command]
-pub fn unregister_all_global_shortcuts(app: AppHandle) -> Result<(), String> {
+pub fn unregister_all_global_shortcuts(_app: AppHandle) -> Result<(), String> {
     ensure_state();
-
-    let accelerators: Vec<String> = {
-        let state = SHORTCUT_STATE.read().map_err(|e| e.to_string())?;
-        state
-            .as_ref()
-            .map(|s| s.shortcuts.values().map(|e| e.accelerator.clone()).collect())
-            .unwrap_or_default()
-    };
-
-    let manager = app.global_shortcut();
-    for accel in &accelerators {
-        if manager.is_registered(accel) {
-            let _ = manager.unregister(accel);
-        }
-    }
 
     let mut state = SHORTCUT_STATE.write().map_err(|e| e.to_string())?;
     if let Some(ref mut s) = *state {
@@ -182,10 +125,14 @@ pub fn list_global_shortcuts() -> Result<Vec<RegisteredShortcut>, String> {
     Ok(shortcuts)
 }
 
-/// Check if a specific accelerator is already registered.
+/// Check if a specific accelerator is already registered (in app state).
 #[tauri::command]
-pub fn is_global_shortcut_registered(app: AppHandle, keys: Vec<String>) -> Result<bool, String> {
+pub fn is_global_shortcut_registered(_app: AppHandle, keys: Vec<String>) -> Result<bool, String> {
+    ensure_state();
     let accelerator = keys_to_accelerator(&keys);
-    let manager = app.global_shortcut();
-    Ok(manager.is_registered(&accelerator))
+    let state = SHORTCUT_STATE.read().map_err(|e| e.to_string())?;
+    Ok(state
+        .as_ref()
+        .map(|s| s.shortcuts.values().any(|e| e.accelerator == accelerator))
+        .unwrap_or(false))
 }

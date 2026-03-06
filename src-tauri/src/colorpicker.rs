@@ -471,15 +471,17 @@ pub async fn copy_color_to_clipboard(
 
     #[cfg(target_os = "windows")]
     {
+        let cmd_arg = format!("echo {} | clip", text);
         let _ = std::process::Command::new("cmd")
-            .args(["/C", &format!("echo {} | clip", text)])
+            .args(["/C", &cmd_arg])
             .output();
     }
 
     #[cfg(target_os = "linux")]
     {
+        let sh_arg = format!("echo -n '{}' | xclip -selection clipboard", text);
         let _ = std::process::Command::new("sh")
-            .args(["-c", &format!("echo -n '{}' | xclip -selection clipboard", text)])
+            .args(["-c", &sh_arg])
             .output();
     }
 

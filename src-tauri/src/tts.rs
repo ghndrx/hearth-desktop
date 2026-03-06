@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, Emitter, Manager, State};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TTSVoice {
@@ -85,12 +85,12 @@ pub type TTSStateHandle = Arc<Mutex<TTSState>>;
 
 /// Initialize the TTS subsystem
 #[tauri::command]
-pub async fn tts_init(state: State<'_, TTSStateHandle>) -> Result<bool, String> {
+pub async fn tts_init(app: AppHandle) -> Result<bool, String> {
+    let voices = get_system_voices().await?;
+    let state = app.state::<TTSStateHandle>();
     let mut tts_state = state.lock().map_err(|e| e.to_string())?;
-    
-    // Populate available voices based on platform
-    tts_state.available_voices = get_system_voices().await?;
-    
+    tts_state.available_voices = voices;
+
     Ok(true)
 }
 
@@ -129,69 +129,78 @@ pub async fn tts_set_settings(
 pub async fn tts_speak(
     text: String,
     priority: Option<TTSPriority>,
-    state: State<'_, TTSStateHandle>,
     app: AppHandle,
 ) -> Result<String, String> {
-    let mut tts_state = state.lock().map_err(|e| e.to_string())?;
-    
-    if !tts_state.settings.enabled {
-        return Err("TTS is disabled".to_string());
+    let state_handle = app.state::<TTSStateHandle>();
+    let should_process;
+    let item_id;
+    {
+        let mut tts_state = state_handle.lock().map_err(|e| e.to_string())?;
+
+        if !tts_state.settings.enabled {
+            return Err("TTS is disabled".to_string());
+        }
+
+        item_id = uuid::Uuid::new_v4().to_string();
+        let priority = priority.unwrap_or(TTSPriority::Normal);
+
+        let item = TTSQueueItem {
+            id: item_id.clone(),
+            text: text.clone(),
+            priority,
+            voice_id: tts_state.settings.voice_id.clone(),
+        };
+
+        // Insert based on priority
+        let insert_pos = tts_state.queue.iter()
+            .position(|i| i.priority < item.priority)
+            .unwrap_or(tts_state.queue.len());
+        tts_state.queue.insert(insert_pos, item);
+
+        should_process = !tts_state.is_speaking;
     }
-    
-    let item_id = uuid::Uuid::new_v4().to_string();
-    let priority = priority.unwrap_or(TTSPriority::Normal);
-    
-    let item = TTSQueueItem {
-        id: item_id.clone(),
-        text: text.clone(),
-        priority,
-        voice_id: tts_state.settings.voice_id.clone(),
-    };
-    
-    // Insert based on priority
-    let insert_pos = tts_state.queue.iter()
-        .position(|i| i.priority < item.priority)
-        .unwrap_or(tts_state.queue.len());
-    tts_state.queue.insert(insert_pos, item);
-    
+
     // If not currently speaking, start
-    if !tts_state.is_speaking {
-        drop(tts_state);
-        process_queue(state.inner().clone(), app).await?;
+    if should_process {
+        process_queue(state_handle.inner().clone(), app).await?;
     }
-    
+
     Ok(item_id)
 }
 
 /// Stop current speech and clear queue
 #[tauri::command]
-pub async fn tts_stop(state: State<'_, TTSStateHandle>, app: AppHandle) -> Result<(), String> {
-    let mut tts_state = state.lock().map_err(|e| e.to_string())?;
-    
-    tts_state.queue.clear();
-    tts_state.is_speaking = false;
-    tts_state.current_item = None;
-    
+pub async fn tts_stop(app: AppHandle) -> Result<(), String> {
+    {
+        let state = app.state::<TTSStateHandle>();
+        let mut tts_state = state.lock().map_err(|e| e.to_string())?;
+        tts_state.queue.clear();
+        tts_state.is_speaking = false;
+        tts_state.current_item = None;
+    }
+
     // Platform-specific stop
     stop_speech_native().await?;
-    
+
     let _ = app.emit("tts-stopped", ());
-    
+
     Ok(())
 }
 
 /// Pause current speech
 #[tauri::command]
-pub async fn tts_pause(state: State<'_, TTSStateHandle>, app: AppHandle) -> Result<(), String> {
-    let tts_state = state.lock().map_err(|e| e.to_string())?;
-    
-    if !tts_state.is_speaking {
-        return Err("Not currently speaking".to_string());
+pub async fn tts_pause(app: AppHandle) -> Result<(), String> {
+    {
+        let state = app.state::<TTSStateHandle>();
+        let tts_state = state.lock().map_err(|e| e.to_string())?;
+        if !tts_state.is_speaking {
+            return Err("Not currently speaking".to_string());
+        }
     }
-    
+
     pause_speech_native().await?;
     let _ = app.emit("tts-paused", ());
-    
+
     Ok(())
 }
 

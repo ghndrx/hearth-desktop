@@ -303,15 +303,4 @@ pub async fn list_audio_input_devices() -> Result<Vec<AudioDevice>, String> {
     Ok(devices)
 }
 
-/// Register voice recorder commands
-pub fn init() -> impl Fn(tauri::Invoke) {
-    tauri::generate_handler![
-        start_voice_recording,
-        stop_voice_recording,
-        pause_voice_recording,
-        resume_voice_recording,
-        cancel_voice_recording,
-        get_audio_level,
-        list_audio_input_devices,
-    ]
-}
+// Commands are registered via tauri::generate_handler! in main.rs

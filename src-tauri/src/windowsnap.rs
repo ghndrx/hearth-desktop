@@ -460,7 +460,8 @@ pub async fn snap_cascade(window: WebviewWindow) -> Result<(), String> {
 pub async fn snap_get_monitors(window: WebviewWindow) -> Result<Vec<MonitorInfo>, String> {
     let monitors = window.available_monitors().map_err(|e| e.to_string())?;
     let current = window.current_monitor().map_err(|e| e.to_string())?;
-    let current_name = current.map(|m| m.name().unwrap_or_default().to_string());
+    let empty_name = String::new();
+    let current_name = current.map(|m| m.name().unwrap_or(&empty_name).to_string());
 
     let infos: Vec<MonitorInfo> = monitors
         .iter()
@@ -468,7 +469,7 @@ pub async fn snap_get_monitors(window: WebviewWindow) -> Result<Vec<MonitorInfo>
         .map(|(i, m)| {
             let pos = m.position();
             let size = m.size();
-            let name = m.name().unwrap_or_default().to_string();
+            let name = m.name().unwrap_or(&empty_name).to_string();
             let is_primary = current_name.as_deref() == Some(&name) && i == 0;
             MonitorInfo {
                 index: i,

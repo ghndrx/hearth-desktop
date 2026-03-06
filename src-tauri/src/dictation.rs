@@ -523,20 +523,4 @@ pub async fn add_punctuation(
     Ok(state.current_transcript.clone())
 }
 
-/// Register dictation commands
-pub fn init() -> impl Fn(tauri::Invoke) {
-    tauri::generate_handler![
-        check_dictation_available,
-        request_dictation_permission,
-        get_supported_languages,
-        start_dictation,
-        stop_dictation,
-        pause_dictation,
-        resume_dictation,
-        cancel_dictation,
-        get_dictation_status,
-        get_dictation_audio_level,
-        update_dictation_transcript,
-        add_punctuation,
-    ]
-}
+// Commands are registered via tauri::generate_handler! in main.rs
