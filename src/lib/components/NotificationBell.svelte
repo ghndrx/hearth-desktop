@@ -9,6 +9,9 @@
 		type Notification 
 	} from '$lib/stores/notifications';
 	import { goto } from '$app/navigation';
+	import { createEventDispatcher } from 'svelte';
+
+	const dispatch = createEventDispatcher<{ openPanel: void }>();
 
 	let showDropdown = false;
 	let dropdownRef: HTMLDivElement;
