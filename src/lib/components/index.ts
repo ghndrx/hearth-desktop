@@ -345,3 +345,6 @@ export { default as ScheduledMessagesPanel } from './ScheduledMessagesPanel.svel
 
 // Status Countdown - temporary status with auto-expiry timer
 export { default as StatusCountdownPanel } from './StatusCountdownPanel.svelte';
+
+// Daily Journal - persistent daily journal with mood tracking and stats
+export { default as DailyJournalPanel } from './DailyJournalPanel.svelte';
