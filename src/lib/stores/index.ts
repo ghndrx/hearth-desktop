@@ -139,3 +139,8 @@ export { aiChatOpen, aiChatMinimized, openAIChat, closeAIChat, toggleAIChat, min
 export { windowBehavior, minimizeToTray, closeToTray, startMinimized, alwaysOnTop, rememberWindowState, showInTaskbar, singleClickTrayToggle, type WindowBehaviorSettings } from './windowBehavior';
 export { secureKeychain, keychainAvailable, keychainLoading } from './secureKeychain';
 export { sessionTimer, elapsedFormatted, elapsedHuman, type SessionTimerState } from './sessionTimer';
+export { indexedFiles, fileIndexStats, fileSearchResults, searchFiles, getRecentFiles, addToIndex, removeFromIndex, getFileIndexStats, clearFileIndex, type IndexedFile, type FileIndexStats } from './fileIndexer';
+export { notificationGroups, groupConfig, unreadGroupCount, getAllGroups, addNotification, markGroupRead, dismissGroup, getGroupConfig, type NotificationGroup, type GroupConfig } from './notificationGroups';
+export { workspaceLayouts, activeLayout, layoutPresets, saveLayout, loadLayout, deleteLayout, getAllLayouts, getPresets, applyPreset, type WorkspaceLayout, type LayoutPreset } from './workspaceLayouts';
+export { voiceMemos, recordingState, memoCount, favoriteMemos, startRecording, stopRecording, cancelRecording, getAllMemos, deleteMemo, toggleFavorite, type VoiceMemo, type VoiceMemoRecordingState } from './voiceMemos';
+export { dashboardState, dashboardVisible, dashboardWidgets, getDashboardState, toggleDashboard, addWidget, removeWidget, resetDashboard, type DashboardWidget, type DashboardConfig, type DashboardState } from './widgetDashboard';
