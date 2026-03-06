@@ -980,6 +980,7 @@ fn main() {
             // Tray user status commands
             tray::tray_get_user_status,
             tray::tray_set_user_status,
+            tray::set_tray_badge,
             // Network monitor commands
             network::get_network_status,
             network::is_online,
