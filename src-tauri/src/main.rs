@@ -111,6 +111,7 @@ mod fileorganizer;
 mod messagetemplates;
 mod stickynotes;
 mod statuscountdown;
+mod journal;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -646,6 +647,7 @@ fn main() {
 
             // Initialize Status Countdown Timer
             app.manage(statuscountdown::StatusCountdownManager::default());
+            app.manage(journal::JournalManager::default());
 
             // Reminder manager
             let reminder_manager = std::sync::Arc::new(reminders::ReminderManager::default());
@@ -1660,6 +1662,12 @@ fn main() {
             statuscountdown::countdown_get_presets,
             statuscountdown::countdown_add_preset,
             statuscountdown::countdown_remove_preset,
+            // Daily Journal commands
+            journal::journal_get_entry,
+            journal::journal_save_entry,
+            journal::journal_delete_entry,
+            journal::journal_get_stats,
+            journal::journal_list_dates,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
