@@ -25,8 +25,10 @@
 	import SearchResults from '$lib/components/SearchResults.svelte';
 	import SplitView from '$lib/components/SplitView.svelte';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
+	import NotificationCenterPanel from '$lib/components/NotificationCenterPanel.svelte';
 
 	let quickSwitcherOpen = false;
+	let notificationCenterOpen = false;
 
 	function handleKeydown(e: KeyboardEvent) {
 		// Don't trigger shortcuts when typing in an input
@@ -254,6 +256,12 @@
 
 <!-- Voice Call Overlay - Floating mini-view during active calls -->
 <VoiceCallOverlay />
+
+<!-- Notification Center Panel -->
+<NotificationCenterPanel
+	bind:open={notificationCenterOpen}
+	onClose={() => notificationCenterOpen = false}
+/>
 
 <!-- Image Preview Modal - Full screen image viewer -->
 <ImagePreviewModal />
