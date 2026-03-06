@@ -118,6 +118,7 @@ mod worldclock;
 mod presencedetector;
 mod meetingcost;
 mod threadpip;
+mod screentime;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1732,6 +1733,18 @@ fn main() {
             threadpip::pip_set_compact,
             threadpip::pip_get_config,
             threadpip::pip_set_config,
+            // Screen Time Tracker commands
+            screentime::screentime_start,
+            screentime::screentime_stop,
+            screentime::screentime_heartbeat,
+            screentime::screentime_activity,
+            screentime::screentime_get_state,
+            screentime::screentime_get_today,
+            screentime::screentime_get_weekly,
+            screentime::screentime_get_range,
+            screentime::screentime_set_idle_threshold,
+            screentime::screentime_reset,
+            screentime::screentime_save,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
