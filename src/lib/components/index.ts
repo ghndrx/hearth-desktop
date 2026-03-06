@@ -339,6 +339,7 @@ export { default as FileOrganizerPanel } from './FileOrganizerPanel.svelte';
 
 // Pomodoro Timer - work/break cycles with circular progress
 export { default as PomodoroPanel } from './PomodoroPanel.svelte';
+export { default as PollsPanel } from './PollsPanel.svelte';
 
 // Scheduled Messages - queue messages for later delivery
 export { default as ScheduledMessagesPanel } from './ScheduledMessagesPanel.svelte';
