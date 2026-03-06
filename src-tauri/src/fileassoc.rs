@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
 /// Represents a file opened via OS file association
 #[derive(Debug, Clone, Serialize, Deserialize)]

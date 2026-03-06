@@ -211,23 +211,23 @@ pub async fn vault_update_entry(
     if state.is_locked {
         return Err("Vault is locked".to_string());
     }
-    let entry = state
+    let entry_idx = state
         .entries
-        .iter_mut()
-        .find(|e| e.id == id)
+        .iter()
+        .position(|e| e.id == id)
         .ok_or("Entry not found")?;
     if let Some(t) = title {
-        entry.title = t;
+        state.entries[entry_idx].title = t;
     }
     if let Some(c) = content {
-        entry.content = c;
+        state.entries[entry_idx].content = c;
     }
     if let Some(cat) = category {
-        entry.category = cat;
+        state.entries[entry_idx].category = cat;
     }
-    entry.updated_at = Utc::now().to_rfc3339();
+    state.entries[entry_idx].updated_at = Utc::now().to_rfc3339();
     state.last_activity = Utc::now().to_rfc3339();
-    let updated = entry.clone();
+    let updated = state.entries[entry_idx].clone();
     let _ = app.emit("vault-entry-updated", &updated);
     Ok(updated)
 }

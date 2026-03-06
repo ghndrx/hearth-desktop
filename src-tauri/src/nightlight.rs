@@ -1,7 +1,7 @@
 // Night Light / Blue Light Filter
 // Adjusts display color temperature to reduce eye strain during evening hours
 
-use chrono::{Local, NaiveTime, Timelike};
+use chrono::{Datelike, Local, NaiveTime, Timelike};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock};
 use tauri::{AppHandle, Emitter, Manager, State};

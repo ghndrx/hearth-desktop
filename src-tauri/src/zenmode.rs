@@ -10,7 +10,7 @@
 use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Mutex;
-use tauri::{AppHandle, Emitter, Runtime, Window};
+use tauri::{AppHandle, Emitter, Manager, Runtime, Window};
 
 /// Zen Mode configuration
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -202,22 +202,22 @@ pub async fn enter_channel_zen_mode(
     window: Window,
     channel_id: String,
 ) -> Result<ZenModeState, String> {
-    let mut state = load_zen_mode_state(&window).await?;
-    
+    let mut state = load_zen_mode_state(window.app_handle()).await?;
+
     // Add channel to enabled list if not present
     if !state.enabled_channels.contains(&channel_id) {
         state.enabled_channels.push(channel_id.clone());
     }
-    
+
     // Enable Zen Mode
     set_zen_mode_internal(&window, true).await?;
-    
+
     // Update timestamp
     state.last_used_at = Some(chrono::Utc::now().to_rfc3339());
     state.config.enabled = true;
-    
+
     // Save state
-    save_zen_mode_state(&window, &state).await?;
+    save_zen_mode_state(window.app_handle(), &state).await?;
     
     // Emit channel-specific event
     window.emit("zen-mode-channel-entered", serde_json::json!({
@@ -234,19 +234,19 @@ pub async fn exit_channel_zen_mode(
     window: Window,
     channel_id: String,
 ) -> Result<ZenModeState, String> {
-    let mut state = load_zen_mode_state(&window).await?;
-    
+    let mut state = load_zen_mode_state(window.app_handle()).await?;
+
     // Remove channel from enabled list
     state.enabled_channels.retain(|id| id != &channel_id);
-    
+
     // Disable Zen Mode if no more channels
     if state.enabled_channels.is_empty() {
         set_zen_mode_internal(&window, false).await?;
         state.config.enabled = false;
     }
-    
+
     // Save state
-    save_zen_mode_state(&window, &state).await?;
+    save_zen_mode_state(window.app_handle(), &state).await?;
     
     Ok(state)
 }

@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Manager, Runtime};
+use tauri::{AppHandle, Emitter, Manager, Runtime};
 use serde::{Deserialize, Serialize};
 
 /// Parsed deep link data

@@ -1,6 +1,6 @@
 use tauri::{
     menu::{AboutMetadata, Menu, MenuItem, PredefinedMenuItem, Submenu},
-    AppHandle, Manager, Runtime, Wry,
+    AppHandle, Emitter, Manager, Runtime, Wry,
 };
 
 pub fn create_menu(app: &AppHandle<Wry>) -> Result<Menu<Wry>, Box<dyn std::error::Error>> {

@@ -81,10 +81,11 @@ $bitmap.Save("{}")"#,
         ));
         
         // Try gnome-screenshot first, then scrot, then import
+        let temp_path_str = temp_path.to_string_lossy().to_string();
         let tools = [
-            vec!["gnome-screenshot", "-f", temp_path.to_string_lossy().as_ref()],
-            vec!["scrot", temp_path.to_string_lossy().as_ref()],
-            vec!["import", "-window", "root", temp_path.to_string_lossy().as_ref()],
+            vec!["gnome-screenshot", "-f", temp_path_str.as_str()],
+            vec!["scrot", temp_path_str.as_str()],
+            vec!["import", "-window", "root", temp_path_str.as_str()],
         ];
         
         let mut success = false;
@@ -283,12 +284,55 @@ pub async fn save_screenshot(data_url: String, app: AppHandle) -> Result<String,
     Ok(save_path.to_string_lossy().to_string())
 }
 
-/// Register screenshot commands
-pub fn init() -> impl Fn(tauri::Invoke) {
-    tauri::generate_handler![
-        capture_fullscreen_screenshot,
-        capture_window_screenshot,
-        capture_region_screenshot,
-        save_screenshot,
-    ]
+/// Alias for capture_fullscreen_screenshot (referenced from main.rs)
+#[tauri::command]
+pub async fn capture_screenshot() -> Result<String, String> {
+    capture_fullscreen_screenshot().await
+}
+
+/// Get the screenshots directory
+#[tauri::command]
+pub async fn get_screenshots_dir(app: AppHandle) -> Result<String, String> {
+    use tauri::Manager;
+    let app_data = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to resolve app data dir: {}", e))?;
+    let screenshots_dir = app_data.join("screenshots");
+    if !screenshots_dir.exists() {
+        std::fs::create_dir_all(&screenshots_dir).map_err(|e| e.to_string())?;
+    }
+    Ok(screenshots_dir.to_string_lossy().to_string())
+}
+
+/// List saved screenshots
+#[tauri::command]
+pub async fn list_screenshots(app: AppHandle) -> Result<Vec<String>, String> {
+    use tauri::Manager;
+    let app_data = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to resolve app data dir: {}", e))?;
+    let screenshots_dir = app_data.join("screenshots");
+    if !screenshots_dir.exists() {
+        return Ok(Vec::new());
+    }
+    let mut files = Vec::new();
+    let entries = std::fs::read_dir(&screenshots_dir).map_err(|e| e.to_string())?;
+    for entry in entries {
+        let entry = entry.map_err(|e| e.to_string())?;
+        let path = entry.path();
+        if path.is_file() {
+            files.push(path.to_string_lossy().to_string());
+        }
+    }
+    files.sort();
+    files.reverse();
+    Ok(files)
+}
+
+/// Delete a screenshot
+#[tauri::command]
+pub async fn delete_screenshot(path: String) -> Result<(), String> {
+    std::fs::remove_file(&path).map_err(|e| format!("Failed to delete screenshot: {}", e))
 }

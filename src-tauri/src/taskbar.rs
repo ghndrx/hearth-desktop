@@ -3,7 +3,7 @@
 
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
-use tauri::{AppHandle, Manager, Runtime, WebviewWindow};
+use tauri::{AppHandle, Emitter, Manager, Runtime, WebviewWindow};
 
 lazy_static::lazy_static! {
     static ref PROGRESS_STATE: Mutex<ProgressState> = Mutex::new(ProgressState::default());

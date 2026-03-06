@@ -53,8 +53,8 @@ pub struct VoiceMemoManager {
     recording_state: Mutex<VoiceMemoState>,
 }
 
-impl VoiceMemoManager {
-    pub fn new() -> Self {
+impl Default for VoiceMemoManager {
+    fn default() -> Self {
         Self {
             memos: Mutex::new(Vec::new()),
             recording_state: Mutex::new(VoiceMemoState {
@@ -64,6 +64,12 @@ impl VoiceMemoManager {
                 audio_level: 0.0,
             }),
         }
+    }
+}
+
+impl VoiceMemoManager {
+    pub fn new() -> Self {
+        Self::default()
     }
 }
 

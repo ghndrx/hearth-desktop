@@ -27,7 +27,7 @@ pub struct ExportResult {
 /// Export chat messages to a file
 #[tauri::command]
 pub async fn export_chat(
-    app: tauri::AppHandle,
+    _app: tauri::AppHandle,
     request: ExportRequest,
 ) -> Result<ExportResult, String> {
     let extension = match request.format.as_str() {
@@ -44,24 +44,49 @@ pub async fn export_chat(
         extension
     );
 
-    // Use save dialog
-    use tauri::dialog::FileDialogBuilder;
-
-    let (tx, rx) = std::sync::mpsc::channel();
-    FileDialogBuilder::new(&app)
-        .set_title("Export Chat History")
-        .set_file_name(&default_name)
-        .add_filter("Chat Export", &[extension])
-        .save_file(move |path| {
-            let _ = tx.send(path);
-        });
-
-    let path = rx
-        .recv()
-        .map_err(|e| e.to_string())?
-        .ok_or("Export cancelled")?
-        .into_path()
-        .map_err(|e| e.to_string())?;
+    // Use platform save dialog (tauri::dialog is not available in Tauri v2
+    // without tauri-plugin-dialog)
+    let path: std::path::PathBuf = {
+        #[cfg(target_os = "linux")]
+        {
+            let filename_arg = format!("--filename={}", default_name);
+            let output = std::process::Command::new("zenity")
+                .args([
+                    "--file-selection",
+                    "--save",
+                    "--title=Export Chat History",
+                    &filename_arg as &str,
+                ])
+                .output()
+                .map_err(|e| format!("Failed to open save dialog: {}", e))?;
+            if !output.status.success() {
+                return Err("Export cancelled".to_string());
+            }
+            std::path::PathBuf::from(String::from_utf8_lossy(&output.stdout).trim())
+        }
+        #[cfg(target_os = "macos")]
+        {
+            let script = format!(
+                "osascript -e 'POSIX path of (choose file name with prompt \"Export Chat History\" default name \"{}\")'",
+                default_name
+            );
+            let output = std::process::Command::new("sh")
+                .args(["-c", &script])
+                .output()
+                .map_err(|e| format!("Failed to open save dialog: {}", e))?;
+            if !output.status.success() {
+                return Err("Export cancelled".to_string());
+            }
+            std::path::PathBuf::from(String::from_utf8_lossy(&output.stdout).trim())
+        }
+        #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+        {
+            // Fallback: save to downloads directory
+            let downloads = dirs::download_dir()
+                .unwrap_or_else(|| std::path::PathBuf::from("."));
+            downloads.join(&default_name)
+        }
+    };
 
     let content = match request.format.as_str() {
         "html" => format_html(&request),

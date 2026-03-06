@@ -128,32 +128,32 @@ pub fn snippets_update(
     tags: Option<Vec<String>>,
 ) -> Result<Snippet, String> {
     let mut s = state.state.lock().map_err(|e| e.to_string())?;
-    let snippet = s
+    let idx = s
         .snippets
-        .iter_mut()
-        .find(|sn| sn.id == id)
+        .iter()
+        .position(|sn| sn.id == id)
         .ok_or_else(|| "Snippet not found".to_string())?;
 
     if let Some(title) = title {
-        snippet.title = title;
+        s.snippets[idx].title = title;
     }
     if let Some(content) = content {
-        snippet.content = content;
+        s.snippets[idx].content = content;
     }
     if let Some(category) = category {
         if !s.categories.contains(&category) {
             s.categories.push(category.clone());
         }
-        snippet.category = category;
+        s.snippets[idx].category = category;
     }
     if let Some(language) = language {
-        snippet.language = Some(language);
+        s.snippets[idx].language = Some(language);
     }
     if let Some(tags) = tags {
-        snippet.tags = tags;
+        s.snippets[idx].tags = tags;
     }
-    snippet.updated_at = Utc::now().to_rfc3339();
-    Ok(snippet.clone())
+    s.snippets[idx].updated_at = Utc::now().to_rfc3339();
+    Ok(s.snippets[idx].clone())
 }
 
 #[tauri::command]

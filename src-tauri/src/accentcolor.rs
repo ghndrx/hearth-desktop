@@ -1,4 +1,4 @@
-use tauri::AppHandle;
+use tauri::{AppHandle, Emitter};
 
 #[derive(serde::Serialize, Clone)]
 pub struct AccentColor {

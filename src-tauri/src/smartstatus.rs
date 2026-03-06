@@ -318,10 +318,11 @@ pub fn detect_music_playing() -> bool {
                 for player_line in players {
                     // Extract player name
                     if let Some(player) = player_line.split('"').nth(1) {
+                        let dest_arg = format!("--dest={}", player);
                         let status_output = Command::new("dbus-send")
                             .args([
                                 "--print-reply",
-                                &format!("--dest={}", player),
+                                &dest_arg as &str,
                                 "/org/mpris/MediaPlayer2",
                                 "org.freedesktop.DBus.Properties.Get",
                                 "string:org.mpris.MediaPlayer2.Player",

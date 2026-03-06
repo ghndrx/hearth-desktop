@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
-use tauri::{AppHandle, Emitter, State, Window};
+use tauri::{AppHandle, Emitter, Manager, State, Window};
 
 // ---------------------------------------------------------------------------
 // Data types
@@ -334,10 +334,10 @@ fn build_and_show_menu(
     let app = window.app_handle();
 
     fn add_items_to_builder<'a>(
-        builder: MenuBuilder<'a, tauri::Wry>,
+        builder: MenuBuilder<'a, tauri::Wry, AppHandle>,
         items: &[MenuItem],
         app: &'a AppHandle,
-    ) -> Result<MenuBuilder<'a, tauri::Wry>, String> {
+    ) -> Result<MenuBuilder<'a, tauri::Wry, AppHandle>, String> {
         let mut b = builder;
         for item in items {
             match item.item_type {
@@ -407,7 +407,7 @@ fn build_and_show_menu(
 
     let builder = MenuBuilder::new(app);
     let builder = add_items_to_builder(builder, &template.items, app)?;
-    let menu = builder.build().map_err(|e| e.to_string())?;
+    let menu = builder.build().map_err(|e: tauri::Error| e.to_string())?;
 
     // Clone values for the closure
     let win = window.clone();

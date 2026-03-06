@@ -119,7 +119,7 @@ pub fn get_performance_metrics() -> PerformanceMetrics {
 
 /// Get memory usage details
 #[tauri::command]
-pub fn get_memory_info() -> MemoryInfo {
+pub fn get_perf_memory_info() -> MemoryInfo {
     get_memory_usage()
 }
 
@@ -226,23 +226,20 @@ fn get_memory_usage() -> MemoryInfo {
     };
 
     let pid = std::process::id();
+    let ps_cmd = format!(
+        r#"
+        $p = Get-Process -Id {}
+        @{{
+            WorkingSet = $p.WorkingSet64
+            VirtualMemory = $p.VirtualMemorySize64
+            PeakWorkingSet = $p.PeakWorkingSet64
+            PrivateMemory = $p.PrivateMemorySize64
+        }} | ConvertTo-Json
+        "#,
+        pid
+    );
     let output = Command::new("powershell")
-        .args([
-            "-NoProfile",
-            "-Command",
-            &format!(
-                r#"
-                $p = Get-Process -Id {}
-                @{{
-                    WorkingSet = $p.WorkingSet64
-                    VirtualMemory = $p.VirtualMemorySize64
-                    PeakWorkingSet = $p.PeakWorkingSet64
-                    PrivateMemory = $p.PrivateMemorySize64
-                }} | ConvertTo-Json
-                "#,
-                pid
-            ),
-        ])
+        .args(["-NoProfile", "-Command", &ps_cmd])
         .output();
 
     if let Ok(output) = output {
@@ -338,15 +335,9 @@ fn get_cpu_usage() -> f32 {
     use std::process::Command;
 
     let pid = std::process::id();
+    let ps_cmd = format!(r#"(Get-Process -Id {}).CPU"#, pid);
     let output = Command::new("powershell")
-        .args([
-            "-NoProfile",
-            "-Command",
-            &format!(
-                r#"(Get-Process -Id {}).CPU"#,
-                pid
-            ),
-        ])
+        .args(["-NoProfile", "-Command", &ps_cmd])
         .output();
 
     // Windows CPU property is cumulative, so we need to calculate delta
@@ -430,12 +421,9 @@ fn get_thread_count() -> u32 {
     use std::process::Command;
 
     let pid = std::process::id();
+    let ps_cmd = format!(r#"(Get-Process -Id {}).Threads.Count"#, pid);
     let output = Command::new("powershell")
-        .args([
-            "-NoProfile",
-            "-Command",
-            &format!(r#"(Get-Process -Id {}).Threads.Count"#, pid),
-        ])
+        .args(["-NoProfile", "-Command", &ps_cmd])
         .output();
 
     if let Ok(output) = output {

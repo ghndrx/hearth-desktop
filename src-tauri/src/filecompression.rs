@@ -252,7 +252,8 @@ pub async fn extract_archive(
     let mut total_files = 0usize;
     let mut total_size = 0u64;
 
-    for i in 0..archive.len() {
+    let archive_len = archive.len();
+    for i in 0..archive_len {
         let mut entry = archive.by_index(i).map_err(|e| e.to_string())?;
         let entry_path = output.join(
             entry
@@ -266,6 +267,7 @@ pub async fn extract_archive(
             if let Some(parent) = entry_path.parent() {
                 fs::create_dir_all(parent).map_err(|e| e.to_string())?;
             }
+            let entry_name = entry.name().to_string();
             let mut outfile = File::create(&entry_path).map_err(|e| e.to_string())?;
             let mut buffer = Vec::new();
             entry.read_to_end(&mut buffer).map_err(|e| e.to_string())?;
@@ -276,9 +278,9 @@ pub async fn extract_archive(
             let _ = app.emit(
                 "extraction-progress",
                 serde_json::json!({
-                    "file": entry.name(),
+                    "file": entry_name,
                     "count": total_files,
-                    "total": archive.len()
+                    "total": archive_len
                 }),
             );
         }

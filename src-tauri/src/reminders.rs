@@ -5,6 +5,7 @@ use chrono::{DateTime, Local, Utc};
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, RwLock};
 use tauri::{AppHandle, Emitter, Manager, State};
+use tauri_plugin_notification::NotificationExt;
 use uuid::Uuid;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

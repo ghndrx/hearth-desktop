@@ -69,10 +69,11 @@ pub fn keychain_set(key: String, value: String) -> Result<(), String> {
     {
         use std::process::Command;
         // Use secret-tool (libsecret) for GNOME Keyring / KDE Wallet
+        let label_arg = format!("Hearth: {}", key);
         let output = Command::new("secret-tool")
             .args([
                 "store",
-                "--label", &format!("Hearth: {}", key),
+                "--label", &label_arg,
                 "service", SERVICE_NAME,
                 "account", &key,
             ])
@@ -98,12 +99,11 @@ pub fn keychain_set(key: String, value: String) -> Result<(), String> {
         use std::process::Command;
         // Use cmdkey for Windows Credential Manager
         let target = format!("{}:{}", SERVICE_NAME, key);
+        let arg_generic = format!("/generic:{}", target);
+        let arg_user = format!("/user:{}", key);
+        let arg_pass = format!("/pass:{}", value);
         let output = Command::new("cmdkey")
-            .args([
-                &format!("/generic:{}", target),
-                &format!("/user:{}", key),
-                &format!("/pass:{}", value),
-            ])
+            .args([&arg_generic, &arg_user, &arg_pass])
             .output()
             .map_err(|e| format!("Failed to store credential: {}", e))?;
 
@@ -171,8 +171,9 @@ pub fn keychain_get(key: String) -> Result<Option<String>, String> {
     {
         use std::process::Command;
         let target = format!("{}:{}", SERVICE_NAME, key);
+        let arg_list = format!("/list:{}", target);
         let output = Command::new("cmdkey")
-            .args([&format!("/list:{}", target)])
+            .args([&arg_list])
             .output()
             .map_err(|e| format!("Failed to read credential: {}", e))?;
 
@@ -238,8 +239,9 @@ pub fn keychain_delete(key: String) -> Result<(), String> {
     {
         use std::process::Command;
         let target = format!("{}:{}", SERVICE_NAME, key);
+        let arg_delete = format!("/delete:{}", target);
         let _ = Command::new("cmdkey")
-            .args([&format!("/delete:{}", target)])
+            .args([&arg_delete])
             .output();
         Ok(())
     }

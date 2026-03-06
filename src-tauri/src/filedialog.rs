@@ -14,52 +14,89 @@ pub struct SelectedFile {
     pub size: u64,
 }
 
-/// Open a file picker dialog and return selected file paths
+/// Open a file picker dialog and return selected file paths.
+/// Note: tauri::dialog / tauri_plugin_dialog is not available. This uses a
+/// platform fallback (zenity on Linux, osascript on macOS, PowerShell on Windows).
 #[tauri::command]
 pub async fn open_file_dialog(
-    app: AppHandle,
+    _app: AppHandle,
     title: Option<String>,
-    filters: Option<Vec<FileDialogFilter>>,
+    _filters: Option<Vec<FileDialogFilter>>,
     multiple: Option<bool>,
-    default_path: Option<String>,
+    _default_path: Option<String>,
 ) -> Result<Vec<SelectedFile>, String> {
-    use tauri::dialog::FileDialogBuilder;
+    let title_str = title.unwrap_or_else(|| "Open File".to_string());
 
-    let mut builder = FileDialogBuilder::new(&app);
-
-    if let Some(t) = title {
-        builder = builder.set_title(&t);
-    }
-
-    if let Some(path) = default_path {
-        builder = builder.set_directory(PathBuf::from(path));
-    }
-
-    if let Some(ref filter_list) = filters {
-        for filter in filter_list {
-            let exts: Vec<&str> = filter.extensions.iter().map(|s| s.as_str()).collect();
-            builder = builder.add_filter(&filter.name, &exts);
+    #[cfg(target_os = "linux")]
+    let paths: Vec<PathBuf> = {
+        let mut args = vec![
+            "--file-selection".to_string(),
+            format!("--title={}", title_str),
+        ];
+        if multiple.unwrap_or(false) {
+            args.push("--multiple".to_string());
+            args.push("--separator=|".to_string());
         }
-    }
+        let output = std::process::Command::new("zenity")
+            .args(&args)
+            .output()
+            .map_err(|e| format!("Failed to open file dialog: {}", e))?;
+        if !output.status.success() {
+            return Ok(Vec::new());
+        }
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        stdout
+            .trim()
+            .split('|')
+            .filter(|s| !s.is_empty())
+            .map(|s| PathBuf::from(s))
+            .collect()
+    };
 
-    let (tx, rx) = std::sync::mpsc::channel();
+    #[cfg(target_os = "macos")]
+    let paths: Vec<PathBuf> = {
+        let script = if multiple.unwrap_or(false) {
+            format!(
+                "osascript -e 'set theFiles to choose file with prompt \"{}\" with multiple selections allowed' -e 'set output to \"\"' -e 'repeat with f in theFiles' -e 'set output to output & POSIX path of f & \"|\"' -e 'end repeat' -e 'return output'",
+                title_str
+            )
+        } else {
+            format!(
+                "osascript -e 'POSIX path of (choose file with prompt \"{}\")'",
+                title_str
+            )
+        };
+        let output = std::process::Command::new("sh")
+            .args(["-c", &script])
+            .output()
+            .map_err(|e| format!("Failed to open file dialog: {}", e))?;
+        if !output.status.success() {
+            return Ok(Vec::new());
+        }
+        let stdout = String::from_utf8_lossy(&output.stdout);
+        stdout
+            .trim()
+            .split('|')
+            .filter(|s| !s.is_empty())
+            .map(|s| PathBuf::from(s))
+            .collect()
+    };
 
-    if multiple.unwrap_or(false) {
-        builder.pick_files(move |paths| {
-            let _ = tx.send(paths.unwrap_or_default());
-        });
-    } else {
-        let tx_clone = tx.clone();
-        builder.pick_file(move |path| {
-            let _ = tx_clone.send(path.map(|p| vec![p]).unwrap_or_default());
-        });
-    }
+    #[cfg(target_os = "windows")]
+    let paths: Vec<PathBuf> = {
+        let _ = title_str;
+        let _ = multiple;
+        // Minimal fallback
+        return Err("File dialog not available without tauri-plugin-dialog".to_string());
+    };
 
-    let paths = rx.recv().map_err(|e| e.to_string())?;
+    #[cfg(not(any(target_os = "linux", target_os = "macos", target_os = "windows")))]
+    let paths: Vec<PathBuf> = {
+        return Err("File dialog not supported on this platform".to_string());
+    };
 
     let mut results = Vec::new();
-    for path in paths {
-        let path_buf = path.into_path().map_err(|e| e.to_string())?;
+    for path_buf in paths {
         let metadata = std::fs::metadata(&path_buf).map_err(|e| e.to_string())?;
         results.push(SelectedFile {
             name: path_buf
@@ -74,45 +111,66 @@ pub async fn open_file_dialog(
     Ok(results)
 }
 
-/// Open a save file dialog and return the selected path
+/// Open a save file dialog and return the selected path.
 #[tauri::command]
 pub async fn save_file_dialog(
-    app: AppHandle,
+    _app: AppHandle,
     title: Option<String>,
     default_name: Option<String>,
-    filters: Option<Vec<FileDialogFilter>>,
-    default_path: Option<String>,
+    _filters: Option<Vec<FileDialogFilter>>,
+    _default_path: Option<String>,
 ) -> Result<Option<String>, String> {
-    use tauri::dialog::FileDialogBuilder;
+    let title_str = title.unwrap_or_else(|| "Save File".to_string());
+    let _default = default_name.unwrap_or_default();
 
-    let mut builder = FileDialogBuilder::new(&app);
-
-    if let Some(t) = title {
-        builder = builder.set_title(&t);
-    }
-
-    if let Some(name) = default_name {
-        builder = builder.set_file_name(&name);
-    }
-
-    if let Some(path) = default_path {
-        builder = builder.set_directory(PathBuf::from(path));
-    }
-
-    if let Some(ref filter_list) = filters {
-        for filter in filter_list {
-            let exts: Vec<&str> = filter.extensions.iter().map(|s| s.as_str()).collect();
-            builder = builder.add_filter(&filter.name, &exts);
+    #[cfg(target_os = "linux")]
+    {
+        let mut args = vec![
+            "--file-selection".to_string(),
+            "--save".to_string(),
+            format!("--title={}", title_str),
+        ];
+        if !_default.is_empty() {
+            args.push(format!("--filename={}", _default));
         }
+        let output = std::process::Command::new("zenity")
+            .args(&args)
+            .output()
+            .map_err(|e| format!("Failed to open save dialog: {}", e))?;
+        if !output.status.success() {
+            return Ok(None);
+        }
+        let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if path.is_empty() {
+            return Ok(None);
+        }
+        return Ok(Some(path));
     }
 
-    let (tx, rx) = std::sync::mpsc::channel();
-    builder.save_file(move |path| {
-        let _ = tx.send(path);
-    });
+    #[cfg(target_os = "macos")]
+    {
+        let script = format!(
+            "osascript -e 'POSIX path of (choose file name with prompt \"{}\" default name \"{}\")'",
+            title_str, _default
+        );
+        let output = std::process::Command::new("sh")
+            .args(["-c", &script])
+            .output()
+            .map_err(|e| format!("Failed to open save dialog: {}", e))?;
+        if !output.status.success() {
+            return Ok(None);
+        }
+        let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if path.is_empty() {
+            return Ok(None);
+        }
+        return Ok(Some(path));
+    }
 
-    let path = rx.recv().map_err(|e| e.to_string())?;
-    Ok(path.map(|p| p.into_path().ok()).flatten().map(|p| p.to_string_lossy().to_string()))
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    {
+        Err("Save dialog not available without tauri-plugin-dialog".to_string())
+    }
 }
 
 /// Write content to a file (used after save dialog)
@@ -158,27 +216,51 @@ pub struct FileMetadata {
 /// Open a folder picker dialog
 #[tauri::command]
 pub async fn pick_folder_dialog(
-    app: AppHandle,
+    _app: AppHandle,
     title: Option<String>,
-    default_path: Option<String>,
+    _default_path: Option<String>,
 ) -> Result<Option<String>, String> {
-    use tauri::dialog::FileDialogBuilder;
+    let title_str = title.unwrap_or_else(|| "Select Folder".to_string());
 
-    let mut builder = FileDialogBuilder::new(&app);
-
-    if let Some(t) = title {
-        builder = builder.set_title(&t);
+    #[cfg(target_os = "linux")]
+    {
+        let title_arg = format!("--title={}", title_str);
+        let output = std::process::Command::new("zenity")
+            .args(["--file-selection", "--directory", &title_arg])
+            .output()
+            .map_err(|e| format!("Failed to open folder dialog: {}", e))?;
+        if !output.status.success() {
+            return Ok(None);
+        }
+        let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if path.is_empty() {
+            return Ok(None);
+        }
+        return Ok(Some(path));
     }
 
-    if let Some(path) = default_path {
-        builder = builder.set_directory(PathBuf::from(path));
+    #[cfg(target_os = "macos")]
+    {
+        let script = format!(
+            "osascript -e 'POSIX path of (choose folder with prompt \"{}\")'",
+            title_str
+        );
+        let output = std::process::Command::new("sh")
+            .args(["-c", &script])
+            .output()
+            .map_err(|e| format!("Failed to open folder dialog: {}", e))?;
+        if !output.status.success() {
+            return Ok(None);
+        }
+        let path = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        if path.is_empty() {
+            return Ok(None);
+        }
+        return Ok(Some(path));
     }
 
-    let (tx, rx) = std::sync::mpsc::channel();
-    builder.pick_folder(move |path| {
-        let _ = tx.send(path);
-    });
-
-    let path = rx.recv().map_err(|e| e.to_string())?;
-    Ok(path.map(|p| p.into_path().ok()).flatten().map(|p| p.to_string_lossy().to_string()))
+    #[cfg(not(any(target_os = "linux", target_os = "macos")))]
+    {
+        Err("Folder dialog not available without tauri-plugin-dialog".to_string())
+    }
 }

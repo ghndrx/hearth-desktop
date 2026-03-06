@@ -17,7 +17,7 @@ pub struct DiagnosticResult {
     pub fix_suggestion: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
 #[serde(rename_all = "lowercase")]
 pub enum DiagnosticStatus {
     Pass,
@@ -542,11 +542,11 @@ fn check_file_system_access() -> DiagnosticResult {
     let start = Instant::now();
     
     let home = dirs::home_dir();
-    let (status, msg) = match home {
+    let (status, msg) = match &home {
         Some(path) if path.exists() => (DiagnosticStatus::Pass, "Home directory accessible".to_string()),
         _ => (DiagnosticStatus::Warn, "Home directory not found".to_string()),
     };
-    
+
     DiagnosticResult {
         name: "File System".to_string(),
         category: "Features".to_string(),
