@@ -115,6 +115,7 @@ mod journal;
 mod eyebreak;
 mod worldclock;
 mod presencedetector;
+mod meetingcost;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -657,6 +658,7 @@ fn main() {
 
             // Initialize World Clock
             app.manage(worldclock::WorldClockManager::default());
+            app.manage(meetingcost::MeetingCostManager::default());
 
             // Reminder manager
             let reminder_manager = std::sync::Arc::new(reminders::ReminderManager::default());
@@ -1697,6 +1699,16 @@ fn main() {
             presencedetector::start_presence_detector,
             presencedetector::stop_presence_detector,
             presencedetector::set_manual_status,
+            // Meeting Cost Timer commands
+            meetingcost::meeting_start,
+            meetingcost::meeting_stop,
+            meetingcost::meeting_pause,
+            meetingcost::meeting_resume,
+            meetingcost::meeting_update_attendees,
+            meetingcost::meeting_get_state,
+            meetingcost::meeting_get_config,
+            meetingcost::meeting_set_config,
+            meetingcost::meeting_reset_daily,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

@@ -366,3 +366,6 @@ export { default as QuickReplyOverlay } from './QuickReplyOverlay.svelte';
 
 // System Resource Widget - compact CPU/RAM/disk monitor
 export { default as SystemResourceWidget } from './SystemResourceWidget.svelte';
+
+// Meeting Cost Timer - track meeting duration and real-time cost
+export { default as MeetingCostPanel } from './MeetingCostPanel.svelte';
