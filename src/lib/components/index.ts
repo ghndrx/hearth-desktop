@@ -297,7 +297,6 @@ export { default as HttpStatusWidget } from './HttpStatusWidget.svelte';
 // MIME type lookup widget
 export { default as MimeTypeLookupWidget } from './MimeTypeLookupWidget.svelte';
 export { default as ChmodCalculatorWidget } from './ChmodCalculatorWidget.svelte';
-export { default as RegexTesterWidget } from './RegexTesterWidget.svelte';
 
 // Daily digest widget - provides morning/evening summary of notifications, focus time, and events
 export { default as DailyDigestWidget } from './DailyDigestWidget.svelte';
@@ -322,3 +321,27 @@ export { default as VoiceMemoPanel } from './VoiceMemoPanel.svelte';
 
 // Widget Dashboard - configurable grid of desktop widgets
 export { default as WidgetDashboardPanel } from './WidgetDashboardPanel.svelte';
+
+// Habit Tracker - daily habit tracking with streak stats and week view
+export { default as HabitTrackerPanel } from './HabitTrackerPanel.svelte';
+
+// Activity Heatmap - contribution graph visualization
+export { default as ActivityHeatmapPanel } from './ActivityHeatmapPanel.svelte';
+
+// Message Templates - pre-made response templates
+export { default as MessageTemplatesPanel } from './MessageTemplatesPanel.svelte';
+
+// Sticky Notes - color-coded notes with positioning
+export { default as StickyNotesPanel } from './StickyNotesPanel.svelte';
+
+// File Organizer - automatic file organization by rules
+export { default as FileOrganizerPanel } from './FileOrganizerPanel.svelte';
+
+// Pomodoro Timer - work/break cycles with circular progress
+export { default as PomodoroPanel } from './PomodoroPanel.svelte';
+
+// Scheduled Messages - queue messages for later delivery
+export { default as ScheduledMessagesPanel } from './ScheduledMessagesPanel.svelte';
+
+// Status Countdown - temporary status with auto-expiry timer
+export { default as StatusCountdownPanel } from './StatusCountdownPanel.svelte';

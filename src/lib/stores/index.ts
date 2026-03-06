@@ -151,3 +151,16 @@ export { templates, loadTemplates, createTemplate, updateTemplate, deleteTemplat
 export { heatmapData, activityStats, todayActivity, loadHeatmapYear, recordActivity, getActivityStats, getStreak, type HeatmapData, type DailyActivity, type ActivityStats } from './activityHeatmap';
 export { stickyNotes, archivedNotes, loadStickyNotes, createNote, updateNote, deleteNote, setNoteColor, setNotePosition, togglePin, archiveNote, type StickyNote, type StickyNoteColor } from './stickyNotes';
 export { organizerConfig, organizerHistory, organizerStats, loadOrganizerConfig, organizeDirectory, previewOrganize, undoLast, addRule, removeRule, type FileOrganizerConfig, type OrganizedFile } from './fileOrganizer';
+
+// Status Countdown - temporary status with auto-expiry timer (native Tauri integration)
+export {
+	statusCountdown,
+	activeCountdown,
+	countdownPresets,
+	isCountdownActive,
+	countdownProgress,
+	countdownFormatted,
+	emojiFromKey,
+	type StatusCountdown,
+	type StatusPreset
+} from './statusCountdown';
