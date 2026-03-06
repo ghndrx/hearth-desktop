@@ -144,3 +144,10 @@ export { notificationGroups, groupConfig, unreadGroupCount, getAllGroups, addNot
 export { workspaceLayouts, activeLayout, layoutPresets, saveLayout, loadLayout, deleteLayout, getAllLayouts, getPresets, applyPreset, type WorkspaceLayout, type LayoutPreset } from './workspaceLayouts';
 export { voiceMemos, recordingState, memoCount, favoriteMemos, startRecording, stopRecording, cancelRecording, getAllMemos, deleteMemo, toggleFavorite, type VoiceMemo, type VoiceMemoRecordingState } from './voiceMemos';
 export { dashboardState, dashboardVisible, dashboardWidgets, getDashboardState, toggleDashboard, addWidget, removeWidget, resetDashboard, type DashboardWidget, type DashboardConfig, type DashboardState } from './widgetDashboard';
+
+// Native features: Habit Tracker, Message Templates, Activity Heatmap, Sticky Notes, File Organizer
+export { habits, habitStats, loadHabits, createHabit, deleteHabit, completeHabit, uncompleteHabit, getHabitStats, updateHabit, resetHabit, loadAllStats, type Habit, type HabitStats } from './habitTracker';
+export { templates, loadTemplates, createTemplate, updateTemplate, deleteTemplate, applyTemplate, searchTemplates, exportTemplates, importTemplates, type MessageTemplate, type TemplateCategory } from './messageTemplates';
+export { heatmapData, activityStats, todayActivity, loadHeatmapYear, recordActivity, getActivityStats, getStreak, type HeatmapData, type DailyActivity, type ActivityStats } from './activityHeatmap';
+export { stickyNotes, archivedNotes, loadStickyNotes, createNote, updateNote, deleteNote, setNoteColor, setNotePosition, togglePin, archiveNote, type StickyNote, type StickyNoteColor } from './stickyNotes';
+export { organizerConfig, organizerHistory, organizerStats, loadOrganizerConfig, organizeDirectory, previewOrganize, undoLast, addRule, removeRule, type FileOrganizerConfig, type OrganizedFile } from './fileOrganizer';
