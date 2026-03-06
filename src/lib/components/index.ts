@@ -376,3 +376,6 @@ export { default as MeetingCostPanel } from './MeetingCostPanel.svelte';
 
 // Mood Tracker - daily wellbeing check-ins with history and stats
 export { default as MoodTrackerPanel } from './MoodTrackerPanel.svelte';
+
+// Quick Timer - lightweight countdown timers with tray integration
+export { default as QuickTimerPanel } from './QuickTimerPanel.svelte';
