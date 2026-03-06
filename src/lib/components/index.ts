@@ -351,3 +351,6 @@ export { default as DailyJournalPanel } from './DailyJournalPanel.svelte';
 
 // Eye Break Reminder - 20-20-20 rule wellness timer
 export { default as EyeBreakPanel } from './EyeBreakPanel.svelte';
+
+// World Clock - multiple timezone display for remote teams
+export { default as WorldClockPanel } from './WorldClockPanel.svelte';
