@@ -110,6 +110,7 @@ mod habittracker;
 mod fileorganizer;
 mod messagetemplates;
 mod stickynotes;
+mod statuscountdown;
 
 use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -642,6 +643,9 @@ fn main() {
 
             // Initialize Sticky Notes
             app.manage(stickynotes::StickyNotesManager::default());
+
+            // Initialize Status Countdown Timer
+            app.manage(statuscountdown::StatusCountdownManager::default());
 
             // Reminder manager
             let reminder_manager = std::sync::Arc::new(reminders::ReminderManager::default());
@@ -1646,6 +1650,16 @@ fn main() {
             stickynotes::sticky_restore,
             stickynotes::sticky_link_to_message,
             stickynotes::sticky_clear_archived,
+            // Status Countdown Timer commands
+            statuscountdown::countdown_start,
+            statuscountdown::countdown_stop,
+            statuscountdown::countdown_get,
+            statuscountdown::countdown_pause,
+            statuscountdown::countdown_resume,
+            statuscountdown::countdown_extend,
+            statuscountdown::countdown_get_presets,
+            statuscountdown::countdown_add_preset,
+            statuscountdown::countdown_remove_preset,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
