@@ -128,6 +128,7 @@ mod cryptohash;
 mod unitconverter;
 mod passwordgen;
 mod quicktimer;
+mod diceroller;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -509,6 +510,9 @@ fn main() {
             let quicktimer_manager = std::sync::Arc::new(quicktimer::QuickTimerManager::default());
             app.manage(quicktimer_manager.clone());
             quicktimer::start_timer_loop(app.handle().clone(), quicktimer_manager);
+
+            // Initialize Dice Roller
+            app.manage(diceroller::DiceRollerManager::default());
 
             Ok(())
         })
@@ -1613,6 +1617,11 @@ fn main() {
             quicktimer::quicktimer_cancel,
             quicktimer::quicktimer_cancel_all,
             quicktimer::quicktimer_get_all,
+            // Dice Roller commands
+            diceroller::dice_roll,
+            diceroller::dice_roll_quick,
+            diceroller::dice_get_history,
+            diceroller::dice_clear_history,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
