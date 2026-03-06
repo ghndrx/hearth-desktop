@@ -126,6 +126,7 @@ mod texttransform;
 mod systemuptime;
 mod cryptohash;
 mod unitconverter;
+mod passwordgen;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1598,6 +1599,9 @@ fn main() {
             // Unit Converter commands
             unitconverter::unit_convert,
             unitconverter::unit_get_categories,
+            // Password Generator commands
+            passwordgen::password_generate,
+            passwordgen::passphrase_generate,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
