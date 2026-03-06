@@ -127,6 +127,7 @@ mod systemuptime;
 mod cryptohash;
 mod unitconverter;
 mod passwordgen;
+mod quicktimer;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -503,6 +504,11 @@ fn main() {
 
             // Initialize Mood Tracker
             app.manage(moodtracker::MoodTrackerManager::default());
+
+            // Initialize Quick Timer
+            let quicktimer_manager = std::sync::Arc::new(quicktimer::QuickTimerManager::default());
+            app.manage(quicktimer_manager.clone());
+            quicktimer::start_timer_loop(app.handle().clone(), quicktimer_manager);
 
             Ok(())
         })
@@ -1602,6 +1608,11 @@ fn main() {
             // Password Generator commands
             passwordgen::password_generate,
             passwordgen::passphrase_generate,
+            // Quick Timer commands
+            quicktimer::quicktimer_start,
+            quicktimer::quicktimer_cancel,
+            quicktimer::quicktimer_cancel_all,
+            quicktimer::quicktimer_get_all,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

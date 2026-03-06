@@ -9,6 +9,7 @@ use std::sync::atomic::{AtomicU32, AtomicBool, AtomicU64, AtomicU8, Ordering};
 use std::sync::Mutex;
 use serde::{Deserialize, Serialize};
 use crate::snooze::{self, SnoozeDuration};
+use crate::quicktimer::QuickTimerManager;
 
 /// Cached original icon RGBA data and dimensions
 static ORIGINAL_ICON: once_cell::sync::Lazy<Mutex<Option<(Vec<u8>, u32, u32)>>> =
@@ -295,6 +296,44 @@ pub fn setup_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                         }
                     }
                 }
+                // Quick Timer menu items
+                id if id.starts_with("qtimer_") => {
+                    if let Some(manager) = app.try_state::<std::sync::Arc<QuickTimerManager>>() {
+                        let (label, secs) = match id {
+                            "qtimer_5m" => ("5 min timer", 300u64),
+                            "qtimer_10m" => ("10 min timer", 600),
+                            "qtimer_15m" => ("15 min timer", 900),
+                            "qtimer_30m" => ("30 min timer", 1800),
+                            "qtimer_1h" => ("1 hour timer", 3600),
+                            _ => ("Timer", 0),
+                        };
+                        if secs > 0 {
+                            manager.start_timer(label.to_string(), secs);
+                            let _ = app.notification()
+                                .builder()
+                                .title("Hearth")
+                                .body(format!("{} started", label))
+                                .show();
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.emit("quicktimer:started", serde_json::json!({
+                                    "label": label,
+                                    "durationSecs": secs,
+                                }));
+                            }
+                        }
+                        let is_muted = crate::commands::is_muted().unwrap_or(false);
+                        let focus_mode = FOCUS_MODE_ENABLED.load(Ordering::Relaxed);
+                        let _ = update_tray_menu(app, is_muted, focus_mode);
+                    }
+                }
+                "qtimer_cancel_all" => {
+                    if let Some(manager) = app.try_state::<std::sync::Arc<QuickTimerManager>>() {
+                        manager.cancel_all();
+                        let is_muted = crate::commands::is_muted().unwrap_or(false);
+                        let focus_mode = FOCUS_MODE_ENABLED.load(Ordering::Relaxed);
+                        let _ = update_tray_menu(app, is_muted, focus_mode);
+                    }
+                }
                 "quit" => {
                     app.exit(0);
                 }
@@ -426,6 +465,22 @@ fn create_tray_menu<R: Runtime>(
         &[&pomodoro_status, &pomodoro_sep, &pomodoro_start_pause_i, &pomodoro_reset_i, &pomodoro_skip_i],
     )?;
     
+    // Quick Timer submenu
+    let qtimer_5m = MenuItem::with_id(app, "qtimer_5m", "5 minutes", true, None::<&str>)?;
+    let qtimer_10m = MenuItem::with_id(app, "qtimer_10m", "10 minutes", true, None::<&str>)?;
+    let qtimer_15m = MenuItem::with_id(app, "qtimer_15m", "15 minutes", true, None::<&str>)?;
+    let qtimer_30m = MenuItem::with_id(app, "qtimer_30m", "30 minutes", true, None::<&str>)?;
+    let qtimer_1h = MenuItem::with_id(app, "qtimer_1h", "1 hour", true, None::<&str>)?;
+    let qtimer_sep = PredefinedMenuItem::separator(app)?;
+    let qtimer_cancel = MenuItem::with_id(app, "qtimer_cancel_all", "Cancel All Timers", true, None::<&str>)?;
+
+    let qtimer_submenu = Submenu::with_items(
+        app,
+        "Quick Timer",
+        true,
+        &[&qtimer_5m, &qtimer_10m, &qtimer_15m, &qtimer_30m, &qtimer_1h, &qtimer_sep, &qtimer_cancel],
+    )?;
+
     // Privacy mode toggle (boss key)
     let toggle_privacy_i = MenuItem::with_id(app, "toggle_privacy", "Privacy Mode (⇧⌘L)", true, None::<&str>)?;
     
@@ -446,6 +501,7 @@ fn create_tray_menu<R: Runtime>(
         &toggle_focus_i,
         &snooze_submenu,
         &pomodoro_submenu,
+        &qtimer_submenu,
         &toggle_privacy_i,
         &check_updates_i,
         &separator2,
