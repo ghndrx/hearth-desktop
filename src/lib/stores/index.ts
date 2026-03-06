@@ -187,3 +187,13 @@ export { quickReply } from './quickReply';
 
 // System Resources - compact CPU/RAM/disk monitor
 export { systemResources } from './systemResources';
+
+// Meeting Cost Timer - track meeting duration and real-time cost
+export {
+	meetingCost,
+	meetingRunning,
+	meetingPaused,
+	formatCost,
+	formatDuration as formatMeetingDuration,
+	costPerSecond
+} from './meetingCost';
