@@ -379,3 +379,6 @@ export { default as MoodTrackerPanel } from './MoodTrackerPanel.svelte';
 
 // Quick Timer - lightweight countdown timers with tray integration
 export { default as QuickTimerPanel } from './QuickTimerPanel.svelte';
+
+// Network Diagnostics - ping, DNS lookup, and port checking
+export { default as NetworkDiagPanel } from './NetworkDiagPanel.svelte';
