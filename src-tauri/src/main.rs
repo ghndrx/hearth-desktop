@@ -131,6 +131,7 @@ mod quicktimer;
 mod diceroller;
 mod stopwatch;
 mod colorpalette;
+mod markdownpreview;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1639,6 +1640,9 @@ fn main() {
             colorpalette::palette_generate,
             colorpalette::palette_all_modes,
             colorpalette::palette_hex_to_hsl,
+            // Markdown preview commands
+            markdownpreview::markdown_render,
+            markdownpreview::markdown_word_count,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
