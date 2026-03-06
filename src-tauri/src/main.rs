@@ -119,8 +119,9 @@ mod presencedetector;
 mod meetingcost;
 mod threadpip;
 mod screentime;
+mod moodtracker;
 
-use tauri::{DragDropEvent, GlobalShortcutBuilder, Manager, WindowEvent};
+use tauri::{DragDropEvent, Emitter, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
 
 fn main() {
@@ -207,232 +208,174 @@ fn main() {
             #[cfg(target_os = "macos")]
             window.set_decorations(true)?;
 
-            // Register global shortcuts
-            let shortcut_manager = app.global_shortcut_manager();
+            // Register global shortcuts using tauri-plugin-global-shortcut
+            {
+                use tauri_plugin_global_shortcut::GlobalShortcutExt;
 
-            // Toggle window visibility with Cmd/Ctrl+Shift+H
-            shortcut_manager
-                .register("CommandOrControl+Shift+H", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        if let Some(window) = app_handle.get_webview_window("main") {
-                            if window.is_visible().unwrap_or(false) {
-                                let _ = window.hide();
-                            } else {
-                                let _ = window.show();
-                                let _ = window.set_focus();
-                            }
-                        }
-                    }
-                })
-                .ok();
+                let gs = app.handle().global_shortcut();
 
-            // Show window with Cmd/Ctrl+Shift+S
-            shortcut_manager
-                .register("CommandOrControl+Shift+S", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        if let Some(window) = app_handle.get_webview_window("main") {
+                // Toggle window visibility with Cmd/Ctrl+Shift+H
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("CommandOrControl+Shift+H", move |_app, _shortcut, _event| {
+                    if let Some(window) = app_h.get_webview_window("main") {
+                        if window.is_visible().unwrap_or(false) {
+                            let _ = window.hide();
+                        } else {
                             let _ = window.show();
                             let _ = window.set_focus();
                         }
                     }
-                })
-                .ok();
+                });
 
-            // Toggle mute with Cmd/Ctrl+Shift+M
-            shortcut_manager
-                .register("CommandOrControl+Shift+M", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        let muted = crate::commands::toggle_mute().unwrap_or(false);
-                        // Update the tray menu to reflect new state
-                        let _ = crate::tray::update_tray_mute_state(&app_handle, muted);
-                        
-                        // Show a toast notification via the window
-                        if let Some(window) = app_handle.get_webview_window("main") {
-                            let message = if muted {
-                                "Notifications muted"
-                            } else {
-                                "Notifications unmuted"
-                            };
-                            let _ = window.emit("mute-state-changed", serde_json::json!({
-                                "muted": muted,
-                                "message": message
-                            }));
-                        }
+                // Show window with Cmd/Ctrl+Shift+S
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("CommandOrControl+Shift+S", move |_app, _shortcut, _event| {
+                    if let Some(window) = app_h.get_webview_window("main") {
+                        let _ = window.show();
+                        let _ = window.set_focus();
                     }
-                })
-                .ok();
+                });
 
-            // Toggle focus mode with Cmd/Ctrl+Shift+F
-            shortcut_manager
-                .register("CommandOrControl+Shift+F", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        let active = crate::commands::toggle_focus_mode().unwrap_or(false);
-                        // Update the tray menu to reflect new state
-                        let _ = crate::tray::update_tray_focus_state(&app_handle, active);
-                        
-                        // Show a toast notification via the window
-                        if let Some(window) = app_handle.get_webview_window("main") {
-                            let message = if active {
-                                "Focus mode enabled - only mentions and DMs"
-                            } else {
-                                "Focus mode disabled"
-                            };
-                            let _ = window.emit("focus-mode-changed", serde_json::json!({
-                                "active": active,
-                                "message": message
-                            }));
-                        }
+                // Toggle mute with Cmd/Ctrl+Shift+M
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("CommandOrControl+Shift+M", move |_app, _shortcut, _event| {
+                    let muted = crate::commands::toggle_mute().unwrap_or(false);
+                    let _ = crate::tray::update_tray_mute_state(&app_h, muted);
+                    if let Some(window) = app_h.get_webview_window("main") {
+                        let message = if muted {
+                            "Notifications muted"
+                        } else {
+                            "Notifications unmuted"
+                        };
+                        let _ = window.emit("mute-state-changed", serde_json::json!({
+                            "muted": muted,
+                            "message": message
+                        }));
                     }
-                })
-                .ok();
+                });
 
-            // Toggle mini mode (PiP) with Cmd/Ctrl+Shift+P
-            shortcut_manager
-                .register("CommandOrControl+Shift+P", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        if let Some(window) = app_handle.get_webview_window("main") {
-                            let window_clone = window.clone();
-                            tauri::async_runtime::spawn(async move {
-                                match crate::commands::toggle_mini_mode(window_clone, None).await {
-                                    Ok(state) => {
-                                        let message = if state.is_active {
-                                            "Mini mode enabled"
-                                        } else {
-                                            "Mini mode disabled"
-                                        };
-                                        let _ = window.emit("mini-mode-changed", serde_json::json!({
-                                            "active": state.is_active,
-                                            "message": message,
-                                            "corner": state.corner
-                                        }));
-                                    }
-                                    Err(e) => {
-                                        log::error!("Failed to toggle mini mode: {}", e);
-                                    }
+                // Toggle focus mode with Cmd/Ctrl+Shift+F
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("CommandOrControl+Shift+F", move |_app, _shortcut, _event| {
+                    let active = crate::commands::toggle_focus_mode().unwrap_or(false);
+                    let _ = crate::tray::update_tray_focus_state(&app_h, active);
+                    if let Some(window) = app_h.get_webview_window("main") {
+                        let message = if active {
+                            "Focus mode enabled - only mentions and DMs"
+                        } else {
+                            "Focus mode disabled"
+                        };
+                        let _ = window.emit("focus-mode-changed", serde_json::json!({
+                            "active": active,
+                            "message": message
+                        }));
+                    }
+                });
+
+                // Toggle mini mode (PiP) with Cmd/Ctrl+Shift+P
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("CommandOrControl+Shift+P", move |_app, _shortcut, _event| {
+                    if let Some(window) = app_h.get_webview_window("main") {
+                        let window_clone = window.clone();
+                        tauri::async_runtime::spawn(async move {
+                            match crate::commands::toggle_mini_mode(window_clone, None).await {
+                                Ok(state) => {
+                                    let message = if state.is_active {
+                                        "Mini mode enabled"
+                                    } else {
+                                        "Mini mode disabled"
+                                    };
+                                    let _ = window.emit("mini-mode-changed", serde_json::json!({
+                                        "active": state.is_active,
+                                        "message": message,
+                                        "corner": state.corner
+                                    }));
                                 }
-                            });
-                        }
-                    }
-                })
-                .ok();
-
-            // Toggle privacy mode with Cmd/Ctrl+Shift+L
-            shortcut_manager
-                .register("CommandOrControl+Shift+L", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        privacy::emit_privacy_toggle(&app_handle);
-                    }
-                })
-                .ok();
-
-            // Toggle Zen Mode with Cmd/Ctrl+Shift+Z
-            shortcut_manager
-                .register("CommandOrControl+Shift+Z", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        if let Some(window) = app_handle.get_webview_window("main") {
-                            let window_clone = window.clone();
-                            tauri::async_runtime::spawn(async move {
-                                match zenmode::toggle_zen_mode(window_clone).await {
-                                    Ok(config) => {
-                                        let message = if config.enabled {
-                                            "Zen Mode enabled - distraction-free chat"
-                                        } else {
-                                            "Zen Mode disabled"
-                                        };
-                                        let _ = window.emit("zen-mode-changed", serde_json::json!({
-                                            "enabled": config.enabled,
-                                            "message": message,
-                                            "config": config
-                                        }));
-                                    }
-                                    Err(e) => {
-                                        log::error!("Failed to toggle Zen Mode: {}", e);
-                                    }
+                                Err(e) => {
+                                    log::error!("Failed to toggle mini mode: {}", e);
                                 }
-                            });
-                        }
+                            }
+                        });
                     }
-                })
-                .ok();
+                });
 
-            // Toggle quick capture with Cmd/Ctrl+Shift+C
-            shortcut_manager
-                .register("CommandOrControl+Shift+C", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        let manager = app_handle.state::<quickcapture::QuickCaptureManager>();
-                        let _ = manager.toggle(&app_handle);
-                    }
-                })
-                .ok();
+                // Toggle privacy mode with Cmd/Ctrl+Shift+L
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("CommandOrControl+Shift+L", move |_app, _shortcut, _event| {
+                    privacy::emit_privacy_toggle(&app_h);
+                });
 
-            // Toggle quick notes with Cmd/Ctrl+Shift+N
-            shortcut_manager
-                .register("CommandOrControl+Shift+N", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        if let Some(window) = app_handle.get_webview_window("main") {
-                            let _ = window.emit("toggle-quick-notes", ());
-                        }
+                // Toggle Zen Mode with Cmd/Ctrl+Shift+Z
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("CommandOrControl+Shift+Z", move |_app, _shortcut, _event| {
+                    if let Some(window) = app_h.get_webview_window("main") {
+                        let window_clone = window.clone();
+                        tauri::async_runtime::spawn(async move {
+                            match zenmode::toggle_zen_mode(window_clone).await {
+                                Ok(config) => {
+                                    let message = if config.enabled {
+                                        "Zen Mode enabled - distraction-free chat"
+                                    } else {
+                                        "Zen Mode disabled"
+                                    };
+                                    let _ = window.emit("zen-mode-changed", serde_json::json!({
+                                        "enabled": config.enabled,
+                                        "message": message,
+                                        "config": config
+                                    }));
+                                }
+                                Err(e) => {
+                                    log::error!("Failed to toggle Zen Mode: {}", e);
+                                }
+                            }
+                        });
                     }
-                })
-                .ok();
+                });
 
-            // Toggle quick replies with Cmd/Ctrl+Shift+R
-            shortcut_manager
-                .register("CommandOrControl+Shift+R", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        if let Some(window) = app_handle.get_webview_window("main") {
-                            let _ = window.emit("open-quick-replies", ());
-                        }
-                    }
-                })
-                .ok();
+                // Toggle quick capture with Cmd/Ctrl+Shift+C
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("CommandOrControl+Shift+C", move |_app, _shortcut, _event| {
+                    let manager = app_h.state::<quickcapture::QuickCaptureManager>();
+                    let _ = manager.toggle(&app_h);
+                });
 
-            // Register media key shortcuts
-            shortcut_manager
-                .register("MediaPlayPause", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        mediasession::emit_media_action(&app_handle, "pause");
+                // Toggle quick notes with Cmd/Ctrl+Shift+N
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("CommandOrControl+Shift+N", move |_app, _shortcut, _event| {
+                    if let Some(window) = app_h.get_webview_window("main") {
+                        let _ = window.emit("toggle-quick-notes", ());
                     }
-                })
-                .ok();
+                });
 
-            shortcut_manager
-                .register("MediaStop", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        mediasession::emit_media_action(&app_handle, "stop");
+                // Toggle quick replies with Cmd/Ctrl+Shift+R
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("CommandOrControl+Shift+R", move |_app, _shortcut, _event| {
+                    if let Some(window) = app_h.get_webview_window("main") {
+                        let _ = window.emit("open-quick-replies", ());
                     }
-                })
-                .ok();
+                });
 
-            shortcut_manager
-                .register("MediaTrackNext", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        mediasession::emit_media_action(&app_handle, "next");
-                    }
-                })
-                .ok();
+                // Register media key shortcuts
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("MediaPlayPause", move |_app, _shortcut, _event| {
+                    mediasession::emit_media_action(&app_h, "pause");
+                });
 
-            shortcut_manager
-                .register("MediaTrackPrevious", {
-                    let app_handle = app.handle().clone();
-                    move || {
-                        mediasession::emit_media_action(&app_handle, "previous");
-                    }
-                })
-                .ok();
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("MediaStop", move |_app, _shortcut, _event| {
+                    mediasession::emit_media_action(&app_h, "stop");
+                });
+
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("MediaTrackNext", move |_app, _shortcut, _event| {
+                    mediasession::emit_media_action(&app_h, "next");
+                });
+
+                let app_h = app.handle().clone();
+                let _ = gs.on_shortcut("MediaTrackPrevious", move |_app, _shortcut, _event| {
+                    mediasession::emit_media_action(&app_h, "previous");
+                });
+            }
 
             // Register deep link handler
             let handle = app.handle().clone();
@@ -688,6 +631,9 @@ fn main() {
             // Initialize Workspace Layouts
             app.manage(workspacelayouts::WorkspaceLayoutManager::default());
 
+            // Initialize Mood Tracker
+            app.manage(moodtracker::MoodTrackerManager::default());
+
             Ok(())
         })
         .on_menu_event(|app, event| {
@@ -696,7 +642,6 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             commands::get_app_version,
             commands::show_notification,
-            commands::set_badge_count,
             commands::minimize_window,
             commands::toggle_maximize,
             commands::close_window,
@@ -855,7 +800,6 @@ fn main() {
             sysinfo::get_memory_info,
             sysinfo::get_runtime_info,
             // Badge commands
-            badge::set_badge_count,
             badge::clear_badge,
             badge::set_badge_muted,
             badge::request_attention,
@@ -916,7 +860,6 @@ fn main() {
             backup::export_layouts,
             backup::import_layouts,
             backup::run_scheduled_backup,
-            backup::get_app_version,
             backup::get_platform,
             // Text-to-Speech commands
             tts::tts_init,
@@ -1745,6 +1688,14 @@ fn main() {
             screentime::screentime_set_idle_threshold,
             screentime::screentime_reset,
             screentime::screentime_save,
+            // Mood Tracker commands
+            moodtracker::mood_log,
+            moodtracker::mood_get_today,
+            moodtracker::mood_get_range,
+            moodtracker::mood_get_history,
+            moodtracker::mood_delete,
+            moodtracker::mood_get_stats,
+            moodtracker::mood_clear,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
