@@ -24,6 +24,7 @@ mod performance;
 mod power;
 mod privacy;
 mod screenshot;
+mod screensources;
 mod smartstatus;
 mod snooze;
 mod spellcheck;
@@ -582,6 +583,9 @@ fn main() {
             screenshot::get_screenshots_dir,
             screenshot::list_screenshots,
             screenshot::delete_screenshot,
+            // Screen source enumeration for screen sharing
+            screensources::get_screen_sources,
+            screensources::capture_source_thumbnail,
             // Audio commands
             audio::get_audio_input_devices,
             audio::get_audio_output_devices,
