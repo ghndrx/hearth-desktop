@@ -139,6 +139,11 @@ mod base64tool;
 mod difftool;
 mod envvars;
 mod recentchannels;
+mod usbmonitor;
+mod clipboardsync;
+mod pipgallery;
+mod fontpreview;
+mod filehash;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -337,6 +342,12 @@ fn main() {
             // Initialize Crypto Hash Manager
             app.manage(cryptohash::CryptoHashManager::default());
 
+            // Initialize File Hash Verifier Manager
+            app.manage(filehash::FileHashManager::default());
+
+            // Initialize Clipboard Sync Manager
+            app.manage(clipboardsync::ClipSyncManager::default());
+
             // Initialize Activity Heatmap Manager
             app.manage(activityheatmap::ActivityHeatmapManager::new(app_data_dir)
                 .expect("Failed to initialize activity heatmap"));
@@ -531,6 +542,9 @@ fn main() {
             let stopwatch_manager = std::sync::Arc::new(stopwatch::StopwatchManager::default());
             app.manage(stopwatch_manager.clone());
             stopwatch::start_stopwatch_loop(app.handle().clone(), stopwatch_manager);
+
+            // Initialize Font Preview manager
+            app.manage(fontpreview::FontPreviewManager::default());
 
             Ok(())
         })
@@ -1002,6 +1016,12 @@ fn main() {
             bluetooth::bluetooth_start_monitor,
             bluetooth::bluetooth_stop_monitor,
             bluetooth::bluetooth_is_monitoring,
+            // USB device monitor commands
+            usbmonitor::usb_get_devices,
+            usbmonitor::usb_get_device_count,
+            usbmonitor::usb_is_monitoring,
+            usbmonitor::usb_start_monitor,
+            usbmonitor::usb_stop_monitor,
             // Process manager commands
             processmanager::process_get_summary,
             processmanager::process_find_by_name,
@@ -1627,6 +1647,28 @@ fn main() {
             cryptohash::hash_get_history,
             cryptohash::hash_clear_history,
             cryptohash::hash_verify,
+            // File Hash Verifier commands
+            filehash::filehash_compute,
+            filehash::filehash_verify,
+            filehash::filehash_get_history,
+            filehash::filehash_clear_history,
+            filehash::filehash_compare_files,
+            // Clipboard Sync commands
+            clipboardsync::clipsync_get_entries,
+            clipboardsync::clipsync_add_entry,
+            clipboardsync::clipsync_clear,
+            clipboardsync::clipsync_get_settings,
+            clipboardsync::clipsync_update_settings,
+            clipboardsync::clipsync_get_stats,
+            // PiP Gallery commands
+            pipgallery::gallery_get_windows,
+            pipgallery::gallery_create_window,
+            pipgallery::gallery_close_window,
+            pipgallery::gallery_update_position,
+            pipgallery::gallery_set_opacity,
+            pipgallery::gallery_toggle_always_on_top,
+            pipgallery::gallery_arrange_grid,
+            pipgallery::gallery_close_all,
             // Unit Converter commands
             unitconverter::unit_convert,
             unitconverter::unit_get_categories,
@@ -1684,6 +1726,14 @@ fn main() {
             recentchannels::recent_channels_visit,
             recentchannels::recent_channels_list,
             recentchannels::recent_channels_clear,
+            // Font Preview commands
+            fontpreview::fontpreview_get_fonts,
+            fontpreview::fontpreview_search_fonts,
+            fontpreview::fontpreview_get_font_count,
+            fontpreview::fontpreview_get_font_categories,
+            fontpreview::fontpreview_get_favorites,
+            fontpreview::fontpreview_add_favorite,
+            fontpreview::fontpreview_remove_favorite,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
