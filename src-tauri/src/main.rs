@@ -129,6 +129,7 @@ mod cryptohash;
 mod unitconverter;
 mod passwordgen;
 mod quicktimer;
+mod coinflip;
 mod diceroller;
 mod stopwatch;
 mod colorpalette;
@@ -614,6 +615,9 @@ fn main() {
             let quicktimer_manager = std::sync::Arc::new(quicktimer::QuickTimerManager::default());
             app.manage(quicktimer_manager.clone());
             quicktimer::start_timer_loop(app.handle().clone(), quicktimer_manager);
+
+            // Initialize Coin Flip
+            app.manage(coinflip::CoinFlipManager::default());
 
             // Initialize Dice Roller
             app.manage(diceroller::DiceRollerManager::default());
@@ -1791,6 +1795,10 @@ fn main() {
             quicktimer::quicktimer_cancel,
             quicktimer::quicktimer_cancel_all,
             quicktimer::quicktimer_get_all,
+            // Coin Flip commands
+            coinflip::coinflip_flip,
+            coinflip::coinflip_get_stats,
+            coinflip::coinflip_clear,
             // Dice Roller commands
             diceroller::dice_roll,
             diceroller::dice_roll_quick,
