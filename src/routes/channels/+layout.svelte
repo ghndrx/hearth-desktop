@@ -26,9 +26,11 @@
 	import SplitView from '$lib/components/SplitView.svelte';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
 	import NotificationCenterPanel from '$lib/components/NotificationCenterPanel.svelte';
+	import FavoriteChannelsPanel from '$lib/components/FavoriteChannelsPanel.svelte';
 
 	let quickSwitcherOpen = false;
 	let notificationCenterOpen = false;
+	let favoritesOpen = false;
 
 	function handleKeydown(e: KeyboardEvent) {
 		// Don't trigger shortcuts when typing in an input
@@ -73,9 +75,17 @@
 			e.preventDefault();
 			splitViewStore.toggle();
 		}
+		// Ctrl+Shift+F to open favorites
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'F') {
+			e.preventDefault();
+			favoritesOpen = !favoritesOpen;
+		}
 		// Escape to close modals
 		if (e.key === 'Escape') {
-			if (quickSwitcherOpen) {
+			if (favoritesOpen) {
+				favoritesOpen = false;
+				e.preventDefault();
+			} else if (quickSwitcherOpen) {
 				quickSwitcherOpen = false;
 				e.preventDefault();
 			} else if ($isSearchOpen) {
@@ -261,6 +271,12 @@
 <NotificationCenterPanel
 	bind:open={notificationCenterOpen}
 	onClose={() => notificationCenterOpen = false}
+/>
+
+<!-- Favorite Channels Panel (Ctrl+Shift+F) -->
+<FavoriteChannelsPanel
+	bind:open={favoritesOpen}
+	onClose={() => favoritesOpen = false}
 />
 
 <!-- Image Preview Modal - Full screen image viewer -->
