@@ -144,6 +144,7 @@ mod clipboardsync;
 mod pipgallery;
 mod fontpreview;
 mod filehash;
+mod ambientsounds;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1734,6 +1735,16 @@ fn main() {
             fontpreview::fontpreview_get_favorites,
             fontpreview::fontpreview_add_favorite,
             fontpreview::fontpreview_remove_favorite,
+            // Ambient Sounds commands
+            ambientsounds::ambient_get_state,
+            ambientsounds::ambient_set_sound_volume,
+            ambientsounds::ambient_toggle_sound,
+            ambientsounds::ambient_set_master_volume,
+            ambientsounds::ambient_stop_all,
+            ambientsounds::ambient_apply_preset,
+            ambientsounds::ambient_save_preset,
+            ambientsounds::ambient_delete_preset,
+            ambientsounds::ambient_toggle_playback,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
