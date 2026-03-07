@@ -133,6 +133,7 @@ mod diceroller;
 mod stopwatch;
 mod colorpalette;
 mod markdownpreview;
+mod jsonformatter;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1647,6 +1648,12 @@ fn main() {
             // Markdown preview commands
             markdownpreview::markdown_render,
             markdownpreview::markdown_word_count,
+            // JSON Formatter commands
+            jsonformatter::json_format,
+            jsonformatter::json_minify,
+            jsonformatter::json_validate,
+            jsonformatter::json_query,
+            jsonformatter::json_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
