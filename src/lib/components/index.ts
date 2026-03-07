@@ -422,3 +422,18 @@ export { default as ContrastCheckerPanel } from './ContrastCheckerPanel.svelte';
 
 // Dice Roller - dice rolling widget with expression parser and history
 export { default as DiceRollerWidget } from './DiceRollerWidget.svelte';
+
+// Tray Quick Actions - configurable system tray quick action buttons
+export { default as TrayActionsPanel } from './TrayActionsPanel.svelte';
+
+// Boot Manager - system startup items and boot time monitoring
+export { default as BootManagerPanel } from './BootManagerPanel.svelte';
+
+// File Watch Live - real-time directory file change monitoring
+export { default as FileWatchLivePanel } from './FileWatchLivePanel.svelte';
+
+// Network Interfaces - display all network interfaces with IPs and traffic stats
+export { default as NetworkInterfacesPanel } from './NetworkInterfacesPanel.svelte';
+
+// Clipboard Ring - circular clipboard history with search and pinning
+export { default as ClipboardRingPanel } from './ClipboardRingPanel.svelte';
