@@ -161,6 +161,11 @@ mod weather;
 mod netspeed;
 mod keystrokeheatmap;
 mod uptimemonitor;
+mod systemprofiler;
+mod filehasher;
+mod portscanner;
+mod logtail;
+mod whoislookup;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -637,6 +642,12 @@ fn main() {
             // Initialize Keystroke Heatmap
             app.manage(keystrokeheatmap::KeystrokeHeatmapManager::default());
             app.manage(uptimemonitor::UptimeMonitorManager::default());
+
+            // Initialize System Profiler
+            app.manage(systemprofiler::SystemProfilerManager::default());
+
+            // Initialize Log Tail manager
+            app.manage(logtail::LogTailManager::default());
 
             Ok(())
         })
@@ -1945,6 +1956,21 @@ fn main() {
             keystrokeheatmap::heatmap_get_top_keys,
             keystrokeheatmap::heatmap_reset,
             uptimemonitor::uptime_get_info,
+            // System Profiler
+            systemprofiler::systemprofiler_poll,
+            // File Hasher
+            filehasher::filehasher_hash,
+            filehasher::filehasher_hash_batch,
+            // Port Scanner
+            portscanner::portscan_scan,
+            portscanner::portscan_check_port,
+            // Log Tail
+            logtail::logtail_read,
+            logtail::logtail_poll,
+            logtail::logtail_unwatch,
+            logtail::logtail_list_watched,
+            // WHOIS Lookup
+            whoislookup::whois_lookup,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
