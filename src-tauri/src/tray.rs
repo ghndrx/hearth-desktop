@@ -334,6 +334,25 @@ pub fn setup_tray(app: &tauri::App) -> Result<(), Box<dyn std::error::Error>> {
                         let _ = update_tray_menu(app, is_muted, focus_mode);
                     }
                 }
+                // Recent channel navigation
+                id if id.starts_with("recent_ch_") => {
+                    let index: usize = id[10..].parse().unwrap_or(0);
+                    if let Some(state) = app.try_state::<crate::recentchannels::RecentChannelsState>() {
+                        let channels = crate::recentchannels::get_recent_for_tray(&state);
+                        if let Some(ch) = channels.get(index) {
+                            if let Some(window) = app.get_webview_window("main") {
+                                let _ = window.show();
+                                let _ = window.set_focus();
+                                let route = if let Some(ref sid) = ch.server_id {
+                                    format!("/channels/{}/{}", sid, ch.channel_id)
+                                } else {
+                                    format!("/channels/@me/{}", ch.channel_id)
+                                };
+                                let _ = window.emit("navigate", &route);
+                            }
+                        }
+                    }
+                }
                 "quit" => {
                     app.exit(0);
                 }
@@ -413,6 +432,9 @@ fn create_tray_menu<R: Runtime>(
         true,
         &status_refs,
     )?;
+
+    // Recent Channels submenu
+    let recent_channels_submenu = build_recent_channels_submenu(app)?;
 
     // Snooze submenu
     let snooze_status = snooze::get_snooze_status();
@@ -497,6 +519,7 @@ fn create_tray_menu<R: Runtime>(
         &settings_i,
         &separator,
         &status_submenu,
+        &recent_channels_submenu,
         &toggle_mute_i,
         &toggle_focus_i,
         &snooze_submenu,
@@ -508,6 +531,44 @@ fn create_tray_menu<R: Runtime>(
         &quit_i
     ])?;
     Ok(menu)
+}
+
+fn build_recent_channels_submenu<R: Runtime>(
+    app: &AppHandle<R>,
+) -> Result<Submenu<R>, Box<dyn std::error::Error>> {
+    let channels = if let Some(state) = app.try_state::<crate::recentchannels::RecentChannelsState>() {
+        crate::recentchannels::get_recent_for_tray(&state)
+    } else {
+        Vec::new()
+    };
+
+    if channels.is_empty() {
+        let empty = MenuItem::with_id(app, "recent_ch_empty", "No recent channels", false, None::<&str>)?;
+        return Submenu::with_items(app, "Recent Channels", true, &[&empty])
+            .map_err(Into::into);
+    }
+
+    let items: Vec<MenuItem<R>> = channels.iter().enumerate().map(|(i, ch)| {
+        let icon = match ch.channel_type {
+            1 => "@",  // DM
+            2 => "🔊", // voice
+            _ => "#",  // text
+        };
+        let label = if let Some(ref sname) = ch.server_name {
+            format!("{} {} ({})", icon, ch.channel_name, sname)
+        } else {
+            format!("{} {}", icon, ch.channel_name)
+        };
+        MenuItem::with_id(app, &format!("recent_ch_{}", i), &label, true, None::<&str>)
+            .expect("failed to create recent channel menu item")
+    }).collect();
+
+    let refs: Vec<&dyn tauri::menu::IsMenuItem<R>> = items.iter()
+        .map(|i| i as &dyn tauri::menu::IsMenuItem<R>)
+        .collect();
+
+    Submenu::with_items(app, "Recent Channels", true, &refs)
+        .map_err(Into::into)
 }
 
 fn update_tray_menu<R: Runtime>(
