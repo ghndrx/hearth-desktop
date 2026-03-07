@@ -148,6 +148,7 @@ mod ambientsounds;
 mod contrastchecker;
 mod linkinspector;
 mod textexpander;
+mod streaktracker;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -558,6 +559,9 @@ fn main() {
 
             // Initialize Text Expander
             app.manage(textexpander::TextExpanderManager::default());
+
+            // Initialize Streak Tracker
+            app.manage(streaktracker::StreakTrackerManager::default());
 
             Ok(())
         })
@@ -1781,6 +1785,12 @@ fn main() {
             textexpander::expander_get_categories,
             textexpander::expander_import,
             textexpander::expander_export,
+            // Streak Tracker commands
+            streaktracker::streak_get_stats,
+            streaktracker::streak_record_activity,
+            streaktracker::streak_check_in,
+            streaktracker::streak_get_history,
+            streaktracker::streak_reset,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
