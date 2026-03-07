@@ -419,3 +419,6 @@ export { default as AmbientSoundsPanel } from './AmbientSoundsPanel.svelte';
 
 // Contrast Checker - WCAG accessibility contrast ratio checker
 export { default as ContrastCheckerPanel } from './ContrastCheckerPanel.svelte';
+
+// Dice Roller - dice rolling widget with expression parser and history
+export { default as DiceRollerWidget } from './DiceRollerWidget.svelte';
