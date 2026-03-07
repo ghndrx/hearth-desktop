@@ -34,6 +34,11 @@
 	import ProxySettingsPanel from '$lib/components/ProxySettingsPanel.svelte';
 	import NativeNotificationPrefsPanel from '$lib/components/NativeNotificationPrefsPanel.svelte';
 	import TextExpanderPanel from '$lib/components/TextExpanderPanel.svelte';
+	import ClipManagerPanel from '$lib/components/ClipManagerPanel.svelte';
+	import SysDashboardPanel from '$lib/components/SysDashboardPanel.svelte';
+	import FileQuickSharePanel from '$lib/components/FileQuickSharePanel.svelte';
+	import ScreenCapturePanel from '$lib/components/ScreenCapturePanel.svelte';
+	import WorkspaceSwitcherPanel from '$lib/components/WorkspaceSwitcherPanel.svelte';
 
 	let quickSwitcherOpen = false;
 	let notificationCenterOpen = false;
@@ -45,6 +50,11 @@
 	let proxySettingsOpen = false;
 	let notificationPrefsOpen = false;
 	let textExpanderOpen = false;
+	let clipManagerOpen = false;
+	let sysDashboardOpen = false;
+	let fileQuickShareOpen = false;
+	let screenCaptureOpen = false;
+	let workspaceSwitcherOpen = false;
 
 	function handleKeydown(e: KeyboardEvent) {
 		// Don't trigger shortcuts when typing in an input
@@ -119,9 +129,49 @@
 			e.preventDefault();
 			textExpanderOpen = !textExpanderOpen;
 		}
+		// Ctrl+Shift+B to open clipboard manager
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'B') {
+			e.preventDefault();
+			clipManagerOpen = !clipManagerOpen;
+		}
+		// Ctrl+Shift+D to open system dashboard
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'D') {
+			e.preventDefault();
+			sysDashboardOpen = !sysDashboardOpen;
+		}
+		// Ctrl+Shift+Q to open file quick share
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Q') {
+			e.preventDefault();
+			fileQuickShareOpen = !fileQuickShareOpen;
+		}
+		// Ctrl+Shift+Y to open screen capture
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'Y') {
+			e.preventDefault();
+			screenCaptureOpen = !screenCaptureOpen;
+		}
+		// Ctrl+Shift+W to open workspace switcher
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'W') {
+			e.preventDefault();
+			workspaceSwitcherOpen = !workspaceSwitcherOpen;
+		}
 		// Escape to close modals
 		if (e.key === 'Escape') {
-			if (textExpanderOpen) {
+			if (workspaceSwitcherOpen) {
+				workspaceSwitcherOpen = false;
+				e.preventDefault();
+			} else if (screenCaptureOpen) {
+				screenCaptureOpen = false;
+				e.preventDefault();
+			} else if (fileQuickShareOpen) {
+				fileQuickShareOpen = false;
+				e.preventDefault();
+			} else if (sysDashboardOpen) {
+				sysDashboardOpen = false;
+				e.preventDefault();
+			} else if (clipManagerOpen) {
+				clipManagerOpen = false;
+				e.preventDefault();
+			} else if (textExpanderOpen) {
 				textExpanderOpen = false;
 				e.preventDefault();
 			} else if (autoUpdaterOpen) {
@@ -379,6 +429,36 @@
 <TextExpanderPanel
 	bind:open={textExpanderOpen}
 	onClose={() => textExpanderOpen = false}
+/>
+
+<!-- Clipboard Manager Panel (Ctrl+Shift+B) -->
+<ClipManagerPanel
+	bind:open={clipManagerOpen}
+	onClose={() => clipManagerOpen = false}
+/>
+
+<!-- System Dashboard Panel (Ctrl+Shift+D) -->
+<SysDashboardPanel
+	bind:open={sysDashboardOpen}
+	onClose={() => sysDashboardOpen = false}
+/>
+
+<!-- File Quick Share Panel (Ctrl+Shift+Q) -->
+<FileQuickSharePanel
+	bind:open={fileQuickShareOpen}
+	onClose={() => fileQuickShareOpen = false}
+/>
+
+<!-- Screen Capture Panel (Ctrl+Shift+Y) -->
+<ScreenCapturePanel
+	bind:open={screenCaptureOpen}
+	onClose={() => screenCaptureOpen = false}
+/>
+
+<!-- Workspace Switcher Panel (Ctrl+Shift+W) -->
+<WorkspaceSwitcherPanel
+	bind:open={workspaceSwitcherOpen}
+	onClose={() => workspaceSwitcherOpen = false}
 />
 
 <!-- Image Preview Modal - Full screen image viewer -->
