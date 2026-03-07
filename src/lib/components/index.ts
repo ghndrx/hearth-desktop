@@ -385,3 +385,19 @@ export { default as NetworkDiagPanel } from './NetworkDiagPanel.svelte';
 
 // Typing Speed Test - measure WPM and accuracy with multiple word modes
 export { default as TypingTestPanel } from './TypingTestPanel.svelte';
+
+// Native capture and recording panels
+export { default as ScreenshotPanel } from './ScreenshotPanel.svelte';
+export { default as ScreenRecorderPanel } from './ScreenRecorderPanel.svelte';
+
+// QR Code generation and scanning
+export { default as QRCodePanel } from './QRCodePanel.svelte';
+
+// Night Light - blue light filter with scheduling
+export { default as NightLightPanel } from './NightLightPanel.svelte';
+
+// Audio Devices - input/output device and volume management
+export { default as AudioDevicesPanel } from './AudioDevicesPanel.svelte';
+
+// Window Snap - window tiling and zone snapping
+export { default as WindowSnapPanel } from './WindowSnapPanel.svelte';
