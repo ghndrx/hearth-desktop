@@ -169,6 +169,7 @@ mod whoislookup;
 mod ipgeo;
 mod cputemp;
 mod batterymon;
+mod brightness;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1983,6 +1984,9 @@ fn main() {
             cputemp::cputemp_poll,
             // Battery Monitor
             batterymon::battery_poll,
+            // Brightness Control
+            brightness::brightness_get,
+            brightness::brightness_set,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
