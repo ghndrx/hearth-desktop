@@ -145,6 +145,7 @@ mod pipgallery;
 mod fontpreview;
 mod filehash;
 mod ambientsounds;
+mod contrastchecker;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -546,6 +547,9 @@ fn main() {
 
             // Initialize Font Preview manager
             app.manage(fontpreview::FontPreviewManager::default());
+
+            // Initialize Contrast Checker
+            app.manage(contrastchecker::ContrastCheckerManager::default());
 
             Ok(())
         })
@@ -1745,6 +1749,12 @@ fn main() {
             ambientsounds::ambient_save_preset,
             ambientsounds::ambient_delete_preset,
             ambientsounds::ambient_toggle_playback,
+            // Contrast Checker commands
+            contrastchecker::contrast_check,
+            contrastchecker::contrast_suggest,
+            contrastchecker::contrast_get_history,
+            contrastchecker::contrast_clear_history,
+            contrastchecker::contrast_parse_color,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
