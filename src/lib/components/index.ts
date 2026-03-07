@@ -416,3 +416,6 @@ export { default as SystemHealthPanel } from './SystemHealthPanel.svelte';
 
 // Ambient Sounds - mix background sounds for focus with presets and volume control
 export { default as AmbientSoundsPanel } from './AmbientSoundsPanel.svelte';
+
+// Contrast Checker - WCAG accessibility contrast ratio checker
+export { default as ContrastCheckerPanel } from './ContrastCheckerPanel.svelte';
