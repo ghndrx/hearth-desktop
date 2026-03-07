@@ -158,6 +158,7 @@ mod workspaceswitcher;
 mod typingspeed;
 mod floatingwindow;
 mod weather;
+mod netspeed;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -627,6 +628,9 @@ fn main() {
 
             // Initialize Tray Customizer
             app.manage(traycustomizer::TrayCustomizerManager::default());
+
+            // Initialize Network Speed Monitor
+            app.manage(netspeed::NetSpeedManager::default());
 
             Ok(())
         })
@@ -1924,6 +1928,10 @@ fn main() {
             weather::weather_get_location,
             weather::weather_get_cached,
             weather::weather_clear_location,
+            // Network Speed Monitor commands
+            netspeed::netspeed_poll,
+            netspeed::netspeed_get_state,
+            netspeed::netspeed_reset,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
