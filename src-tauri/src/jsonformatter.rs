@@ -69,8 +69,9 @@ pub fn json_format(text: String, indent: Option<usize>) -> Result<FormatResult, 
         serde_json::to_string(&parsed).map_err(|e| e.to_string())?
     } else {
         let mut buf = Vec::new();
+        let indent_str = " ".repeat(indent_size);
         let formatter = serde_json::ser::PrettyFormatter::with_indent(
-            " ".repeat(indent_size).as_bytes(),
+            indent_str.as_bytes(),
         );
         let mut ser = serde_json::Serializer::with_formatter(&mut buf, formatter);
         use serde::Serialize;

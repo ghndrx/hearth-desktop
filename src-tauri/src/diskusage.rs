@@ -77,7 +77,7 @@ pub fn disk_get_usage() -> Result<DiskUsageSummary, String> {
         disk_infos.push(DiskInfo {
             name: disk.name().to_string_lossy().to_string(),
             mount_point: disk.mount_point().to_string_lossy().to_string(),
-            fs_type: String::from_utf8_lossy(disk.file_system()).to_string(),
+            fs_type: disk.file_system().to_string_lossy().to_string(),
             total_bytes: total,
             used_bytes: used,
             free_bytes: available,
@@ -132,7 +132,7 @@ pub fn disk_get_info(path: String) -> Result<DiskInfo, String> {
                 best_match = Some(DiskInfo {
                     name: disk.name().to_string_lossy().to_string(),
                     mount_point: mp.to_string_lossy().to_string(),
-                    fs_type: String::from_utf8_lossy(disk.file_system()).to_string(),
+                    fs_type: disk.file_system().to_string_lossy().to_string(),
                     total_bytes: total,
                     used_bytes: used,
                     free_bytes: available,

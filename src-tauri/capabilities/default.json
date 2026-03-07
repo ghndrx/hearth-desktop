@@ -33,6 +33,21 @@
     "clipboard-manager:allow-write-text",
     "window-state:default",
     "window-state:allow-restore-state",
-    "window-state:allow-save-window-state"
+    "window-state:allow-save-window-state",
+    "global-shortcut:default",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "global-shortcut:allow-unregister-all",
+    "global-shortcut:allow-is-registered",
+    "core:window:allow-create",
+    "core:window:allow-set-size",
+    "core:window:allow-set-position",
+    "core:window:allow-set-decorations",
+    "core:window:allow-set-resizable",
+    "core:window:allow-set-skip-taskbar",
+    "core:window:allow-set-title",
+    "core:window:allow-center",
+    "core:window:allow-inner-size",
+    "core:window:allow-outer-position"
   ]
 }
