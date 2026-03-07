@@ -147,6 +147,7 @@ mod filehash;
 mod ambientsounds;
 mod contrastchecker;
 mod linkinspector;
+mod textexpander;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -554,6 +555,9 @@ fn main() {
 
             // Initialize Link Inspector
             app.manage(linkinspector::LinkInspectorManager::default());
+
+            // Initialize Text Expander
+            app.manage(textexpander::TextExpanderManager::default());
 
             Ok(())
         })
@@ -1764,6 +1768,19 @@ fn main() {
             linkinspector::link_clean_url,
             linkinspector::link_get_history,
             linkinspector::link_clear_history,
+            // Text Expander commands
+            textexpander::expander_get_state,
+            textexpander::expander_try_expand,
+            textexpander::expander_create,
+            textexpander::expander_update,
+            textexpander::expander_delete,
+            textexpander::expander_set_enabled,
+            textexpander::expander_get_triggers,
+            textexpander::expander_get_frequent,
+            textexpander::expander_search,
+            textexpander::expander_get_categories,
+            textexpander::expander_import,
+            textexpander::expander_export,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

@@ -276,6 +276,15 @@
 			icon: '⏺️',
 			action: () => dispatch('openPanel', { panel: 'screenrecorder' })
 		},
+		{
+			id: 'text-expander',
+			label: 'Text Expander',
+			description: 'Manage text shortcuts and abbreviations',
+			category: 'tools',
+			icon: 'T',
+			shortcut: ['Ctrl', 'Shift', 'E'],
+			action: () => dispatch('openPanel', { panel: 'textexpander' })
+		},
 		// Window
 		{
 			id: 'minimize',
