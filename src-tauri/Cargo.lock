@@ -1872,6 +1872,7 @@ dependencies = [
  "futures",
  "image",
  "lazy_static",
+ "libc",
  "log",
  "once_cell",
  "open",
