@@ -168,6 +168,7 @@ mod logtail;
 mod whoislookup;
 mod ipgeo;
 mod cputemp;
+mod batterymon;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1980,6 +1981,8 @@ fn main() {
             ipgeo::ipgeo_lookup,
             // CPU Temperature Monitor
             cputemp::cputemp_poll,
+            // Battery Monitor
+            batterymon::battery_poll,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
