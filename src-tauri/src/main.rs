@@ -155,6 +155,7 @@ mod sysdashboard;
 mod filequickshare;
 mod nativescreenshot;
 mod workspaceswitcher;
+mod typingspeed;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -377,6 +378,9 @@ fn main() {
 
             // Initialize Workspace Switcher Manager
             app.manage(workspaceswitcher::WorkspaceSwitcherManager::default());
+
+            // Initialize Typing Speed Tracker
+            app.manage(typingspeed::TypingSpeedManager::default());
 
             // Load custom spell check dictionary
             spellcheck::load_custom_dictionary(app.handle());
@@ -1861,6 +1865,12 @@ fn main() {
             workspaceswitcher::wkspc_remove_server,
             workspaceswitcher::wkspc_add_channel,
             workspaceswitcher::wkspc_remove_channel,
+            // Typing Speed Tracker commands
+            typingspeed::typing_speed_keystroke,
+            typingspeed::typing_speed_flush,
+            typingspeed::typing_speed_get_stats,
+            typingspeed::typing_speed_get_wpm,
+            typingspeed::typing_speed_reset,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
