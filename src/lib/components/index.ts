@@ -404,3 +404,6 @@ export { default as WindowSnapPanel } from './WindowSnapPanel.svelte';
 
 // Cron Builder - visual cron expression builder with next-run preview
 export { default as CronBuilderPanel } from './CronBuilderPanel.svelte';
+
+// Workspace Layouts - save, restore, and switch between window arrangements
+export { default as WorkspaceLayoutsPanel } from './WorkspaceLayoutsPanel.svelte';
