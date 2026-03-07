@@ -60,7 +60,7 @@ pub fn heatmap_record_keys(
 }
 
 #[tauri::command]
-pub fn heatmap_get_stats(
+pub fn keystroke_heatmap_get_stats(
     state: State<'_, KeystrokeHeatmapManager>,
 ) -> Result<KeystrokeStats, String> {
     let counts = state.counts.lock().map_err(|e| e.to_string())?;

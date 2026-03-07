@@ -51,8 +51,8 @@ pub fn cputemp_poll(
 
     for comp in components.iter() {
         let label = comp.label().to_string();
-        let current = comp.temperature();
-        let max = comp.max();
+        let current = comp.temperature().unwrap_or(0.0);
+        let max = comp.max().unwrap_or(0.0);
         let critical = comp.critical();
 
         // Skip sensors reporting 0 or negative

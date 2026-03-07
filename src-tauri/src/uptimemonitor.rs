@@ -31,7 +31,7 @@ impl Default for UptimeMonitorManager {
 }
 
 #[tauri::command]
-pub fn uptime_get_info(
+pub fn uptime_monitor_get_info(
     state: tauri::State<'_, UptimeMonitorManager>,
 ) -> Result<UptimeInfo, String> {
     let mut sys = state.sys.lock().map_err(|e| e.to_string())?;
