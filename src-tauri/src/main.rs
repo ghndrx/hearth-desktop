@@ -180,6 +180,7 @@ mod volumectl;
 mod alarmclock;
 mod tasklist;
 mod uuidgen;
+mod charmap;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -2075,6 +2076,10 @@ fn main() {
             tasklist::tasklist_remove,
             tasklist::tasklist_clear_completed,
             tasklist::tasklist_reorder,
+            // Character Map commands
+            charmap::charmap_get_categories,
+            charmap::charmap_search,
+            charmap::charmap_get_char_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
