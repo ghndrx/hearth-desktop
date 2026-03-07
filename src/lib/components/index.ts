@@ -401,3 +401,6 @@ export { default as AudioDevicesPanel } from './AudioDevicesPanel.svelte';
 
 // Window Snap - window tiling and zone snapping
 export { default as WindowSnapPanel } from './WindowSnapPanel.svelte';
+
+// Cron Builder - visual cron expression builder with next-run preview
+export { default as CronBuilderPanel } from './CronBuilderPanel.svelte';
