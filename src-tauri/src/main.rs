@@ -149,6 +149,7 @@ mod contrastchecker;
 mod linkinspector;
 mod textexpander;
 mod streaktracker;
+mod traycustomizer;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -562,6 +563,9 @@ fn main() {
 
             // Initialize Streak Tracker
             app.manage(streaktracker::StreakTrackerManager::default());
+
+            // Initialize Tray Customizer
+            app.manage(traycustomizer::TrayCustomizerManager::default());
 
             Ok(())
         })
@@ -1791,6 +1795,15 @@ fn main() {
             streaktracker::streak_check_in,
             streaktracker::streak_get_history,
             streaktracker::streak_reset,
+            // Tray Customizer commands
+            traycustomizer::tray_customizer_get_config,
+            traycustomizer::tray_customizer_set_item_visible,
+            traycustomizer::tray_customizer_reorder_items,
+            traycustomizer::tray_customizer_set_badge_visible,
+            traycustomizer::tray_customizer_set_status_tooltip,
+            traycustomizer::tray_customizer_set_compact_mode,
+            traycustomizer::tray_customizer_reset,
+            traycustomizer::tray_customizer_get_categories,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
