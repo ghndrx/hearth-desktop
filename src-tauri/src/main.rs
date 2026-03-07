@@ -2029,6 +2029,30 @@ fn main() {
             alarmclock::alarm_snooze,
             alarmclock::alarm_check_triggered,
             alarmclock::alarm_update,
+            // Tray Quick Actions
+            trayactions::trayactions_list,
+            trayactions::trayactions_trigger,
+            trayactions::trayactions_toggle,
+            trayactions::trayactions_add,
+            trayactions::trayactions_remove,
+            trayactions::trayactions_get_log,
+            // Startup Boot Manager
+            bootmanager::boot_scan,
+            bootmanager::boot_get_uptime,
+            // File Watch Live
+            filewatchlive::filewatchlive_set_path,
+            filewatchlive::filewatchlive_poll,
+            filewatchlive::filewatchlive_stop,
+            filewatchlive::filewatchlive_clear,
+            // Network Interfaces
+            netinterfaces::netinterfaces_scan,
+            // Clipboard Ring
+            clipring::clipring_add,
+            clipring::clipring_list,
+            clipring::clipring_pin,
+            clipring::clipring_remove,
+            clipring::clipring_clear,
+            clipring::clipring_search,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
