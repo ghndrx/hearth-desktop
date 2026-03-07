@@ -40,6 +40,7 @@
 	import ScreenCapturePanel from '$lib/components/ScreenCapturePanel.svelte';
 	import WorkspaceSwitcherPanel from '$lib/components/WorkspaceSwitcherPanel.svelte';
 	import IpGeoPanel from '$lib/components/IpGeoPanel.svelte';
+	import BrightnessPanel from '$lib/components/BrightnessPanel.svelte';
 
 	let quickSwitcherOpen = false;
 	let notificationCenterOpen = false;
@@ -57,6 +58,7 @@
 	let screenCaptureOpen = false;
 	let workspaceSwitcherOpen = false;
 	let ipGeoOpen = false;
+	let brightnessOpen = false;
 
 	function handleKeydown(e: KeyboardEvent) {
 		// Don't trigger shortcuts when typing in an input
@@ -161,9 +163,17 @@
 			e.preventDefault();
 			ipGeoOpen = !ipGeoOpen;
 		}
+		// Ctrl+Shift+J to open brightness control
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'J') {
+			e.preventDefault();
+			brightnessOpen = !brightnessOpen;
+		}
 		// Escape to close modals
 		if (e.key === 'Escape') {
-			if (ipGeoOpen) {
+			if (brightnessOpen) {
+				brightnessOpen = false;
+				e.preventDefault();
+			} else if (ipGeoOpen) {
 				ipGeoOpen = false;
 				e.preventDefault();
 			} else if (workspaceSwitcherOpen) {
@@ -475,6 +485,12 @@
 <IpGeoPanel
 	bind:open={ipGeoOpen}
 	onClose={() => ipGeoOpen = false}
+/>
+
+<!-- Brightness Control Panel (Ctrl+Shift+J) -->
+<BrightnessPanel
+	bind:open={brightnessOpen}
+	onClose={() => brightnessOpen = false}
 />
 
 <!-- Image Preview Modal - Full screen image viewer -->
