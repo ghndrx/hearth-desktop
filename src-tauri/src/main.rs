@@ -159,6 +159,7 @@ mod typingspeed;
 mod floatingwindow;
 mod weather;
 mod netspeed;
+mod keystrokeheatmap;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -631,6 +632,9 @@ fn main() {
 
             // Initialize Network Speed Monitor
             app.manage(netspeed::NetSpeedManager::default());
+
+            // Initialize Keystroke Heatmap
+            app.manage(keystrokeheatmap::KeystrokeHeatmapManager::default());
 
             Ok(())
         })
@@ -1932,6 +1936,12 @@ fn main() {
             netspeed::netspeed_poll,
             netspeed::netspeed_get_state,
             netspeed::netspeed_reset,
+            // Keystroke Heatmap commands
+            keystrokeheatmap::heatmap_record_key,
+            keystrokeheatmap::heatmap_record_keys,
+            keystrokeheatmap::heatmap_get_stats,
+            keystrokeheatmap::heatmap_get_top_keys,
+            keystrokeheatmap::heatmap_reset,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
