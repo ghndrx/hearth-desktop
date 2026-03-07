@@ -158,6 +158,11 @@ mod nativescreenshot;
 mod workspaceswitcher;
 mod typingspeed;
 mod floatingwindow;
+mod trayactions;
+mod bootmanager;
+mod filewatchlive;
+mod netinterfaces;
+mod clipring;
 mod weather;
 mod netspeed;
 mod keystrokeheatmap;
@@ -172,6 +177,7 @@ mod cputemp;
 mod batterymon;
 mod brightness;
 mod volumectl;
+mod alarmclock;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -660,6 +666,21 @@ fn main() {
 
             // Initialize CPU Temperature Monitor
             app.manage(cputemp::CpuTempManager::default());
+
+            // Initialize Alarm Clock
+            app.manage(alarmclock::AlarmClockManager::default());
+
+            // Initialize Tray Actions
+            app.manage(trayactions::TrayActionsManager::default());
+
+            // Initialize Boot Manager
+            app.manage(bootmanager::BootManager::default());
+
+            // Initialize File Watch Live
+            app.manage(filewatchlive::FileWatchLiveManager::default());
+
+            // Initialize Clipboard Ring
+            app.manage(clipring::ClipRingManager::default());
 
             Ok(())
         })
@@ -2000,6 +2021,14 @@ fn main() {
             volumectl::volume_get,
             volumectl::volume_set,
             volumectl::volume_toggle_mute,
+            // Alarm Clock commands
+            alarmclock::alarm_get_status,
+            alarmclock::alarm_create,
+            alarmclock::alarm_delete,
+            alarmclock::alarm_toggle,
+            alarmclock::alarm_snooze,
+            alarmclock::alarm_check_triggered,
+            alarmclock::alarm_update,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
