@@ -28,11 +28,21 @@
 	import NotificationCenterPanel from '$lib/components/NotificationCenterPanel.svelte';
 	import FavoriteChannelsPanel from '$lib/components/FavoriteChannelsPanel.svelte';
 	import LinkInspectorPanel from '$lib/components/LinkInspectorPanel.svelte';
+	import AutoUpdaterPanel from '$lib/components/AutoUpdaterPanel.svelte';
+	import SpellCheckPanel from '$lib/components/SpellCheckPanel.svelte';
+	import GlobalMediaPanel from '$lib/components/GlobalMediaPanel.svelte';
+	import ProxySettingsPanel from '$lib/components/ProxySettingsPanel.svelte';
+	import NativeNotificationPrefsPanel from '$lib/components/NativeNotificationPrefsPanel.svelte';
 
 	let quickSwitcherOpen = false;
 	let notificationCenterOpen = false;
 	let favoritesOpen = false;
 	let linkInspectorOpen = false;
+	let autoUpdaterOpen = false;
+	let spellCheckOpen = false;
+	let globalMediaOpen = false;
+	let proxySettingsOpen = false;
+	let notificationPrefsOpen = false;
 
 	function handleKeydown(e: KeyboardEvent) {
 		// Don't trigger shortcuts when typing in an input
@@ -87,9 +97,39 @@
 			e.preventDefault();
 			linkInspectorOpen = !linkInspectorOpen;
 		}
+		// Ctrl+Shift+U to open auto updater
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'U') {
+			e.preventDefault();
+			autoUpdaterOpen = !autoUpdaterOpen;
+		}
+		// Ctrl+Shift+; to open spell check
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === ':') {
+			e.preventDefault();
+			spellCheckOpen = !spellCheckOpen;
+		}
+		// Ctrl+Shift+M to open global media controls
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'M') {
+			e.preventDefault();
+			globalMediaOpen = !globalMediaOpen;
+		}
 		// Escape to close modals
 		if (e.key === 'Escape') {
-			if (linkInspectorOpen) {
+			if (autoUpdaterOpen) {
+				autoUpdaterOpen = false;
+				e.preventDefault();
+			} else if (spellCheckOpen) {
+				spellCheckOpen = false;
+				e.preventDefault();
+			} else if (globalMediaOpen) {
+				globalMediaOpen = false;
+				e.preventDefault();
+			} else if (proxySettingsOpen) {
+				proxySettingsOpen = false;
+				e.preventDefault();
+			} else if (notificationPrefsOpen) {
+				notificationPrefsOpen = false;
+				e.preventDefault();
+			} else if (linkInspectorOpen) {
 				linkInspectorOpen = false;
 				e.preventDefault();
 			} else if (favoritesOpen) {
@@ -293,6 +333,36 @@
 <LinkInspectorPanel
 	bind:open={linkInspectorOpen}
 	onClose={() => linkInspectorOpen = false}
+/>
+
+<!-- Auto Updater Panel (Ctrl+Shift+U) -->
+<AutoUpdaterPanel
+	bind:open={autoUpdaterOpen}
+	onClose={() => autoUpdaterOpen = false}
+/>
+
+<!-- Spell Check Panel (Ctrl+Shift+;) -->
+<SpellCheckPanel
+	bind:open={spellCheckOpen}
+	onClose={() => spellCheckOpen = false}
+/>
+
+<!-- Global Media Controls (Ctrl+Shift+M) -->
+<GlobalMediaPanel
+	bind:open={globalMediaOpen}
+	onClose={() => globalMediaOpen = false}
+/>
+
+<!-- Proxy Settings Panel -->
+<ProxySettingsPanel
+	bind:open={proxySettingsOpen}
+	onClose={() => proxySettingsOpen = false}
+/>
+
+<!-- Native Notification Preferences Panel -->
+<NativeNotificationPrefsPanel
+	bind:open={notificationPrefsOpen}
+	onClose={() => notificationPrefsOpen = false}
 />
 
 <!-- Image Preview Modal - Full screen image viewer -->

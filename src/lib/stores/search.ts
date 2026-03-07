@@ -69,7 +69,7 @@ export interface RecentSearch {
 	filters?: Partial<SearchFilters>;
 }
 
-interface SearchState {
+export interface SearchState {
 	isOpen: boolean;
 	filters: SearchFilters;
 	results: SearchResult[];
