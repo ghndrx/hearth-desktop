@@ -146,6 +146,7 @@ mod fontpreview;
 mod filehash;
 mod ambientsounds;
 mod contrastchecker;
+mod linkinspector;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -550,6 +551,9 @@ fn main() {
 
             // Initialize Contrast Checker
             app.manage(contrastchecker::ContrastCheckerManager::default());
+
+            // Initialize Link Inspector
+            app.manage(linkinspector::LinkInspectorManager::default());
 
             Ok(())
         })
@@ -1755,6 +1759,11 @@ fn main() {
             contrastchecker::contrast_get_history,
             contrastchecker::contrast_clear_history,
             contrastchecker::contrast_parse_color,
+            // Link Inspector commands
+            linkinspector::link_inspect,
+            linkinspector::link_clean_url,
+            linkinspector::link_get_history,
+            linkinspector::link_clear_history,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

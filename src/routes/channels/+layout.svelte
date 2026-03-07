@@ -27,10 +27,12 @@
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
 	import NotificationCenterPanel from '$lib/components/NotificationCenterPanel.svelte';
 	import FavoriteChannelsPanel from '$lib/components/FavoriteChannelsPanel.svelte';
+	import LinkInspectorPanel from '$lib/components/LinkInspectorPanel.svelte';
 
 	let quickSwitcherOpen = false;
 	let notificationCenterOpen = false;
 	let favoritesOpen = false;
+	let linkInspectorOpen = false;
 
 	function handleKeydown(e: KeyboardEvent) {
 		// Don't trigger shortcuts when typing in an input
@@ -80,9 +82,17 @@
 			e.preventDefault();
 			favoritesOpen = !favoritesOpen;
 		}
+		// Ctrl+Shift+L to open link inspector
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'L') {
+			e.preventDefault();
+			linkInspectorOpen = !linkInspectorOpen;
+		}
 		// Escape to close modals
 		if (e.key === 'Escape') {
-			if (favoritesOpen) {
+			if (linkInspectorOpen) {
+				linkInspectorOpen = false;
+				e.preventDefault();
+			} else if (favoritesOpen) {
 				favoritesOpen = false;
 				e.preventDefault();
 			} else if (quickSwitcherOpen) {
@@ -277,6 +287,12 @@
 <FavoriteChannelsPanel
 	bind:open={favoritesOpen}
 	onClose={() => favoritesOpen = false}
+/>
+
+<!-- Link Inspector Panel (Ctrl+Shift+I) -->
+<LinkInspectorPanel
+	bind:open={linkInspectorOpen}
+	onClose={() => linkInspectorOpen = false}
 />
 
 <!-- Image Preview Modal - Full screen image viewer -->
