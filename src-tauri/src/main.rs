@@ -181,6 +181,7 @@ mod alarmclock;
 mod tasklist;
 mod uuidgen;
 mod charmap;
+mod httptester;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -2080,6 +2081,8 @@ fn main() {
             charmap::charmap_get_categories,
             charmap::charmap_search,
             charmap::charmap_get_char_info,
+            // HTTP Request Tester
+            httptester::httptester_request,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

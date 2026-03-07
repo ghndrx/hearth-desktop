@@ -42,6 +42,7 @@
 	import IpGeoPanel from '$lib/components/IpGeoPanel.svelte';
 	import BrightnessPanel from '$lib/components/BrightnessPanel.svelte';
 	import VolumeControlPanel from '$lib/components/VolumeControlPanel.svelte';
+	import HttpTesterPanel from '$lib/components/HttpTesterPanel.svelte';
 
 	let quickSwitcherOpen = false;
 	let notificationCenterOpen = false;
@@ -61,6 +62,7 @@
 	let ipGeoOpen = false;
 	let brightnessOpen = false;
 	let volumeControlOpen = false;
+	let httpTesterOpen = false;
 
 	function handleKeydown(e: KeyboardEvent) {
 		// Don't trigger shortcuts when typing in an input
@@ -175,9 +177,17 @@
 			e.preventDefault();
 			volumeControlOpen = !volumeControlOpen;
 		}
+		// Ctrl+Shift+H to open HTTP tester
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'H') {
+			e.preventDefault();
+			httpTesterOpen = !httpTesterOpen;
+		}
 		// Escape to close modals
 		if (e.key === 'Escape') {
-			if (volumeControlOpen) {
+			if (httpTesterOpen) {
+				httpTesterOpen = false;
+				e.preventDefault();
+			} else if (volumeControlOpen) {
 				volumeControlOpen = false;
 				e.preventDefault();
 			} else if (brightnessOpen) {
@@ -507,6 +517,12 @@
 <VolumeControlPanel
 	bind:open={volumeControlOpen}
 	onClose={() => volumeControlOpen = false}
+/>
+
+<!-- HTTP Request Tester (Ctrl+Shift+H) -->
+<HttpTesterPanel
+	bind:open={httpTesterOpen}
+	onClose={() => httpTesterOpen = false}
 />
 
 <!-- Image Preview Modal - Full screen image viewer -->
