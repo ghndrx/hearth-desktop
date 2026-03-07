@@ -156,6 +156,8 @@ mod filequickshare;
 mod nativescreenshot;
 mod workspaceswitcher;
 mod typingspeed;
+mod floatingwindow;
+mod weather;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -171,6 +173,7 @@ fn main() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_clipboard_manager::init())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_window_state::Builder::new().build())
         .plugin(tauri_plugin_single_instance::init(|app, args, cwd| {
             // When a second instance is launched, focus the existing window
@@ -244,25 +247,56 @@ fn main() {
             #[cfg(target_os = "macos")]
             window.set_decorations(true)?;
 
-            // Global shortcuts - OS-level registration requires tauri-plugin-global-shortcut
-            // which is not currently in Cargo.toml. Shortcut registration is handled by the
-            // globalshortcut module at the app-state level. When the plugin is added, this
-            // block can be restored to register OS-level shortcuts.
-            //
-            // Intended shortcuts:
-            //   CommandOrControl+Shift+H  - Toggle window visibility
-            //   CommandOrControl+Shift+S  - Show window
-            //   CommandOrControl+Shift+M  - Toggle mute
-            //   CommandOrControl+Shift+F  - Toggle focus mode
-            //   CommandOrControl+Shift+P  - Toggle mini mode (PiP)
-            //   CommandOrControl+Shift+L  - Toggle privacy mode
-            //   CommandOrControl+Shift+Z  - Toggle Zen Mode
-            //   CommandOrControl+Shift+C  - Toggle quick capture
-            //   CommandOrControl+Shift+N  - Toggle quick notes
-            //   CommandOrControl+Shift+R  - Toggle quick replies
-            //   MediaPlayPause / MediaStop / MediaTrackNext / MediaTrackPrevious
+            // Register OS-level global shortcuts
             {
-                let _ = app.handle().clone(); // placeholder
+                use tauri_plugin_global_shortcut::GlobalShortcutExt;
+
+                let shortcuts: Vec<(&str, &str)> = vec![
+                    ("CommandOrControl+Shift+H", "toggle-window"),
+                    ("CommandOrControl+Shift+M", "toggle-mute"),
+                    ("CommandOrControl+Shift+F", "toggle-focus"),
+                    ("CommandOrControl+Shift+P", "toggle-floating"),
+                    ("CommandOrControl+Shift+L", "toggle-privacy"),
+                    ("CommandOrControl+Shift+Z", "toggle-zen"),
+                    ("CommandOrControl+Shift+C", "toggle-capture"),
+                    ("CommandOrControl+Shift+N", "toggle-notes"),
+                ];
+
+                for (accel, action_id) in shortcuts {
+                    if let Ok(shortcut) = accel.parse::<tauri_plugin_global_shortcut::Shortcut>() {
+                        let handle = app.handle().clone();
+                        let action = action_id.to_string();
+                        let _ = app.global_shortcut().on_shortcut(shortcut, move |_app, _sc, _event| {
+                            match action.as_str() {
+                                "toggle-window" => {
+                                    if let Some(w) = handle.get_webview_window("main") {
+                                        if w.is_visible().unwrap_or(false) {
+                                            let _ = w.hide();
+                                        } else {
+                                            let _ = w.show();
+                                            let _ = w.set_focus();
+                                        }
+                                    }
+                                }
+                                "toggle-mute" => {
+                                    let _ = crate::commands::toggle_mute();
+                                    if let Some(w) = handle.get_webview_window("main") {
+                                        let muted = crate::commands::is_muted().unwrap_or(false);
+                                        let _ = w.emit("global-shortcut:mute-toggled", muted);
+                                    }
+                                }
+                                "toggle-floating" => {
+                                    let _ = crate::floatingwindow::floating_toggle(handle.clone(), None);
+                                }
+                                other => {
+                                    if let Some(w) = handle.get_webview_window("main") {
+                                        let _ = w.emit("global-shortcut:triggered", other);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
             }
 
             // Register deep link handler
@@ -381,6 +415,9 @@ fn main() {
 
             // Initialize Typing Speed Tracker
             app.manage(typingspeed::TypingSpeedManager::default());
+
+            // Initialize Weather Manager
+            app.manage(weather::WeatherManager::default());
 
             // Load custom spell check dictionary
             spellcheck::load_custom_dictionary(app.handle());
@@ -1871,6 +1908,22 @@ fn main() {
             typingspeed::typing_speed_get_stats,
             typingspeed::typing_speed_get_wpm,
             typingspeed::typing_speed_reset,
+            // Floating window commands
+            floatingwindow::floating_show,
+            floatingwindow::floating_hide,
+            floatingwindow::floating_toggle,
+            floatingwindow::floating_get_state,
+            floatingwindow::floating_set_opacity,
+            floatingwindow::floating_move_corner,
+            floatingwindow::floating_resize,
+            floatingwindow::floating_navigate,
+            // Weather commands
+            weather::weather_search_city,
+            weather::weather_fetch,
+            weather::weather_set_location,
+            weather::weather_get_location,
+            weather::weather_get_cached,
+            weather::weather_clear_location,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
