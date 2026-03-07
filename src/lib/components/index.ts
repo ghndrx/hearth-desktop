@@ -407,3 +407,6 @@ export { default as CronBuilderPanel } from './CronBuilderPanel.svelte';
 
 // Workspace Layouts - save, restore, and switch between window arrangements
 export { default as WorkspaceLayoutsPanel } from './WorkspaceLayoutsPanel.svelte';
+
+// System Health - live CPU, memory, and disk usage dashboard with gauges
+export { default as SystemHealthPanel } from './SystemHealthPanel.svelte';
