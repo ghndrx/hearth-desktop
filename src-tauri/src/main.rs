@@ -150,6 +150,11 @@ mod linkinspector;
 mod textexpander;
 mod streaktracker;
 mod traycustomizer;
+mod clipmanager;
+mod sysdashboard;
+mod filequickshare;
+mod nativescreenshot;
+mod workspaceswitcher;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -355,8 +360,23 @@ fn main() {
             app.manage(clipboardsync::ClipSyncManager::default());
 
             // Initialize Activity Heatmap Manager
-            app.manage(activityheatmap::ActivityHeatmapManager::new(app_data_dir)
+            app.manage(activityheatmap::ActivityHeatmapManager::new(app_data_dir.clone())
                 .expect("Failed to initialize activity heatmap"));
+
+            // Initialize Clipboard Manager
+            app.manage(clipmanager::ClipManagerStore::default());
+
+            // Initialize System Dashboard Manager
+            app.manage(sysdashboard::SysDashboardManager::default());
+
+            // Initialize File Quick Share Manager
+            app.manage(filequickshare::FileShareManager::default());
+
+            // Initialize Screenshot Manager
+            app.manage(nativescreenshot::ScreenshotManager::new(app_data_dir));
+
+            // Initialize Workspace Switcher Manager
+            app.manage(workspaceswitcher::WorkspaceSwitcherManager::default());
 
             // Load custom spell check dictionary
             spellcheck::load_custom_dictionary(app.handle());
@@ -1804,6 +1824,43 @@ fn main() {
             traycustomizer::tray_customizer_set_compact_mode,
             traycustomizer::tray_customizer_reset,
             traycustomizer::tray_customizer_get_categories,
+            // Clipboard Manager commands
+            clipmanager::clipmgr_get_state,
+            clipmanager::clipmgr_add,
+            clipmanager::clipmgr_pin,
+            clipmanager::clipmgr_delete,
+            clipmanager::clipmgr_clear,
+            clipmanager::clipmgr_search,
+            clipmanager::clipmgr_copy_entry,
+            // System Dashboard commands
+            sysdashboard::sysdash_snapshot,
+            sysdashboard::sysdash_get_history,
+            // File Quick Share commands
+            filequickshare::fileshare_get_state,
+            filequickshare::fileshare_add_file,
+            filequickshare::fileshare_remove,
+            filequickshare::fileshare_get_file_info,
+            filequickshare::fileshare_open_in_folder,
+            filequickshare::fileshare_clear_expired,
+            // Screenshot commands
+            nativescreenshot::screenshot_get_state,
+            nativescreenshot::screenshot_capture,
+            nativescreenshot::screenshot_capture_area,
+            nativescreenshot::screenshot_annotate,
+            nativescreenshot::screenshot_delete,
+            nativescreenshot::screenshot_open_file,
+            nativescreenshot::screenshot_set_format,
+            nativescreenshot::screenshot_set_auto_copy,
+            // Workspace Switcher commands
+            workspaceswitcher::wkspc_get_state,
+            workspaceswitcher::wkspc_switch,
+            workspaceswitcher::wkspc_create,
+            workspaceswitcher::wkspc_delete,
+            workspaceswitcher::wkspc_update,
+            workspaceswitcher::wkspc_add_server,
+            workspaceswitcher::wkspc_remove_server,
+            workspaceswitcher::wkspc_add_channel,
+            workspaceswitcher::wkspc_remove_channel,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
