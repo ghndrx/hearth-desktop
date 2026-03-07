@@ -170,6 +170,7 @@ mod ipgeo;
 mod cputemp;
 mod batterymon;
 mod brightness;
+mod volumectl;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1987,6 +1988,10 @@ fn main() {
             // Brightness Control
             brightness::brightness_get,
             brightness::brightness_set,
+            // Volume Control
+            volumectl::volume_get,
+            volumectl::volume_set,
+            volumectl::volume_toggle_mute,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

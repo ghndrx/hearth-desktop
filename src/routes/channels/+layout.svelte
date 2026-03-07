@@ -41,6 +41,7 @@
 	import WorkspaceSwitcherPanel from '$lib/components/WorkspaceSwitcherPanel.svelte';
 	import IpGeoPanel from '$lib/components/IpGeoPanel.svelte';
 	import BrightnessPanel from '$lib/components/BrightnessPanel.svelte';
+	import VolumeControlPanel from '$lib/components/VolumeControlPanel.svelte';
 
 	let quickSwitcherOpen = false;
 	let notificationCenterOpen = false;
@@ -59,6 +60,7 @@
 	let workspaceSwitcherOpen = false;
 	let ipGeoOpen = false;
 	let brightnessOpen = false;
+	let volumeControlOpen = false;
 
 	function handleKeydown(e: KeyboardEvent) {
 		// Don't trigger shortcuts when typing in an input
@@ -168,9 +170,17 @@
 			e.preventDefault();
 			brightnessOpen = !brightnessOpen;
 		}
+		// Ctrl+Shift+V to open volume control
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'V') {
+			e.preventDefault();
+			volumeControlOpen = !volumeControlOpen;
+		}
 		// Escape to close modals
 		if (e.key === 'Escape') {
-			if (brightnessOpen) {
+			if (volumeControlOpen) {
+				volumeControlOpen = false;
+				e.preventDefault();
+			} else if (brightnessOpen) {
 				brightnessOpen = false;
 				e.preventDefault();
 			} else if (ipGeoOpen) {
@@ -491,6 +501,12 @@
 <BrightnessPanel
 	bind:open={brightnessOpen}
 	onClose={() => brightnessOpen = false}
+/>
+
+<!-- Volume Control Panel (Ctrl+Shift+V) -->
+<VolumeControlPanel
+	bind:open={volumeControlOpen}
+	onClose={() => volumeControlOpen = false}
 />
 
 <!-- Image Preview Modal - Full screen image viewer -->
