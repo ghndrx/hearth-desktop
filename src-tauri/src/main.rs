@@ -178,6 +178,8 @@ mod batterymon;
 mod brightness;
 mod volumectl;
 mod alarmclock;
+mod tasklist;
+mod uuidgen;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -633,6 +635,9 @@ fn main() {
             app.manage(stopwatch_manager.clone());
             stopwatch::start_stopwatch_loop(app.handle().clone(), stopwatch_manager);
 
+            // Initialize UUID Generator
+            app.manage(uuidgen::UuidGenManager::default());
+
             // Initialize Font Preview manager
             app.manage(fontpreview::FontPreviewManager::default());
 
@@ -669,6 +674,9 @@ fn main() {
 
             // Initialize Alarm Clock
             app.manage(alarmclock::AlarmClockManager::default());
+
+            // Initialize Task List
+            app.manage(tasklist::TaskListManager::default());
 
             // Initialize Tray Actions
             app.manage(trayactions::TrayActionsManager::default());
@@ -1825,6 +1833,12 @@ fn main() {
             diceroller::dice_roll_quick,
             diceroller::dice_get_history,
             diceroller::dice_clear_history,
+            // UUID Generator commands
+            uuidgen::uuid_generate,
+            uuidgen::uuid_generate_batch,
+            uuidgen::uuid_validate,
+            uuidgen::uuid_get_history,
+            uuidgen::uuid_clear_history,
             // Stopwatch commands
             stopwatch::stopwatch_start,
             stopwatch::stopwatch_stop,
@@ -2053,6 +2067,14 @@ fn main() {
             clipring::clipring_remove,
             clipring::clipring_clear,
             clipring::clipring_search,
+            // Task List
+            tasklist::tasklist_get,
+            tasklist::tasklist_add,
+            tasklist::tasklist_toggle,
+            tasklist::tasklist_update,
+            tasklist::tasklist_remove,
+            tasklist::tasklist_clear_completed,
+            tasklist::tasklist_reorder,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
