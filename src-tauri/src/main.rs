@@ -138,6 +138,7 @@ mod regextester;
 mod base64tool;
 mod difftool;
 mod envvars;
+mod recentchannels;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -282,6 +283,9 @@ fn main() {
 
             // Initialize notification center state
             app.manage(notification_center::NotificationCenterState::default());
+
+            // Initialize recent channels state
+            app.manage(recentchannels::RecentChannelsState::default());
 
             // Initialize drafts state
             app.manage(drafts::DraftsState::default());
@@ -1676,6 +1680,10 @@ fn main() {
             envvars::env_search,
             envvars::env_get,
             envvars::env_get_categories,
+            // Recent Channels commands
+            recentchannels::recent_channels_visit,
+            recentchannels::recent_channels_list,
+            recentchannels::recent_channels_clear,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

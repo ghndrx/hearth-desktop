@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { currentServer, servers } from '$lib/stores/servers';
 	import { currentChannel, loadServerChannels, channels } from '$lib/stores/channels';
+	import { trackChannelVisit } from '$lib/stores/recentChannels';
 	import { sendMessage } from '$lib/stores/messages';
 	import { splitViewStore, canAddSplitPanel, splitViewEnabled } from '$lib/stores/splitView';
 	import MessageList from '$lib/components/MessageList.svelte';
@@ -25,6 +26,14 @@
 		const channel = $channels.find(c => c.id === channelId);
 		if (channel && $currentChannel?.id !== channelId) {
 			currentChannel.set(channel);
+			// Track channel visit for tray Recent Channels menu
+			trackChannelVisit(
+				channel.id,
+				channel.type === 1 ? (channel.recipients?.[0]?.username || channel.name) : channel.name,
+				channel.server_id,
+				$currentServer?.name ?? null,
+				channel.type
+			);
 		} else if (!channel && serverId && serverId !== '@me') {
 			// Channel not in store yet - load server channels
 			loadServerChannels(serverId);

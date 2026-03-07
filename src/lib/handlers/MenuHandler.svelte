@@ -45,6 +45,13 @@
         goto('/about');
       })
     );
+
+    // Tray navigation events (e.g., Recent Channels submenu)
+    unlisteners.push(
+      await listen<string>('navigate', (event) => {
+        goto(event.payload);
+      })
+    );
   });
 
   onDestroy(() => {
