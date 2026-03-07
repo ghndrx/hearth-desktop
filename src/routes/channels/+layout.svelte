@@ -33,6 +33,7 @@
 	import GlobalMediaPanel from '$lib/components/GlobalMediaPanel.svelte';
 	import ProxySettingsPanel from '$lib/components/ProxySettingsPanel.svelte';
 	import NativeNotificationPrefsPanel from '$lib/components/NativeNotificationPrefsPanel.svelte';
+	import TextExpanderPanel from '$lib/components/TextExpanderPanel.svelte';
 
 	let quickSwitcherOpen = false;
 	let notificationCenterOpen = false;
@@ -43,6 +44,7 @@
 	let globalMediaOpen = false;
 	let proxySettingsOpen = false;
 	let notificationPrefsOpen = false;
+	let textExpanderOpen = false;
 
 	function handleKeydown(e: KeyboardEvent) {
 		// Don't trigger shortcuts when typing in an input
@@ -112,9 +114,17 @@
 			e.preventDefault();
 			globalMediaOpen = !globalMediaOpen;
 		}
+		// Ctrl+Shift+E to open text expander
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'E') {
+			e.preventDefault();
+			textExpanderOpen = !textExpanderOpen;
+		}
 		// Escape to close modals
 		if (e.key === 'Escape') {
-			if (autoUpdaterOpen) {
+			if (textExpanderOpen) {
+				textExpanderOpen = false;
+				e.preventDefault();
+			} else if (autoUpdaterOpen) {
 				autoUpdaterOpen = false;
 				e.preventDefault();
 			} else if (spellCheckOpen) {
@@ -363,6 +373,12 @@
 <NativeNotificationPrefsPanel
 	bind:open={notificationPrefsOpen}
 	onClose={() => notificationPrefsOpen = false}
+/>
+
+<!-- Text Expander Panel (Ctrl+Shift+E) -->
+<TextExpanderPanel
+	bind:open={textExpanderOpen}
+	onClose={() => textExpanderOpen = false}
 />
 
 <!-- Image Preview Modal - Full screen image viewer -->
