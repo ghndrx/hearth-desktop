@@ -382,3 +382,6 @@ export { default as QuickTimerPanel } from './QuickTimerPanel.svelte';
 
 // Network Diagnostics - ping, DNS lookup, and port checking
 export { default as NetworkDiagPanel } from './NetworkDiagPanel.svelte';
+
+// Typing Speed Test - measure WPM and accuracy with multiple word modes
+export { default as TypingTestPanel } from './TypingTestPanel.svelte';
