@@ -84,6 +84,9 @@ export { default as AISettings } from './AISettings.svelte';
 // AI Chat components
 export { default as AIChat } from './AIChat.svelte';
 
+// Sound Profile panel
+export { default as SoundProfilePanel } from './SoundProfilePanel.svelte';
+
 // Skeleton loading components
 export { default as SkeletonBase } from './SkeletonBase.svelte';
 export { default as SkeletonMessage } from './SkeletonMessage.svelte';
