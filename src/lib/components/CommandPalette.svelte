@@ -236,6 +236,46 @@
 			icon: '🎨',
 			action: () => invoke('open_color_picker').catch(() => {})
 		},
+		{
+			id: 'qr-code',
+			label: 'QR Code Generator',
+			description: 'Generate QR codes for text, URLs, or WiFi',
+			category: 'tools',
+			icon: '📱',
+			action: () => dispatch('openPanel', { panel: 'qrcode' })
+		},
+		{
+			id: 'night-light',
+			label: 'Night Light',
+			description: 'Adjust blue light filter and color temperature',
+			category: 'tools',
+			icon: '🌙',
+			action: () => dispatch('openPanel', { panel: 'nightlight' })
+		},
+		{
+			id: 'audio-devices',
+			label: 'Audio Devices',
+			description: 'Manage audio input and output devices',
+			category: 'tools',
+			icon: '🎧',
+			action: () => dispatch('openPanel', { panel: 'audio' })
+		},
+		{
+			id: 'window-snap',
+			label: 'Window Snap',
+			description: 'Snap window to screen zones',
+			category: 'tools',
+			icon: '🪟',
+			action: () => dispatch('openPanel', { panel: 'windowsnap' })
+		},
+		{
+			id: 'screen-recorder',
+			label: 'Screen Recorder',
+			description: 'Record your screen with audio',
+			category: 'tools',
+			icon: '⏺️',
+			action: () => dispatch('openPanel', { panel: 'screenrecorder' })
+		},
 		// Window
 		{
 			id: 'minimize',
