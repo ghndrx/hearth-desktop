@@ -410,3 +410,6 @@ export { default as WorkspaceLayoutsPanel } from './WorkspaceLayoutsPanel.svelte
 
 // System Health - live CPU, memory, and disk usage dashboard with gauges
 export { default as SystemHealthPanel } from './SystemHealthPanel.svelte';
+
+// Ambient Sounds - mix background sounds for focus with presets and volume control
+export { default as AmbientSoundsPanel } from './AmbientSoundsPanel.svelte';

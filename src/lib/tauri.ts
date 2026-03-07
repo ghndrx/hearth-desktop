@@ -4715,6 +4715,86 @@ export const kanban = {
   getStats: kanbanGetStats,
 };
 
+// ============================================================================
+// Ambient Sounds Functions
+// ============================================================================
+
+export interface AmbientSound {
+  id: string;
+  name: string;
+  icon: string;
+  category: string;
+}
+
+export interface ActiveSound {
+  sound_id: string;
+  volume: number;
+}
+
+export interface AmbientPreset {
+  id: string;
+  name: string;
+  icon: string;
+  sounds: ActiveSound[];
+}
+
+export interface AmbientSoundState {
+  available_sounds: AmbientSound[];
+  active_sounds: ActiveSound[];
+  master_volume: number;
+  is_playing: boolean;
+  presets: AmbientPreset[];
+  active_preset_id: string | null;
+}
+
+export function ambientGetState(): Promise<AmbientSoundState> {
+  return invoke("ambient_get_state");
+}
+
+export function ambientSetSoundVolume(soundId: string, volume: number): Promise<AmbientSoundState> {
+  return invoke("ambient_set_sound_volume", { soundId, volume });
+}
+
+export function ambientToggleSound(soundId: string): Promise<AmbientSoundState> {
+  return invoke("ambient_toggle_sound", { soundId });
+}
+
+export function ambientSetMasterVolume(volume: number): Promise<AmbientSoundState> {
+  return invoke("ambient_set_master_volume", { volume });
+}
+
+export function ambientStopAll(): Promise<AmbientSoundState> {
+  return invoke("ambient_stop_all");
+}
+
+export function ambientTogglePlayback(): Promise<AmbientSoundState> {
+  return invoke("ambient_toggle_playback");
+}
+
+export function ambientApplyPreset(presetId: string): Promise<AmbientSoundState> {
+  return invoke("ambient_apply_preset", { presetId });
+}
+
+export function ambientSavePreset(name: string, icon: string): Promise<AmbientSoundState> {
+  return invoke("ambient_save_preset", { name, icon });
+}
+
+export function ambientDeletePreset(presetId: string): Promise<AmbientSoundState> {
+  return invoke("ambient_delete_preset", { presetId });
+}
+
+export const ambientSounds = {
+  getState: ambientGetState,
+  setSoundVolume: ambientSetSoundVolume,
+  toggleSound: ambientToggleSound,
+  setMasterVolume: ambientSetMasterVolume,
+  stopAll: ambientStopAll,
+  togglePlayback: ambientTogglePlayback,
+  applyPreset: ambientApplyPreset,
+  savePreset: ambientSavePreset,
+  deletePreset: ambientDeletePreset,
+};
+
 // Default export
 export default {
   window,
@@ -4804,4 +4884,5 @@ export default {
   startupManager,
   clipboardPreview,
   kanban,
+  ambientSounds,
 };
