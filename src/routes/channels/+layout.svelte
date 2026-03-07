@@ -39,6 +39,7 @@
 	import FileQuickSharePanel from '$lib/components/FileQuickSharePanel.svelte';
 	import ScreenCapturePanel from '$lib/components/ScreenCapturePanel.svelte';
 	import WorkspaceSwitcherPanel from '$lib/components/WorkspaceSwitcherPanel.svelte';
+	import IpGeoPanel from '$lib/components/IpGeoPanel.svelte';
 
 	let quickSwitcherOpen = false;
 	let notificationCenterOpen = false;
@@ -55,6 +56,7 @@
 	let fileQuickShareOpen = false;
 	let screenCaptureOpen = false;
 	let workspaceSwitcherOpen = false;
+	let ipGeoOpen = false;
 
 	function handleKeydown(e: KeyboardEvent) {
 		// Don't trigger shortcuts when typing in an input
@@ -154,9 +156,17 @@
 			e.preventDefault();
 			workspaceSwitcherOpen = !workspaceSwitcherOpen;
 		}
+		// Ctrl+Shift+G to open IP geolocation
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'G') {
+			e.preventDefault();
+			ipGeoOpen = !ipGeoOpen;
+		}
 		// Escape to close modals
 		if (e.key === 'Escape') {
-			if (workspaceSwitcherOpen) {
+			if (ipGeoOpen) {
+				ipGeoOpen = false;
+				e.preventDefault();
+			} else if (workspaceSwitcherOpen) {
 				workspaceSwitcherOpen = false;
 				e.preventDefault();
 			} else if (screenCaptureOpen) {
@@ -459,6 +469,12 @@
 <WorkspaceSwitcherPanel
 	bind:open={workspaceSwitcherOpen}
 	onClose={() => workspaceSwitcherOpen = false}
+/>
+
+<!-- IP Geolocation Panel (Ctrl+Shift+G) -->
+<IpGeoPanel
+	bind:open={ipGeoOpen}
+	onClose={() => ipGeoOpen = false}
 />
 
 <!-- Image Preview Modal - Full screen image viewer -->

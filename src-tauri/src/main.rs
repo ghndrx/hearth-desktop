@@ -166,6 +166,7 @@ mod filehasher;
 mod portscanner;
 mod logtail;
 mod whoislookup;
+mod ipgeo;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1971,6 +1972,8 @@ fn main() {
             logtail::logtail_list_watched,
             // WHOIS Lookup
             whoislookup::whois_lookup,
+            // IP Geolocation
+            ipgeo::ipgeo_lookup,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
