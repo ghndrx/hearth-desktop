@@ -167,6 +167,7 @@ mod portscanner;
 mod logtail;
 mod whoislookup;
 mod ipgeo;
+mod cputemp;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -649,6 +650,9 @@ fn main() {
 
             // Initialize Log Tail manager
             app.manage(logtail::LogTailManager::default());
+
+            // Initialize CPU Temperature Monitor
+            app.manage(cputemp::CpuTempManager::default());
 
             Ok(())
         })
@@ -1974,6 +1978,8 @@ fn main() {
             whoislookup::whois_lookup,
             // IP Geolocation
             ipgeo::ipgeo_lookup,
+            // CPU Temperature Monitor
+            cputemp::cputemp_poll,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
