@@ -160,6 +160,7 @@ mod floatingwindow;
 mod weather;
 mod netspeed;
 mod keystrokeheatmap;
+mod uptimemonitor;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -635,6 +636,7 @@ fn main() {
 
             // Initialize Keystroke Heatmap
             app.manage(keystrokeheatmap::KeystrokeHeatmapManager::default());
+            app.manage(uptimemonitor::UptimeMonitorManager::default());
 
             Ok(())
         })
@@ -1942,6 +1944,7 @@ fn main() {
             keystrokeheatmap::heatmap_get_stats,
             keystrokeheatmap::heatmap_get_top_keys,
             keystrokeheatmap::heatmap_reset,
+            uptimemonitor::uptime_get_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
