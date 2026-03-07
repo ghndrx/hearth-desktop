@@ -134,6 +134,9 @@ mod stopwatch;
 mod colorpalette;
 mod markdownpreview;
 mod jsonformatter;
+mod regextester;
+mod base64tool;
+mod difftool;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -1654,6 +1657,19 @@ fn main() {
             jsonformatter::json_validate,
             jsonformatter::json_query,
             jsonformatter::json_stats,
+            // Regex Tester commands
+            regextester::regex_test,
+            regextester::regex_validate,
+            regextester::regex_replace,
+            // Base64 Tool commands
+            base64tool::base64_encode,
+            base64tool::base64_decode,
+            base64tool::base64_encode_file,
+            base64tool::base64_validate,
+            // Diff Tool commands
+            difftool::diff_compare,
+            difftool::diff_unified,
+            difftool::diff_stats,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
