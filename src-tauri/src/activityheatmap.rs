@@ -503,7 +503,7 @@ pub fn heatmap_get_streak(
 }
 
 #[tauri::command]
-pub fn heatmap_get_stats(
+pub fn activity_heatmap_get_stats(
     state: State<'_, ActivityHeatmapManager>,
     start_date: String,
     end_date: String,

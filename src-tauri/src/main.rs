@@ -1593,7 +1593,7 @@ fn main() {
             activityheatmap::heatmap_get_year,
             activityheatmap::heatmap_get_today,
             activityheatmap::heatmap_get_streak,
-            activityheatmap::heatmap_get_stats,
+            activityheatmap::activity_heatmap_get_stats,
             activityheatmap::heatmap_get_peak_hours,
             activityheatmap::heatmap_get_server_breakdown,
             activityheatmap::heatmap_clear,
@@ -1744,7 +1744,7 @@ fn main() {
             texttransform::text_get_stats,
             texttransform::text_get_available_transforms,
             // System Uptime commands
-            systemuptime::uptime_get_info,
+            systemuptime::system_uptime_get_info,
             systemuptime::uptime_acknowledge_milestone,
             systemuptime::uptime_get_sessions,
             systemuptime::uptime_get_total_app_time,
@@ -1957,10 +1957,10 @@ fn main() {
             // Keystroke Heatmap commands
             keystrokeheatmap::heatmap_record_key,
             keystrokeheatmap::heatmap_record_keys,
-            keystrokeheatmap::heatmap_get_stats,
+            keystrokeheatmap::keystroke_heatmap_get_stats,
             keystrokeheatmap::heatmap_get_top_keys,
             keystrokeheatmap::heatmap_reset,
-            uptimemonitor::uptime_get_info,
+            uptimemonitor::uptime_monitor_get_info,
             // System Profiler
             systemprofiler::systemprofiler_poll,
             // File Hasher

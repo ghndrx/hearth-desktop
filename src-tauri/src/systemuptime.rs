@@ -67,7 +67,7 @@ const MILESTONES: &[(u64, &str)] = &[
 ];
 
 #[tauri::command]
-pub fn uptime_get_info(
+pub fn system_uptime_get_info(
     state: State<'_, UptimeManager>,
 ) -> Result<UptimeInfo, String> {
     use sysinfo::System;
