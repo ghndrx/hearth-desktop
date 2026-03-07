@@ -306,8 +306,9 @@ pub fn sysdash_snapshot(
     let mut history = manager.history.lock().map_err(|e| e.to_string())?;
     history.push(snapshot.clone());
     // Keep last 60 snapshots
-    if history.len() > 60 {
-        history.drain(0..history.len() - 60);
+    let len = history.len();
+    if len > 60 {
+        history.drain(0..len - 60);
     }
 
     Ok(snapshot)

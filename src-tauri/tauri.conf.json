@@ -13,6 +13,7 @@
     "windows": [
       {
         "title": "Hearth",
+        "label": "main",
         "width": 1200,
         "height": 800,
         "minWidth": 800,
@@ -21,6 +22,22 @@
         "fullscreen": false,
         "decorations": true,
         "transparent": false
+      },
+      {
+        "title": "Hearth Mini",
+        "label": "floating",
+        "url": "/floating",
+        "width": 380,
+        "height": 520,
+        "minWidth": 320,
+        "minHeight": 400,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "skipTaskbar": true,
+        "visible": false
       }
     ],
     "trayIcon": {
