@@ -3,10 +3,31 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/svelte';
 import '@testing-library/jest-dom/vitest';
 import GameLibraryPanel from './GameLibraryPanel.svelte';
 
+// Mock Web Animations API for Svelte transitions
+Element.prototype.animate = vi.fn(() => ({
+	finish: vi.fn(),
+	oncancel: null,
+	onfinish: null,
+	cancel: vi.fn(),
+	pause: vi.fn(),
+	play: vi.fn(),
+	reverse: vi.fn(),
+	persist: vi.fn(),
+	ready: Promise.resolve(),
+	startTime: 0,
+	currentTime: 0,
+	playbackRate: 1,
+	timeline: null,
+	updatePlaybackRate: vi.fn(),
+	pending: false,
+	effect: null,
+	dispatchEvent: vi.fn(),
+})) as any;
+
 const mockInvoke = vi.fn();
 
 vi.mock('@tauri-apps/api/core', () => ({
-	invoke: (cmd: string, args?: object) => mockInvoke(cmd, args),
+	invoke: (cmd: string, args?: object) => (args !== undefined ? mockInvoke(cmd, args) : mockInvoke(cmd)),
 }));
 
 vi.mock('@tauri-apps/api/event', () => ({
@@ -149,8 +170,9 @@ describe('GameLibraryPanel', () => {
 			expect(screen.getByText('Counter-Strike 2')).toBeInTheDocument();
 		});
 
-		const playButton = screen.getByTitle('Launch via Steam');
-		await fireEvent.click(playButton);
+		// Use getAllByTitle since there are multiple game cards with Play buttons
+		const playButtons = screen.getAllByTitle('Launch via Steam');
+		await fireEvent.click(playButtons[0]);
 
 		await waitFor(() => {
 			expect(mockInvoke).toHaveBeenCalledWith('launch_game', { appId: '730' });
@@ -212,7 +234,12 @@ describe('GameLibraryPanel', () => {
 			props: { open: true, onClose },
 		});
 
-		await fireEvent.keyDown(document, { key: 'Escape' });
+		await waitFor(() => {
+			expect(screen.getByRole('dialog')).toBeInTheDocument();
+		});
+
+		const dialog = screen.getByRole('dialog');
+		await fireEvent.keyDown(dialog, { key: 'Escape' });
 
 		expect(onClose).toHaveBeenCalled();
 	});
