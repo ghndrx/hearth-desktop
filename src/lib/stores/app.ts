@@ -171,13 +171,15 @@ export interface Settings {
 	sounds: boolean;
 	compactMode: boolean;
 	fontSize: 'small' | 'medium' | 'large';
+	minimizeToTray: boolean;
 }
 
 const defaultSettings: Settings = {
 	notifications: true,
 	sounds: true,
 	compactMode: false,
-	fontSize: 'medium'
+	fontSize: 'medium',
+	minimizeToTray: true
 };
 
 function createSettingsStore() {

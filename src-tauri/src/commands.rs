@@ -1,5 +1,7 @@
 use tauri_plugin_notification::NotificationExt;
 
+use crate::tray;
+
 /// Get the application version
 #[tauri::command]
 pub fn get_app_version() -> String {
@@ -25,6 +27,9 @@ pub async fn show_notification(
 /// Set the dock/taskbar badge count (unread messages)
 #[tauri::command]
 pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), String> {
+    // Update tray state, menu, and tooltip
+    tray::update_unread(&app, count);
+
     #[cfg(target_os = "macos")]
     {
         use tauri::Manager;
@@ -37,4 +42,16 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
         }
     }
     Ok(())
+}
+
+/// Get whether minimize-to-tray is enabled
+#[tauri::command]
+pub fn get_minimize_to_tray(app: tauri::AppHandle) -> bool {
+    tray::should_minimize_to_tray(&app)
+}
+
+/// Set whether minimize-to-tray is enabled
+#[tauri::command]
+pub fn set_minimize_to_tray(app: tauri::AppHandle, enabled: bool) {
+    tray::set_minimize_to_tray(&app, enabled);
 }

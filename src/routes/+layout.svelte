@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { app, isLoading } from '$lib/stores/app';
+	import { initTray } from '$lib/stores/tray';
 	import '$lib/styles/theme.css';
 	import '../app.css';
 
@@ -8,6 +9,7 @@
 
 	onMount(() => {
 		app.init();
+		initTray();
 	});
 </script>
 
