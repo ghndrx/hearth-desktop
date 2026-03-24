@@ -97,6 +97,7 @@ mod printmanager;
 mod gesturemanager;
 mod contentfilter;
 mod game_detection;
+mod rich_presence;
 mod kanban;
 mod reminders;
 mod bookmarks;
@@ -1484,6 +1485,15 @@ fn main() {
             game_detection::start_detection,
             game_detection::stop_detection,
             game_detection::launch_game,
+            // Rich Presence commands
+            rich_presence::update_presence,
+            rich_presence::clear_presence,
+            rich_presence::get_current_presence,
+            rich_presence::get_friend_presence,
+            rich_presence::join_game,
+            rich_presence::spectate_game,
+            rich_presence::set_presence_broadcasting,
+            rich_presence::get_all_friend_presences,
             // Gesture Manager commands
             gesturemanager::gesture_get_config,
             gesturemanager::gesture_update_config,
