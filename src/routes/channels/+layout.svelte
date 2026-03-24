@@ -43,6 +43,7 @@
 	import BrightnessPanel from '$lib/components/BrightnessPanel.svelte';
 	import VolumeControlPanel from '$lib/components/VolumeControlPanel.svelte';
 	import HttpTesterPanel from '$lib/components/HttpTesterPanel.svelte';
+	import GameLibraryPanel from '$lib/components/GameLibraryPanel.svelte';
 
 	let quickSwitcherOpen = false;
 	let notificationCenterOpen = false;
@@ -63,6 +64,7 @@
 	let brightnessOpen = false;
 	let volumeControlOpen = false;
 	let httpTesterOpen = false;
+	let gameLibraryOpen = false;
 
 	function handleKeydown(e: KeyboardEvent) {
 		// Don't trigger shortcuts when typing in an input
@@ -182,9 +184,17 @@
 			e.preventDefault();
 			httpTesterOpen = !httpTesterOpen;
 		}
+		// Ctrl+Shift+R to open game library
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'R') {
+			e.preventDefault();
+			gameLibraryOpen = !gameLibraryOpen;
+		}
 		// Escape to close modals
 		if (e.key === 'Escape') {
-			if (httpTesterOpen) {
+			if (gameLibraryOpen) {
+				gameLibraryOpen = false;
+				e.preventDefault();
+			} else if (httpTesterOpen) {
 				httpTesterOpen = false;
 				e.preventDefault();
 			} else if (volumeControlOpen) {
@@ -523,6 +533,12 @@
 <HttpTesterPanel
 	bind:open={httpTesterOpen}
 	onClose={() => httpTesterOpen = false}
+/>
+
+<!-- Game Library Panel (Ctrl+Shift+R) -->
+<GameLibraryPanel
+	bind:open={gameLibraryOpen}
+	onClose={() => gameLibraryOpen = false}
 />
 
 <!-- Image Preview Modal - Full screen image viewer -->
