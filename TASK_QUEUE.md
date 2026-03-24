@@ -20,7 +20,7 @@
   - **Dependencies:** GAME-001, WebSocket infrastructure
   - **Acceptance:** Shows detailed game status (name, level, server)
 
-- [ ] **GAME-003** Create game library management panel
+- [x] **GAME-003** Create game library management panel ✅ PR #3
   - **Estimate:** 2 weeks
   - **Dependencies:** GAME-001
   - **Acceptance:** Users can launch games from Hearth Desktop
