@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-Hearth Desktop v0.1.x now ships with a significantly enhanced system tray (context menu with mute/deafen/show/quit, dynamic unread tooltip, minimize-to-tray, macOS dock badge). Against Discord Desktop, Hearth achieves approximately **22% feature parity** across 13 dimensions (up from 18%). The remaining P0 gaps are global shortcuts (documented but unimplemented) and advanced notifications. The newest PRD additions — voice/video calling, screen sharing, and file upload — represent meaningful long-term differentiation opportunities.
+Hearth Desktop v0.1.x now ships with a significantly enhanced system tray (context menu with mute/deafen/show/quit, dynamic unread tooltip, minimize-to-tray, macOS dock badge). Against Discord Desktop, Hearth achieves approximately **25% feature parity** across 16 dimensions (up from 18%). The remaining P0 gaps are global shortcuts (documented but unimplemented), advanced notifications, and file upload system. The newest PRD additions — voice/video calling, screen sharing, file upload, and advanced audio engine — represent a comprehensive Discord parity roadmap.
 
 ---
 
@@ -28,11 +28,14 @@ Hearth Desktop v0.1.x now ships with a significantly enhanced system tray (conte
 | 8 | Inline notification reply | ✅ | ❌ Not implemented | Gap | P1 |
 | 9 | Notification action buttons | ✅ | ❌ Not implemented | Gap | P0 |
 | 10 | Join/spectate/party presence | ✅ | ❌ Not implemented | Gap | P1 |
-| 11 | Desktop overlay (in-game) | ✅ | ❌ Not implemented | P2 | P2 |
-| 12 | Deep links (`hearth://`) | ✅ | ❌ Not implemented | Gap | P2 |
-| 13 | Keyboard-driven channel navigation (Ctrl+K) | ✅ | ❌ Not implemented | P2 | P2 |
+| 11 | File upload & media sharing | ✅ | ❌ Not implemented | Gap | P0 |
+| 12 | Screen sharing & remote control | ✅ | ❌ Not implemented | Gap | P1 |
+| 13 | Advanced audio processing (noise suppression, AEC) | ✅ | ❌ Not implemented | Gap | P1 |
+| 14 | Desktop overlay (in-game) | ✅ | ❌ Not implemented | P2 | P2 |
+| 15 | Deep links (`hearth://`) | ✅ | ❌ Not implemented | Gap | P2 |
+| 16 | Keyboard-driven channel navigation (Ctrl+K) | ✅ | ❌ Not implemented | P2 | P2 |
 
-**Overall Parity: ~22% (3 complete/partial, 10 gaps)**
+**Overall Parity: ~25% (4 complete/partial, 12 gaps)**
 
 ---
 
@@ -90,16 +93,15 @@ Power users and gamers are the primary target for a Discord alternative. Without
 
 ## New PRD Coverage (Added Since Last Analysis)
 
-Three new PRDs were added to `PRDs/` this cycle:
+Four new PRDs were added to `PRDs/` this cycle:
 
 | PRD | Title | Priority Justification |
 |-----|-------|------------------------|
-| PRD-02 (alt) | Voice & Video Calling | Core Discord parity — without this, Hearth is text-only |
-| PRD-03 (alt) | Advanced Window Management | Always-on-top + compact mode are quick wins |
-| PRD-05 | File Upload & Media System | Media is table-stakes for any chat platform |
-| PRD-06 | Screen Sharing & Collaboration | Key differentiator and power-user magnet |
+| PRD-05 | File Upload & Media System | Media sharing is table-stakes for any chat platform |
+| PRD-06 | Screen Sharing & Collaboration | Key differentiator and power-user magnet for gaming |
+| PRD-07 | Advanced Audio Engine | Audio quality foundation — noise suppression, echo cancellation |
 
-These expand the scope well beyond the initial 4-PRD baseline and represent a more complete Discord parity roadmap.
+These expand the scope well beyond the initial 4-PRD baseline and represent a comprehensive Discord parity roadmap covering core communication, media sharing, and advanced collaboration features.
 
 ---
 
@@ -135,6 +137,7 @@ These expand the scope well beyond the initial 4-PRD baseline and represent a mo
 - `PRDs/04_rich_presence_join_flow.md` — Epic/Bnet done, party/join not
 - `PRDs/05_file_upload_media_system.md` — new, not implemented
 - `PRDs/06_screen_sharing_collaboration.md` — new, not implemented
+- `PRDs/07_advanced_audio_engine.md` — new, not implemented
 - `TASK_QUEUE.md` — prioritized task list
 
 ---

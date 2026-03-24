@@ -25,6 +25,14 @@
 - [ ] Per-channel notification settings store schema
 - [ ] Frontend: notification settings UI (all / mentions / nothing per channel)
 
+### File Upload & Media Sharing (PRD-05 — new P0)
+- [ ] Add `tauri-plugin-fs` and drag-drop event handlers to Svelte components
+- [ ] `commands.rs`: Add `upload_file` chunked upload command with progress tracking
+- [ ] Implement clipboard monitoring for paste-to-upload (images/files)
+- [ ] Frontend: drag-drop zones with upload progress UI
+- [ ] Media preview system (images, videos, audio) with thumbnails
+- [ ] File validation and type detection (security-critical)
+
 ---
 
 ## P1 — Next Release (v0.2.0–v0.3.0)
@@ -56,6 +64,22 @@
 - [ ] Frontend: voice channel member list with speaking indicators
 - [ ] Frontend: video tile grid for active calls
 
+### Screen Sharing & Collaboration (PRD-06 — new P1)
+- [ ] Implement platform-specific screen capture APIs (Windows: Desktop Duplication, macOS: ScreenCaptureKit, Linux: X11/Wayland)
+- [ ] Add screen/window/region selection UI with preview
+- [ ] Extend WebRTC infrastructure to support screen sharing media tracks
+- [ ] `commands.rs`: Add screen sharing commands (start, stop, switch source)
+- [ ] Implement remote control protocol with permission management
+- [ ] Screen share viewer interface with quality controls
+
+### Advanced Audio Engine (PRD-07 — new P1)
+- [ ] Integrate RNNoise for real-time noise suppression
+- [ ] Implement acoustic echo cancellation (AEC) with adaptive algorithms
+- [ ] Add automatic gain control (AGC) and dynamic range compression
+- [ ] Create modular audio processing pipeline with plugin architecture
+- [ ] Implement spatial audio with HRTF positioning for gaming
+- [ ] Audio quality monitoring and diagnostics interface
+
 ---
 
 ## P2 — Backlog
@@ -71,8 +95,10 @@
 - Keyboard shortcut: Discord-style channel jump (Ctrl+K)
 - Native macOS Touch Bar support
 - Deep link handler: `hearth://` URL scheme for invites and join links
-- File upload & media system (PRD-05)
-- Screen sharing & collaboration (PRD-06)
+- Advanced file features: recording/replay, file encryption, collaborative editing
+- Screen sharing: collaborative annotations, whiteboard tools, session recording
+- Audio effects: voice modulation, pitch shifting, advanced spatial audio
+- AI-powered audio enhancement and voice clarity improvement
 - Linux: XDG desktop portal for screenshot sharing
 - Snap/Flatpak/AUR package builds for Linux distributions
 
@@ -89,3 +115,10 @@
   - macOS dock badge ✅
   - Minimize-to-tray on close ✅
 - [x] `v0.1.x` — Tray enhancements (tray.rs full rewrite with state management)
+- [x] `PRD-02` — Voice & Video Calling System (documented)
+- [x] `PRD-03` — Advanced Window Management (documented)
+- [x] `PRD-03-notify` — Advanced Notifications (documented)
+- [x] `PRD-04` — Rich Presence Join Flow (documented)
+- [x] `PRD-05` — File Upload & Media Sharing System (documented)
+- [x] `PRD-06` — Screen Sharing & Collaboration (documented)
+- [x] `PRD-07` — Advanced Audio Engine (documented)
