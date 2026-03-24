@@ -12,14 +12,7 @@
 
 ## P0 — Must Ship (v0.2.0)
 
-### System Tray Depth
-- [ ] `tray.rs`: Add right-click context menu (mute/deafen/show/quit)
-- [ ] `tray.rs`: Show unread count badge on tray icon (macOS overlay / Windows tooltip)
-- [ ] `window.onCloseRequest`: Prevent close, hide to tray (setting-gated)
-- [ ] `tray.rs`: Dynamic tooltip with current status (e.g., "Hearth — 3 unread")
-- [ ] `tray.rs`: Rebuild tray menu on unread state change (subscribe to app store)
-
-### Global Shortcuts (PRD-01 existing — implement)
+### Global Shortcuts (PRD-01 — documented, NOT implemented)
 - [ ] Add `tauri-plugin-global-shortcut` to Cargo dependencies
 - [ ] Register default shortcuts: toggle app (Ctrl+Shift+H), mute (Ctrl+Shift+M), push-to-talk
 - [ ] Frontend: shortcut configuration UI in settings
@@ -28,7 +21,7 @@
 
 ### Advanced Notifications
 - [ ] `commands.rs`: Add `send_rich_notification` command (title, body, icon, channelId, actions)
-- [ ] Register notification actions (Mute Channel, Mark Read) — macOS + Windows + Linux
+- [ ] Register notification action buttons (Mute Channel, Mark Read) — macOS + Windows + Linux
 - [ ] Per-channel notification settings store schema
 - [ ] Frontend: notification settings UI (all / mentions / nothing per channel)
 
@@ -36,7 +29,17 @@
 
 ## P1 — Next Release (v0.2.0–v0.3.0)
 
-### Rich Presence — Join Flow
+### Window Management (partially done — minimize-to-tray ✅)
+- [ ] Always-on-top toggle (window.set_always_on_top)
+- [ ] Compact mode / mini window (resize to 400x100 sidebar)
+- [ ] Remember window position and size across restarts (use `tauri-plugin-store`)
+
+### Autostart & Session Persistence
+- [ ] Frontend: autostart toggle in settings (uses existing `tauri-plugin-autostart`)
+- [ ] Implement session restore: reconnect to voice channels on app restart after crash
+- [ ] Persistent login token refresh — don't log out on app close
+
+### Rich Presence — Join Flow (Epic/Bnet done, party/join not)
 - [ ] `rich_presence.rs`: Add party ID and party size fields to presence payload
 - [ ] `rich_presence.rs`: Add voice channel context to presence (e.g., "In #engineering")
 - [ ] `commands.rs`: Add `update_presence` Tauri command
@@ -45,26 +48,31 @@
 - [ ] Frontend: "Join" button on friend presence cards
 - [ ] Backend API: join request acceptance flow (tracked separately)
 
-### Window Management
-- [ ] Always-on-top toggle (window.set_always_on_top)
-- [ ] Compact mode / mini window (resize to 400x100 sidebar)
-- [ ] Remember window position and size across restarts (use `tauri-plugin-store`)
-- [ ] Frameless window option (currently `decorations: true`)
-
-### Autostart & Session Persistence
-- [ ] Frontend: autostart toggle in settings (uses existing `tauri-plugin-autostart`)
-- [ ] Implement session restore: reconnect to voice channels on app restart after crash
-- [ ] Persistent login token refresh — don't log out on app close
+### Voice & Video Calling (PRD-02 new)
+- [ ] Research: WebRTC vs. libwebrtc vs. Oxide for Tauri
+- [ ] Signaling server: add `offer/answer/ICE-candidate` endpoints to Hearth API
+- [ ] `voice_state` store schema (muted, deafened, speaking, camera on)
+- [ ] Tauri commands: `join_voice(channel_id)`, `leave_voice()`, `toggle_mute()`, `toggle_deafen()`
+- [ ] Frontend: voice channel member list with speaking indicators
+- [ ] Frontend: video tile grid for active calls
 
 ---
 
 ## P2 — Backlog
 
+- [x] `tray.rs`: Add right-click context menu (mute/deafen/show/quit) — **DONE v0.1.x**
+- [x] `tray.rs`: Dynamic tooltip with unread count — **DONE v0.1.x**
+- [x] `tray.rs`: Show unread count badge on tray icon (macOS) — **DONE v0.1.x**
+- [x] `window.onCloseRequest`: Prevent close, hide to tray (setting-gated) — **DONE v0.1.x**
+- [x] `tray.rs`: Rebuild tray menu on mute/deafen state change — **DONE v0.1.x**
+- [ ] Server/channel submenus in tray context menu
 - Desktop overlay for in-game voice status (hardware-accelerated overlay layer)
 - Spectate button (stub for future streaming integration)
 - Keyboard shortcut: Discord-style channel jump (Ctrl+K)
 - Native macOS Touch Bar support
 - Deep link handler: `hearth://` URL scheme for invites and join links
+- File upload & media system (PRD-05)
+- Screen sharing & collaboration (PRD-06)
 - Linux: XDG desktop portal for screenshot sharing
 - Snap/Flatpak/AUR package builds for Linux distributions
 
@@ -75,3 +83,9 @@
 - [x] `v0.1.0` — Desktop client scaffold (Tauri + SvelteKit)
 - [x] `GAME-004` — Epic Games Store and Battle.net support
 - [x] `PRD-01` — Global Shortcuts System (documented, not implemented)
+- [x] `PRD-02` — System Tray Depth — **largely implemented in v0.1.x**
+  - Context menu: mute, deafen, show, quit ✅
+  - Dynamic tooltip with unread count ✅
+  - macOS dock badge ✅
+  - Minimize-to-tray on close ✅
+- [x] `v0.1.x` — Tray enhancements (tray.rs full rewrite with state management)
