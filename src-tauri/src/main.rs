@@ -96,6 +96,7 @@ mod renderer;
 mod printmanager;
 mod gesturemanager;
 mod contentfilter;
+mod game_detection;
 mod kanban;
 mod reminders;
 mod bookmarks;
@@ -1477,6 +1478,12 @@ fn main() {
             printmanager::print_cancel_job,
             printmanager::print_clear_jobs,
             printmanager::print_export_pdf,
+            // Game Detection commands
+            game_detection::get_running_games,
+            game_detection::get_game_library,
+            game_detection::start_detection,
+            game_detection::stop_detection,
+            game_detection::launch_game,
             // Gesture Manager commands
             gesturemanager::gesture_get_config,
             gesturemanager::gesture_update_config,
