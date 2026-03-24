@@ -1,6 +1,14 @@
 use tauri_plugin_notification::NotificationExt;
+use serde::{Deserialize, Serialize};
 
 use crate::tray;
+
+/// Represents a notification action that users can interact with
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NotificationAction {
+    pub id: String,
+    pub title: String,
+}
 
 /// Get the application version
 #[tauri::command]
@@ -54,4 +62,37 @@ pub fn get_minimize_to_tray(app: tauri::AppHandle) -> bool {
 #[tauri::command]
 pub fn set_minimize_to_tray(app: tauri::AppHandle, enabled: bool) {
     tray::set_minimize_to_tray(&app, enabled);
+}
+
+/// Send a rich notification with additional features
+#[tauri::command]
+pub async fn send_rich_notification(
+    app: tauri::AppHandle,
+    title: String,
+    body: String,
+    icon: Option<String>,
+    channel_id: Option<String>,
+    actions: Option<Vec<NotificationAction>>,
+) -> Result<(), String> {
+    let mut builder = app.notification().builder().title(&title).body(&body);
+
+    // Set icon if provided
+    if let Some(icon_path) = icon {
+        builder = builder.icon(&icon_path);
+    }
+
+    // Set channel ID if provided (for notification grouping)
+    if let Some(channel) = channel_id {
+        builder = builder.tag(&channel);
+    }
+
+    // Add actions if provided
+    if let Some(action_list) = actions {
+        for action in action_list {
+            builder = builder.action(&action.id, &action.title);
+        }
+    }
+
+    builder.show().map_err(|e| e.to_string())?;
+    Ok(())
 }

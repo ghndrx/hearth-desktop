@@ -44,6 +44,7 @@ fn main() {
         .invoke_handler(tauri::generate_handler![
             commands::get_app_version,
             commands::show_notification,
+            commands::send_rich_notification,
             commands::set_badge_count,
             commands::get_minimize_to_tray,
             commands::set_minimize_to_tray,
