@@ -1,8 +1,10 @@
 use std::sync::{Arc, Mutex};
+use image::{ImageBuffer, Rgba, RgbaImage};
 use tauri::{
+    image::Image,
     menu::{MenuBuilder, MenuItemBuilder},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
-    AppHandle, Manager, Runtime,
+    AppHandle, Emitter, Manager, Runtime,
 };
 
 #[derive(Debug, Clone)]
@@ -24,6 +26,84 @@ impl Default for TrayState {
     }
 }
 
+/// Creates a badge overlay image (red circle with white number text) scaled to the given size.
+fn create_badge_image(size: u32, count: u32) -> RgbaImage {
+    let mut img: RgbaImage = ImageBuffer::from_pixel(size, size, Rgba([0, 0, 0, 0]));
+
+    let center = (size as f32 / 2.0, size as f32 / 2.0);
+    let radius = size as f32 / 2.0 - 1.0;
+
+    // Draw red circle
+    for y in 0..size {
+        for x in 0..size {
+            let dx = x as f32 - center.0;
+            let dy = y as f32 - center.1;
+            if dx * dx + dy * dy <= radius * radius {
+                img.put_pixel(x, y, Rgba([220, 38, 38, 255])); // Red-600
+            }
+        }
+    }
+
+    // Draw count text (simplified: white circle for digit)
+    let display = if count > 9 { "9".to_string() } else { count.to_string() };
+    let text_len = display.len() as u32;
+    let char_width = size / 4;
+    let start_x = (size - text_len * char_width) / 2;
+    let char_height = size / 2;
+    let start_y = (size - char_height) / 2;
+
+    for (i, _c) in display.chars().enumerate() {
+        let cx = start_x + (i as u32) * char_width + char_width / 2;
+        let cy = start_y + char_height / 2;
+        let cr = char_width / 2 - 1;
+        for dy in 0..char_height {
+            for dx in 0..char_width {
+                let px = cx - char_width / 2 + dx;
+                let py = cy - char_height / 2 + dy;
+                if px < size && py < size {
+                    let ddx = px as f32 - cx as f32;
+                    let ddy = py as f32 - cy as f32;
+                    if ddx * ddx + ddy * ddy <= (cr * cr) as f32 {
+                        img.put_pixel(px, py, Rgba([255, 255, 255, 255])); // White
+                    }
+                }
+            }
+        }
+    }
+
+    img
+}
+
+/// Loads the default icon with an unread count badge overlaid in the bottom-right corner.
+fn load_icon_with_badge<R: Runtime>(app: &AppHandle<R>, unread: u32) -> Image<'static> {
+    let base_icon = match app.default_window_icon() {
+        Some(icon) => icon,
+        None => return Image::new_owned(vec![], 0, 0),
+    };
+
+    let width = base_icon.width();
+    let height = base_icon.height();
+    let rgba: &[u8] = base_icon.rgba();
+    let mut icon_img: ImageBuffer<Rgba<u8>, Vec<u8>> =
+        ImageBuffer::from_raw(width, height, rgba.to_vec())
+            .unwrap_or_else(|| ImageBuffer::from_pixel(width, height, Rgba([0, 0, 0, 0])));
+
+    if unread > 0 {
+        // Badge size: 1/4 of icon size, minimum 16
+        let badge_size = std::cmp::max(16, std::cmp::min(width, height) / 4);
+        let badge = create_badge_image(badge_size, unread);
+
+        // Overlay in bottom-right with 2px margin
+        let margin = 2;
+        let x_offset = width.saturating_sub(badge_size + margin);
+        let y_offset = height.saturating_sub(badge_size + margin);
+
+        image::imageops::overlay(&mut icon_img, &badge, x_offset as i64, y_offset as i64);
+    }
+
+    Image::new_owned(icon_img.into_raw(), width, height)
+}
+
 pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::error::Error>> {
     let state = Arc::new(Mutex::new(TrayState::default()));
     app.manage(state.clone());
@@ -31,14 +111,14 @@ pub fn setup_tray<R: Runtime>(app: &tauri::App<R>) -> Result<(), Box<dyn std::er
     let s = state.lock().unwrap();
     let menu = build_tray_menu(app, &s)?;
     let tooltip = build_tooltip(&s);
+    let icon = load_icon_with_badge(app.handle(), s.unread_count);
     drop(s);
 
-    let _tray = TrayIconBuilder::new()
-        .icon(app.default_window_icon().unwrap().clone())
+    let _tray = TrayIconBuilder::with_id("main")
+        .icon(icon)
         .tooltip(&tooltip)
         .menu(&menu)
-        .menu_on_left_click(false)
-        .id("main")
+        .show_menu_on_left_click(false)
         .on_tray_icon_event(|tray, event| {
             if let TrayIconEvent::Click {
                 button: MouseButton::Left,
@@ -148,6 +228,10 @@ fn rebuild_tray<R: Runtime>(app: &AppHandle<R>, state: &TrayState) {
             let _ = tray.set_menu(Some(menu));
         }
         let _ = tray.set_tooltip(Some(&build_tooltip(state)));
+
+        // Update icon with badge overlay when unread > 0
+        let icon = load_icon_with_badge(app, state.unread_count);
+        let _ = tray.set_icon(Some(icon));
     }
 }
 
