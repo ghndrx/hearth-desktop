@@ -4,6 +4,7 @@ import { gateway, Op, onGatewayEvent } from '$lib/stores/gateway';
 import { voiceState, voiceActions } from '$lib/stores/voice';
 import { user as authUser } from '$lib/stores/auth';
 import { WebRTCConnectionManager } from './WebRTCConnectionManager';
+import { getNoiseSuppressionManager, type SuppressionLevel } from './NoiseSuppressionManager';
 import type { AnySignalingMessage } from './types';
 
 /**
@@ -22,6 +23,7 @@ class VoiceConnectionManager {
 	private isSpeaking = false;
 	private cleanupFunctions: Array<() => void> = [];
 	private webrtcCleanups: Array<() => void> = [];
+	private noiseSuppressionEnabled = false;
 
 	constructor() {
 		this.webrtc = new WebRTCConnectionManager();
@@ -166,7 +168,7 @@ class VoiceConnectionManager {
 		try {
 			// Acquire microphone via WebRTCConnectionManager
 			await this.webrtc.acquireLocalStream();
-			const localStream = this.webrtc.getLocalStream();
+			let localStream = this.webrtc.getLocalStream();
 
 			// Set the local user ID so WebRTCConnectionManager can filter own messages
 			const currentUser = get(authUser);
@@ -174,6 +176,20 @@ class VoiceConnectionManager {
 				// Store userId for gateway-based signaling forwarding
 				this.webrtc['localUserId'] = currentUser.id;
 				this.webrtc['channelId'] = _channelId;
+			}
+
+			// Apply noise suppression to the local stream if enabled
+			if (localStream && this.noiseSuppressionEnabled) {
+				try {
+					const nsManager = getNoiseSuppressionManager();
+					if (!nsManager.getConfig()) {
+						await nsManager.initialize();
+					}
+					localStream = await nsManager.processMediaStream(localStream);
+					console.log('[Voice] Noise suppression applied to local stream');
+				} catch (error) {
+					console.warn('[Voice] Noise suppression unavailable:', error);
+				}
 			}
 
 			// Setup audio analysis for speaking detection
@@ -196,6 +212,33 @@ class VoiceConnectionManager {
 			);
 			throw error;
 		}
+	}
+
+	/**
+	 * Enable or disable noise suppression for voice connections.
+	 * Takes effect on the next connect() call, or immediately if already connected.
+	 */
+	async setNoiseSuppression(enabled: boolean, level?: SuppressionLevel): Promise<void> {
+		this.noiseSuppressionEnabled = enabled;
+		const nsManager = getNoiseSuppressionManager();
+
+		if (enabled) {
+			if (!nsManager.getConfig()) {
+				await nsManager.initialize(level !== undefined ? { level } : undefined);
+			} else if (level !== undefined) {
+				await nsManager.setLevel(level);
+			}
+			nsManager.setEnabled(true);
+		} else {
+			nsManager.setEnabled(false);
+		}
+	}
+
+	/**
+	 * Check if noise suppression is currently enabled
+	 */
+	isNoiseSuppressionEnabled(): boolean {
+		return this.noiseSuppressionEnabled;
 	}
 
 	private setupSpeakingDetection(stream: MediaStream) {
