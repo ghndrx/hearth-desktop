@@ -20,6 +20,7 @@
 	import ServerSettings from '$lib/components/ServerSettings.svelte';
 	import UserPopout from '$lib/components/UserPopout.svelte';
 	import VoiceCallOverlay from '$lib/components/VoiceCallOverlay.svelte';
+	import VoicePiPOverlay from '$lib/components/VoicePiPOverlay.svelte';
 	import ImagePreviewModal from '$lib/components/ImagePreviewModal.svelte';
 	import QuickSwitcher from '$lib/components/QuickSwitcher.svelte';
 	import SearchResults from '$lib/components/SearchResults.svelte';
@@ -416,6 +417,9 @@
 
 <!-- Voice Call Overlay - Floating mini-view during active calls -->
 <VoiceCallOverlay />
+
+<!-- Voice Picture-in-Picture Overlay - MW-002 floating voice overlay -->
+<VoicePiPOverlay />
 
 <!-- Notification Center Panel -->
 <NotificationCenterPanel

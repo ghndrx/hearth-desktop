@@ -13,6 +13,7 @@
 	import { createEventDispatcher, onMount, onDestroy } from 'svelte';
 	import { slide, fade } from 'svelte/transition';
 	import { voiceState, voiceActions, isInVoice, voiceChannel, currentVoiceUsers } from '$lib/stores/voice';
+	import { voicePiPActions, canEnterPiP, isPiPActive } from '$lib/stores/voicePiP';
 	import { getVoiceConnectionManager } from '$lib/voice/connection';
 	import { user as currentUser } from '$lib/stores/auth';
 	import Avatar from './Avatar.svelte';
@@ -108,6 +109,10 @@
 
 	function handleExpandFullView() {
 		dispatch('expandFullView');
+	}
+
+	function handleTogglePiP() {
+		voicePiPActions.toggle();
 	}
 
 	onDestroy(() => {
@@ -279,7 +284,22 @@
 
 				<!-- Actions Footer -->
 				<div class="expanded-footer">
-					<button 
+					<button
+						class="pip-toggle-btn"
+						class:active={$isPiPActive}
+						disabled={!$canEnterPiP && !$isPiPActive}
+						on:click={handleTogglePiP}
+						type="button"
+						title={$isPiPActive ? 'Exit Picture-in-Picture' : 'Enter Picture-in-Picture'}
+					>
+						<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor" aria-hidden="true">
+							<rect x="2" y="4" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.5" fill="none"/>
+							<rect x="12" y="10" width="8" height="6" rx="1" fill="currentColor"/>
+						</svg>
+						<span>{$isPiPActive ? 'Exit PiP' : 'Picture-in-Picture'}</span>
+					</button>
+
+					<button
 						class="expand-full-btn"
 						on:click={handleExpandFullView}
 						type="button"
@@ -522,8 +542,52 @@
 
 	/* Expanded Footer */
 	.expanded-footer {
+		display: flex;
+		flex-direction: column;
+		gap: 8px;
 		padding: 8px;
 		border-top: 1px solid #1e1f22;
+	}
+
+	.pip-toggle-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		gap: 8px;
+		width: 100%;
+		padding: 8px 12px;
+		background: rgba(242, 63, 67, 0.1);
+		border: none;
+		border-radius: 4px;
+		color: #f23f43;
+		font-size: 13px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.15s ease;
+	}
+
+	.pip-toggle-btn:hover:not(:disabled) {
+		background: rgba(242, 63, 67, 0.2);
+		color: #f23f43;
+	}
+
+	.pip-toggle-btn.active {
+		background: #f23f43;
+		color: white;
+	}
+
+	.pip-toggle-btn.active:hover {
+		background: #d93336;
+	}
+
+	.pip-toggle-btn:disabled {
+		opacity: 0.5;
+		cursor: not-allowed;
+	}
+
+	.pip-toggle-btn:focus {
+		outline: 2px solid #f23f43;
+		outline-offset: 2px;
 	}
 
 	.expand-full-btn {
