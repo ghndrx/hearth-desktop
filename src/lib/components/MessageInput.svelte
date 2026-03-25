@@ -5,10 +5,12 @@
 	import { uploadStore } from '$lib/stores/uploads';
 	import EmojiPicker from './EmojiPicker.svelte';
 	import GifPicker from './GifPicker.svelte';
+	import StickerPicker from './StickerPicker.svelte';
 	import FileUploadZone from './FileUploadZone.svelte';
 	import UploadProgress from './UploadProgress.svelte';
 	import MentionAutocomplete from './MentionAutocomplete.svelte';
 	import type { UploadItem } from './UploadProgress.svelte';
+	import type { Sticker } from '$lib/api/stickers';
 
 	const dispatch = createEventDispatcher<{
 		send: { content: string; attachments: File[]; replyTo?: string };
@@ -24,6 +26,7 @@
 	let lastTypingTime = 0;
 	let showEmojiPicker = false;
 	let showGifPicker = false;
+	let showStickerPicker = false;
 	let uploadErrors: string[] = [];
 	
 	// Mention autocomplete state
@@ -313,6 +316,7 @@
 		showGifPicker = !showGifPicker;
 		if (showGifPicker) {
 			showEmojiPicker = false;
+			showStickerPicker = false;
 		}
 	}
 
@@ -320,7 +324,27 @@
 		showEmojiPicker = !showEmojiPicker;
 		if (showEmojiPicker) {
 			showGifPicker = false;
+			showStickerPicker = false;
 		}
+	}
+
+	function toggleStickerPicker() {
+		showStickerPicker = !showStickerPicker;
+		if (showStickerPicker) {
+			showEmojiPicker = false;
+			showGifPicker = false;
+		}
+	}
+
+	function handleStickerSelect(event: CustomEvent<Sticker>) {
+		const sticker = event.detail;
+		dispatch('send', {
+			content: `[sticker:${sticker.id}:${sticker.image_url}:${sticker.alias}]`,
+			attachments: [],
+			replyTo: replyTo?.id
+		});
+		showStickerPicker = false;
+		replyTo = null;
 	}
 </script>
 
@@ -518,6 +542,41 @@
 					show={showGifPicker}
 					on:select={handleGifSelect}
 					on:close={() => (showGifPicker = false)}
+				/>
+			</div>
+
+			<!-- Sticker Button -->
+			<div class="sticker-button-container">
+				<button
+					class="icon-button sticker-button"
+					title="Select sticker"
+					aria-label="Select sticker"
+					aria-expanded={showStickerPicker}
+					aria-haspopup="dialog"
+					on:click={toggleStickerPicker}
+					disabled={!$currentChannel}
+					type="button"
+				>
+					<svg
+						width="24"
+						height="24"
+						viewBox="0 0 24 24"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="2"
+						aria-hidden="true"
+					>
+						<rect x="3" y="3" width="18" height="18" rx="3" />
+						<circle cx="9" cy="10" r="1.5" fill="currentColor" stroke="none" />
+						<circle cx="15" cy="10" r="1.5" fill="currentColor" stroke="none" />
+						<path d="M8 15c1 1.5 3 2.5 4 2.5s3-1 4-2.5" />
+					</svg>
+				</button>
+
+				<StickerPicker
+					show={showStickerPicker}
+					on:select={handleStickerSelect}
+					on:close={() => (showStickerPicker = false)}
 				/>
 			</div>
 
@@ -797,6 +856,15 @@
 
 	.gif-button:hover:not(:disabled) {
 		color: var(--blurple, #5865f2);
+	}
+
+	/* Sticker Button Container */
+	.sticker-button-container {
+		position: relative;
+	}
+
+	.sticker-button:hover:not(:disabled) {
+		color: #3ba55d;
 	}
 
 	/* Emoji Button Container */

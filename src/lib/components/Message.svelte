@@ -62,6 +62,7 @@
 	import ThreadReplyIndicator from './ThreadReplyIndicator.svelte';
 	import MediaPlayer from './MediaPlayer.svelte';
 	import LazyImage from './LazyImage.svelte';
+	import StickerMessage from './StickerMessage.svelte';
 	
 	export let message: any;
 	export let grouped = false;
@@ -178,6 +179,17 @@
 	$: isEdited = !!message.edited_at;
 	$: usernameColor = roleColor || message.author?.role_color || '#f2f3f5';
 	$: parsedContent = parseMessage(message.content);
+
+	// Sticker detection: content matches [sticker:id:url:alias]
+	$: stickerMatch = message.content?.match(/^\[sticker:([^:]+):([^:]+):([^\]]+)\]$/);
+	$: stickerData = stickerMatch ? {
+		id: stickerMatch[1],
+		pack_id: '',
+		alias: stickerMatch[3],
+		image_url: stickerMatch[2],
+		format: 'png' as const,
+		created_at: message.created_at
+	} : null;
 
 	function handleAuthorClick(event: MouseEvent | KeyboardEvent) {
 		if (!message.author) return;
@@ -315,6 +327,8 @@
 					escape to <button on:click={cancelEdit} class="text-[#00a8fc] hover:underline">cancel</button> • enter to <button on:click={saveEdit} class="text-[#00a8fc] hover:underline">save</button>
 				</div>
 			</div>
+		{:else if stickerData}
+			<StickerMessage sticker={stickerData} />
 		{:else}
 			<div class="text-[#dbdee1] text-base leading-[1.375rem] break-words">
 				{@html parsedContent}

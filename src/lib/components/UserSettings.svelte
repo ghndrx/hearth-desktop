@@ -8,6 +8,7 @@
   import NotificationSettings from './NotificationSettings.svelte';
   import DeviceManagement from './DeviceManagement.svelte';
   import AISettings from './AISettings.svelte';
+  import StickerSettings from './StickerSettings.svelte';
   
   export let open = false;
   
@@ -36,6 +37,7 @@
     { id: 'keybinds', label: 'Keybinds', icon: 'keyboard' },
     { id: 'splitview', label: 'Split View', icon: 'splitview' },
     { id: 'ai', label: 'AI Settings', icon: 'ai' },
+    { id: 'stickers', label: 'Stickers', icon: 'sticker' },
     { id: 'divider-other', label: '', divider: true },
     { id: 'about', label: 'About Hearth', icon: 'info' },
     { id: 'logout', label: 'Log Out', icon: 'logout', danger: true }
@@ -976,7 +978,12 @@
             <section>
               <AISettings />
             </section>
-          
+
+          {:else if activeSection === 'stickers'}
+            <section>
+              <StickerSettings />
+            </section>
+
           {:else if activeSection === 'about'}
             <section>
               <h1 class="text-xl font-semibold text-[var(--text-primary)] mb-5">About Hearth</h1>
