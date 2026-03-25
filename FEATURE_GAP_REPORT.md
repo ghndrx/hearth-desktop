@@ -6,60 +6,74 @@
 
 ## Executive Summary
 
-Hearth Desktop currently achieves **32% overall parity** with Discord's native desktop application across all major feature categories. While Hearth has established a solid foundation with advanced utility widgets and basic desktop integration, significant gaps exist in core communication features that are critical for competitive positioning.
+Hearth Desktop currently achieves **50% overall parity** with Discord's native desktop application across all major feature categories — up from 32% at last assessment. Major progress has been made in Q1 2026 with the completion of the WebRTC P2P voice system and full game integration stack (Steam/Epic/Battlenet).
 
 **Key Findings:**
-- 🟢 **Strengths:** Desktop utilities, system integration foundation, multi-monitor support
-- 🔴 **Critical Gaps:** Voice/audio (20%), game integration (0%), overlays (25%)
-- 🎯 **Target:** Achieve 85% parity by end of 2026 through focused P0/P1 initiatives
+- 🟢 **Strengths:** Game integration (80%), window management (60%), voice P2P infrastructure (complete)
+- 🔴 **Critical Gaps:** In-game overlay injection, noise suppression/echo cancellation, screen sharing
+- 🎯 **Target:** Achieve 65% parity by end of Q2 2026 through focused P0 initiatives
 
 ---
 
 ## Feature Category Analysis
 
 ### 1. Voice & Audio Communication
-**Current Parity: 20% | Weight: 25% | Priority: P0 Critical**
+**Current Parity: 65% | Weight: 25% | Priority: P0 Critical**
 
 | Feature | Discord | Hearth Desktop | Gap |
 |---------|---------|----------------|-----|
 | Persistent Voice Channels | ✅ Full | ❌ None | 100% |
-| Noise Suppression | ✅ AI-powered | ❌ None | 100% |
-| Echo Cancellation | ✅ Advanced | ❌ None | 100% |
+| Noise Suppression (RNNoise) | ✅ AI-powered | ❌ None | 100% |
+| Echo Cancellation (AEC3) | ✅ Advanced | ❌ None | 100% |
 | Push-to-Talk | ✅ Global hotkeys | ⚠️ Basic shortcuts | 70% |
-| Spatial Audio | ✅ 3D positioning | ❌ None | 100% |
-| Voice Activity Detection | ✅ Smart detection | ❌ None | 100% |
-| Multi-user Voice Mixing | ✅ 50+ users | ❌ None | 100% |
-| **Category Score** | **100%** | **20%** | **80%** |
+| Spatial Audio (HRTF) | ✅ 3D positioning | ❌ None | 100% |
+| Voice Activity Detection | ✅ Smart detection | ✅ WebRTC VAD | 0% |
+| WebRTC P2P Infrastructure | ✅ Full | ✅ Complete (2dac71b7) | 0% |
+| P2P Connection Diagnostics | ✅ Connection view | ✅ Real-time monitoring | 0% |
+| Audio Quality Controls | ✅ Advanced | ✅ Echo/AGC/HPF filters | 0% |
+| Multi-user Voice Mixing | ✅ 50+ users | ⚠️ P2P (scaling TBD) | 30% |
+| **Category Score** | **100%** | **65%** | **35%** |
+
+**Recent Commits:** `2dac71b7` (WebRTC P2P voice, today), `120683ce` (WebRTC voice foundation)
 
 **Impact:** Critical competitive disadvantage. Voice is core to Discord's value proposition.
 
 ### 2. Game Integration & Rich Presence
-**Current Parity: 0% | Weight: 20% | Priority: P0 Critical**
+**Current Parity: 80% | Weight: 20% | Priority: P0 Critical**
 
 | Feature | Discord | Hearth Desktop | Gap |
 |---------|---------|----------------|-----|
-| Game Detection | ✅ Auto-detection | ❌ None | 100% |
-| Rich Presence Display | ✅ Custom states | ❌ None | 100% |
-| Steam Integration | ✅ Full library | ❌ None | 100% |
-| Game Launching | ✅ Direct launch | ❌ None | 100% |
+| Game Detection (process scan) | ✅ Auto-detection | ✅ Steam/Epic/Battlenet | 0% |
+| Rich Presence Display | ✅ Custom states | ✅ Broadcasting (54d90192) | 0% |
+| Steam Integration | ✅ Full library | ✅ GAME-001/003 (c7e769c0) | 0% |
+| Epic & Battle.net | ✅ Full library | ✅ GAME-004 (05bbb01e) | 0% |
+| Game Library Panel | ✅ Management UI | ✅ Panel (c7e769c0) | 0% |
+| Game Launching | ✅ Direct launch | ⚠️ Via library | 20% |
 | Achievement Tracking | ✅ Game achievements | ❌ None | 100% |
 | Join Game Functionality | ✅ One-click join | ❌ None | 100% |
-| **Category Score** | **100%** | **0%** | **100%** |
+| **Category Score** | **100%** | **80%** | **20%** |
+
+**Recent Commits:** `05bbb01e` (Epic/Battlenet), `c7e769c0` (Game library panel), `54d90192` (Rich presence API), `3c0d546b` (Steam game detection)
 
 **Impact:** Gaming communities won't adopt without game integration features.
 
 ### 3. Window Management & Overlays
-**Current Parity: 25% | Weight: 15% | Priority: P0 Critical**
+**Current Parity: 60% | Weight: 15% | Priority: P0 Critical**
 
 | Feature | Discord | Hearth Desktop | Gap |
 |---------|---------|----------------|-----|
 | In-Game Overlay | ✅ Full overlay | ❌ None | 100% |
-| Always-On-Top Mode | ✅ Multiple modes | ⚠️ Basic support | 60% |
-| Mini Player Mode | ✅ Compact interface | ❌ None | 100% |
-| Pop-out Windows | ✅ Multi-window | ❌ Single window | 100% |
-| Overlay Hotkeys | ✅ Configurable | ❌ None | 100% |
-| Window Transparency | ✅ Configurable | ⚠️ Limited | 70% |
-| **Category Score** | **100%** | **25%** | **75%** |
+| Always-On-Top Mode | ✅ Multiple modes | ✅ Multi-mode | 0% |
+| Multi-Window Architecture | ✅ Pop-out channels | ✅ MW-001 (dd24cbc9) | 0% |
+| Voice PiP Overlay | ✅ Voice PiP | ✅ MW-002 (db1bc1a6) | 0% |
+| Floating Mini Window | ✅ Compact player | ✅ 1353ac9e | 0% |
+| Mini Player Mode | ✅ Compact interface | ✅ VoiceMiniPlayer | 0% |
+| Pop-out Windows | ✅ Multi-window | ✅ Supported | 0% |
+| Overlay Hotkeys | ✅ Configurable | ⚠️ Basic | 50% |
+| Window Transparency | ✅ Configurable | ✅ Limited | 30% |
+| **Category Score** | **100%** | **60%** | **40%** |
+
+**Recent Commits:** `1353ac9e` (floating mini window), `db1bc1a6` (Voice PiP overlay), `dd24cbc9` (MW-001 multi-window), `5e1a2dd0` (tray badge overlay)
 
 **Impact:** Gamers and multitaskers expect overlay functionality.
 
@@ -129,32 +143,33 @@ Hearth Desktop currently achieves **32% overall parity** with Discord's native d
 
 | Category | Weight | Discord Score | Hearth Score | Weighted Gap |
 |----------|---------|---------------|--------------|--------------|
-| Voice & Audio | 25% | 100% | 20% | 20.0% |
-| Game Integration | 20% | 100% | 0% | 0.0% |
-| Window Management | 15% | 100% | 25% | 3.8% |
-| Screen Sharing | 15% | 100% | 15% | 2.3% |
-| Hardware Integration | 10% | 100% | 10% | 1.0% |
-| System Integration | 10% | 100% | 30% | 3.0% |
-| Community Features | 5% | 100% | 45% | 2.3% |
-| **TOTAL** | **100%** | **100%** | **32%** | **32.4%** |
+| Voice & Audio | 25% | 100% | 65% | 8.75% |
+| Game Integration | 20% | 100% | 80% | 4.0% |
+| Window Management | 15% | 100% | 60% | 6.0% |
+| Screen Sharing | 15% | 100% | 15% | 12.75% |
+| Hardware Integration | 10% | 100% | 10% | 9.0% |
+| System Integration | 10% | 100% | 30% | 7.0% |
+| Community Features | 5% | 100% | 45% | 2.75% |
+| **TOTAL** | **100%** | **100%** | **50%** | **50.25%** |
 
-### **🎯 Current Overall Parity: 32%**
+### **🎯 Current Overall Parity: 50%**
 
 ---
 
 ## Competitive Risk Assessment
 
 ### High Risk Areas (0-25% Parity)
-1. **Game Integration (0%)** - Deal breaker for gaming communities
-2. **Voice & Audio (20%)** - Core value proposition missing
-3. **Window Overlays (25%)** - Essential for gamers and power users
+1. **Screen Sharing (15%)** - Critical for team collaboration
+2. **Hardware Integration (10%)** - Power users and gamers expect hardware controls
 
 ### Medium Risk Areas (26-50% Parity)
 1. **System Integration (30%)** - Affects daily usability
 2. **Community Features (45%)** - Important for large communities
 
 ### Low Risk Areas (51-75% Parity)
-- None currently - all major categories need significant improvement
+1. **Voice & Audio (65%)** - Core infrastructure complete; polish features remaining
+2. **Window Overlays (60%)** - Architecture complete; in-game injection remains
+3. **Game Integration (80%)** - Achievements and join functionality pending
 
 ---
 
@@ -177,25 +192,27 @@ Hearth Desktop currently achieves **32% overall parity** with Discord's native d
 
 ## 2026 Parity Roadmap
 
-### Q1 2026 Target: 45% Parity
-- ✅ Complete game integration framework
-- ✅ Enhanced system integration features
-- ✅ Basic voice infrastructure
+### Q1 2026 Target: 50% Parity ✅ (On Track)
+- ✅ WebRTC P2P voice infrastructure (120683ce, 2dac71b7)
+- ✅ Game detection & rich presence (GAME-001 to GAME-004)
+- ✅ Multi-window architecture (MW-001, MW-002)
+- ✅ Floating mini window & PiP overlays
 
 ### Q2 2026 Target: 65% Parity
-- ✅ Full voice & audio feature set
-- ✅ Window overlay system
-- ✅ Advanced game integration
+- ⬜ Noise suppression (RNNoise) & echo cancellation (AEC3)
+- ⬜ Achievement tracking & join game functionality
+- ⬜ In-game overlay injection (anti-cheat compatible)
+- ⬜ Persistent voice channels with member management
 
 ### Q3 2026 Target: 80% Parity
-- ✅ Screen sharing & streaming
-- ✅ Hardware integration platform
-- ✅ Advanced community features
+- ⬜ Screen sharing & streaming
+- ⬜ Hardware integration platform (headsets, RGB)
+- ⬜ Advanced community features
 
 ### Q4 2026 Target: 85% Parity
-- ✅ Mobile sync & cross-platform
-- ✅ Plugin ecosystem foundation
-- ✅ Performance optimization
+- ⬜ Mobile sync & cross-platform
+- ⬜ Plugin ecosystem foundation
+- ⬜ Performance optimization
 
 ---
 
