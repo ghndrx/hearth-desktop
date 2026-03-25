@@ -93,22 +93,22 @@ describe('MessageList', () => {
 			expect(screen.getByText('Select a channel to start chatting')).toBeTruthy();
 		});
 
-		it('should render channel header when channel is selected', async () => {
+		it('should render channel welcome when channel is selected', async () => {
 			mockCurrentChannelStore.set(createMockChannel({ name: 'test-channel' }));
 			const MessageList = (await import('./MessageList.svelte')).default;
 
 			render(MessageList);
 
-			expect(screen.getByText('test-channel')).toBeTruthy();
+			expect(screen.getByText('Welcome to #test-channel!')).toBeTruthy();
 		});
 
-		it('should render channel topic in header', async () => {
-			mockCurrentChannelStore.set(createMockChannel({ topic: 'This is the topic' }));
+		it('should render channel start message with channel name', async () => {
+			mockCurrentChannelStore.set(createMockChannel({ name: 'help' }));
 			const MessageList = (await import('./MessageList.svelte')).default;
 
 			render(MessageList);
 
-			expect(screen.getByText('This is the topic')).toBeTruthy();
+			expect(screen.getByText(/This is the start of the #help channel/)).toBeTruthy();
 		});
 
 		it('should render welcome message for text channel', async () => {
@@ -266,23 +266,21 @@ describe('MessageList', () => {
 	});
 
 	describe('message input visibility', () => {
-		it('should show MessageInput when channel is selected', async () => {
+		it('should render message log container when channel is selected', async () => {
 			mockCurrentChannelStore.set(createMockChannel());
 			const MessageList = (await import('./MessageList.svelte')).default;
 
 			const { container } = render(MessageList);
 
-			// MessageInput is rendered (check for textarea which is part of MessageInput)
-			expect(container.querySelector('textarea') || container.textContent?.includes('Message')).toBeTruthy();
+			expect(container.querySelector('[role="log"]')).toBeTruthy();
 		});
 
-		it('should NOT show MessageInput when no channel selected', async () => {
+		it('should NOT show message log when no channel selected', async () => {
 			mockCurrentChannelStore.set(null);
 			const MessageList = (await import('./MessageList.svelte')).default;
 
 			render(MessageList);
 
-			// Should show select channel prompt instead
 			expect(screen.getByText('Select a channel to start chatting')).toBeTruthy();
 		});
 	});
@@ -351,7 +349,7 @@ describe('MessageList', () => {
 
 			const { container } = render(MessageList);
 
-			const scrollContainer = container.querySelector('.overflow-y-auto');
+			const scrollContainer = container.querySelector('.message-list-container');
 			expect(scrollContainer).toBeTruthy();
 		});
 	});
@@ -401,8 +399,8 @@ describe('MessageList', () => {
 
 			render(MessageList);
 
-			// Should render without error
-			expect(screen.getByText('general')).toBeTruthy();
+			// Should render without error - channel name appears in welcome
+			expect(screen.getByText('Welcome to #general!')).toBeTruthy();
 		});
 
 		it('should handle undefined recipients gracefully', async () => {
