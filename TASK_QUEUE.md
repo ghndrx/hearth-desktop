@@ -15,7 +15,7 @@
 ### Multi-Window & Workspace Management
 | Task | Description | Owner | Estimate | Dependencies |
 |------|-------------|--------|----------|-------------|
-| - [ ] **MW-001** | Implement Tauri multi-window architecture foundation | Platform Team | 3 weeks | Tauri 2.0 upgrade |
+| - [x] **MW-001** | Implement Tauri multi-window architecture foundation | Platform Team | 3 weeks | Tauri 2.0 upgrade |
 | - [ ] **MW-002** | Basic picture-in-picture voice channel overlay | Frontend Team | 2 weeks | MW-001 |
 | - [ ] **MW-003** | Multi-monitor detection and configuration system | Platform Team | 2 weeks | None |
 | - [ ] **MW-004** | Window state persistence across app restarts | Backend Team | 1 week | MW-001 |
