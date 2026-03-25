@@ -4,6 +4,7 @@
 mod accessibility;
 mod activity;
 mod audio;
+mod noise_suppression;
 mod autoaway;
 mod backup;
 mod badge;
@@ -777,6 +778,11 @@ fn main() {
             audio::set_output_volume,
             audio::is_output_muted,
             audio::toggle_output_mute,
+            // Noise suppression commands
+            noise_suppression::noise_suppression_enable,
+            noise_suppression::noise_suppression_disable,
+            noise_suppression::noise_suppression_status,
+            noise_suppression::noise_suppression_process,
             // Do Not Disturb commands
             dnd::get_dnd_status,
             dnd::toggle_dnd,
