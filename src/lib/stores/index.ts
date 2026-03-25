@@ -182,6 +182,15 @@ export {
 	fileTypeColor
 } from './filePreview';
 
+// Voice Picture-in-Picture - MW-002 floating voice overlay
+export {
+	voicePiPState,
+	voicePiPActions,
+	isPiPActive,
+	isPiPTransitioning,
+	canEnterPiP
+} from './voicePiP';
+
 // Quick Reply - reply from notifications without focusing app
 export { quickReply } from './quickReply';
 
