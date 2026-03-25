@@ -76,25 +76,25 @@ describe('UserPanel', () => {
 		it('shows online status color by default', () => {
 			const { container } = render(UserPanel, { props: { status: 'online' } });
 			const statusDot = container.querySelector('.status-dot');
-			expect(statusDot).toHaveStyle('background: var(--status-online, #23a559)');
+			expect(statusDot).toHaveStyle('background: rgb(35, 165, 89)');
 		});
 
 		it('shows idle status color', () => {
 			const { container } = render(UserPanel, { props: { status: 'idle' } });
 			const statusDot = container.querySelector('.status-dot');
-			expect(statusDot).toHaveStyle('background: var(--status-idle, #f0b232)');
+			expect(statusDot).toHaveStyle('background: rgb(240, 178, 50)');
 		});
 
 		it('shows dnd status color', () => {
 			const { container } = render(UserPanel, { props: { status: 'dnd' } });
 			const statusDot = container.querySelector('.status-dot');
-			expect(statusDot).toHaveStyle('background: var(--status-dnd, #f23f43)');
+			expect(statusDot).toHaveStyle('background: rgb(242, 63, 67)');
 		});
 
 		it('shows offline status color', () => {
 			const { container } = render(UserPanel, { props: { status: 'offline' } });
 			const statusDot = container.querySelector('.status-dot');
-			expect(statusDot).toHaveStyle('background: var(--status-offline, #80848e)');
+			expect(statusDot).toHaveStyle('background: rgb(128, 132, 142)');
 		});
 	});
 
