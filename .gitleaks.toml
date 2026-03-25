@@ -1,0 +1,48 @@
+[pragma]
+autofix = false
+allowlist = []
+
+[[rules]]
+description = "AWS Access Key ID"
+regex = '''(A3T[A-Z0-9]|AKIA|AGPA|AIDA|AROA|AIPA|ANPA|ANVA|ASIA)[A-Z0-9]{16}'''
+tags = ["key", "AWS"]
+
+[[rules]]
+description = "AWS Secret Access Key"
+regex = '''(?i)aws(.{0,20})?['\"][0-9a-zA-Z\/+]{40}['\"]'''
+tags = ["key", "AWS"]
+
+[[rules]]
+description = "Generic API Key"
+regex = '''(?i)(api[key|pwd|secret|token]|apikey|api_secret|password)\s*[:=]\s*['\"][0-9a-zA-Z]{16,64}['\"]'''
+tags = ["key", "API"]
+
+[[rules]]
+description = "GitHub Token"
+regex = '''gh[pousr]_[A-Za-z0-9_]{36,255}'''
+tags = ["key", "GitHub"]
+
+[[rules]]
+description = "Generic Secret"
+regex = '''(?i)secret|password|passwd|pwd|token|api_key|apikey\s*[:=]\s*['\"][^'\"]{8,64}['\"]'''
+tags = ["secret"]
+
+[[rules]]
+description = "Private Key"
+regex = '''-----BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY-----'''
+tags = ["key", "private"]
+
+[[rules]]
+description = "JWT Token"
+regex = '''eyJ[A-Za-z0-9-_]+\.eyJ[A-Za-z0-9-_]+\.[A-Za-z0-9-_.+/=]*'''
+tags = ["token", "JWT"]
+
+[allowlist]
+description = "Allowlisted files"
+paths = [
+  '''\.gitleaks\.toml$''',
+  '''\.gitignore$''',
+  '''\.github/workflows/.*\.yml$''',
+  '''package\.json$''',
+  '''package-lock\.json$''',
+]
