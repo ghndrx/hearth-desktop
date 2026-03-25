@@ -1,0 +1,26 @@
+name: Auto-Cleanup Branch
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  delete-branch:
+    name: Delete Merged Branch
+    runs-on: ubuntu-latest
+    if: github.event.pull_request.merged == true
+    steps:
+      - name: Delete branch
+        run: |
+          # Don't delete master/main/develop
+          if [[ "${{ github.event.pull_request.head.ref }}" =~ ^master$|^main$|^develop$ ]]; then
+            echo "Skipping protected branch: ${{ github.event.pull_request.head.ref }}"
+            exit 0
+          fi
+          gh api \
+            --method DELETE \
+            "/repos/${{ github.repository }}/git/refs/heads/${{ github.event.pull_request.head.ref }}" \
+            && echo "Deleted branch: ${{ github.event.pull_request.head.ref }}" \
+            || echo "Branch already deleted or cannot be deleted"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
