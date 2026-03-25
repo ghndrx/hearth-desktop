@@ -178,7 +178,7 @@ export {
 // File Preview - native file preview with thumbnails and metadata
 export {
 	filePreview,
-	formatFileSize,
+	formatFileSize as formatPreviewFileSize,
 	fileTypeColor
 } from './filePreview';
 
