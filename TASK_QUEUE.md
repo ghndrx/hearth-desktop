@@ -15,28 +15,28 @@
 ### Multi-Window & Workspace Management
 | Task | Description | Owner | Estimate | Dependencies |
 |------|-------------|--------|----------|-------------|
-| **MW-001** | Implement Tauri multi-window architecture foundation | Platform Team | 3 weeks | Tauri 2.0 upgrade |
-| **MW-002** | Basic picture-in-picture voice channel overlay | Frontend Team | 2 weeks | MW-001 |
-| **MW-003** | Multi-monitor detection and configuration system | Platform Team | 2 weeks | None |
-| **MW-004** | Window state persistence across app restarts | Backend Team | 1 week | MW-001 |
-| **MW-005** | Smart window positioning engine (basic) | Platform Team | 2 weeks | MW-001, MW-003 |
+| - [ ] **MW-001** | Implement Tauri multi-window architecture foundation | Platform Team | 3 weeks | Tauri 2.0 upgrade |
+| - [ ] **MW-002** | Basic picture-in-picture voice channel overlay | Frontend Team | 2 weeks | MW-001 |
+| - [ ] **MW-003** | Multi-monitor detection and configuration system | Platform Team | 2 weeks | None |
+| - [ ] **MW-004** | Window state persistence across app restarts | Backend Team | 1 week | MW-001 |
+| - [ ] **MW-005** | Smart window positioning engine (basic) | Platform Team | 2 weeks | MW-001, MW-003 |
 
 ### AI-Powered Desktop Intelligence (MVP)
 | Task | Description | Owner | Estimate | Dependencies |
 |------|-------------|--------|----------|-------------|
-| **AI-001** | Local ML inference engine setup (TensorFlow Lite) | AI Team | 2 weeks | None |
-| **AI-002** | Basic context detection (work, gaming, idle) | AI Team | 3 weeks | AI-001 |
-| **AI-003** | Smart notification filtering based on context | Frontend Team | 2 weeks | AI-002 |
-| **AI-004** | Automated presence management system | Backend Team | 2 weeks | AI-002 |
-| **AI-005** | Privacy controls and user consent framework | Platform Team | 1 week | AI-001 |
+| - [ ] **AI-001** | Local ML inference engine setup (TensorFlow Lite) | AI Team | 2 weeks | None |
+| - [ ] **AI-002** | Basic context detection (work, gaming, idle) | AI Team | 3 weeks | AI-001 |
+| - [ ] **AI-003** | Smart notification filtering based on context | Frontend Team | 2 weeks | AI-002 |
+| - [ ] **AI-004** | Automated presence management system | Backend Team | 2 weeks | AI-002 |
+| - [ ] **AI-005** | Privacy controls and user consent framework | Platform Team | 1 week | AI-001 |
 
 ### Plugin Ecosystem Foundation (Existing)
 | Task | Description | Owner | Estimate | Dependencies |
 |------|-------------|--------|----------|-------------|
-| **PE-001** | WASM plugin runtime environment | Platform Team | 4 weeks | Security review |
-| **PE-002** | Plugin API framework (messages, UI, storage) | Backend Team | 3 weeks | PE-001 |
-| **PE-003** | Basic plugin marketplace UI | Frontend Team | 2 weeks | PE-002 |
-| **PE-004** | Plugin SDK and CLI tools | DevTools Team | 3 weeks | PE-002 |
+| - [ ] **PE-001** | WASM plugin runtime environment | Platform Team | 4 weeks | Security review |
+| - [ ] **PE-002** | Plugin API framework (messages, UI, storage) | Backend Team | 3 weeks | PE-001 |
+| - [ ] **PE-003** | Basic plugin marketplace UI | Frontend Team | 2 weeks | PE-002 |
+| - [ ] **PE-004** | Plugin SDK and CLI tools | DevTools Team | 3 weeks | PE-002 |
 
 ---
 
@@ -45,35 +45,35 @@
 ### Hardware Integration & Gaming Peripherals
 | Task | Description | Owner | Estimate | Dependencies |
 |------|-------------|--------|----------|-------------|
-| **HW-001** | RGB hardware abstraction layer | Hardware Team | 2 weeks | Hardware vendor SDKs |
-| **HW-002** | Voice activity RGB synchronization | Hardware Team | 2 weeks | HW-001 |
-| **HW-003** | Gaming controller input mapping system | Input Team | 2 weeks | Controller APIs |
-| **HW-004** | Basic haptic feedback for notifications | Hardware Team | 1 week | HW-001 |
-| **HW-005** | Stream Deck integration for voice controls | Hardware Team | 2 weeks | Elgato SDK |
+| - [ ] **HW-001** | RGB hardware abstraction layer | Hardware Team | 2 weeks | Hardware vendor SDKs |
+| - [ ] **HW-002** | Voice activity RGB synchronization | Hardware Team | 2 weeks | HW-001 |
+| - [ ] **HW-003** | Gaming controller input mapping system | Input Team | 2 weeks | Controller APIs |
+| - [ ] **HW-004** | Basic haptic feedback for notifications | Hardware Team | 1 week | HW-001 |
+| - [ ] **HW-005** | Stream Deck integration for voice controls | Hardware Team | 2 weeks | Elgato SDK |
 
 ### Advanced Voice Features (Existing)
 | Task | Description | Owner | Estimate | Dependencies |
 |------|-------------|--------|----------|-------------|
-| **VF-001** | Spatial audio engine implementation | Audio Team | 4 weeks | WebRTC upgrade |
-| **VF-002** | Advanced noise suppression (AI-powered) | Audio Team | 3 weeks | AI-001 |
-| **VF-003** | Voice activity detection optimization | Audio Team | 2 weeks | None |
-| **VF-004** | Multi-channel voice mixing | Audio Team | 2 weeks | VF-001 |
+| - [ ] **VF-001** | Spatial audio engine implementation | Audio Team | 4 weeks | WebRTC upgrade |
+| - [ ] **VF-002** | Advanced noise suppression (AI-powered) | Audio Team | 3 weeks | AI-001 |
+| - [ ] **VF-003** | Voice activity detection optimization | Audio Team | 2 weeks | None |
+| - [ ] **VF-004** | Multi-channel voice mixing | Audio Team | 2 weeks | VF-001 |
 
 ### Screen Sharing & Streaming (Existing)
 | Task | Description | Owner | Estimate | Dependencies |
 |------|-------------|--------|----------|-------------|
-| **SS-001** | Native screen capture API integration | Platform Team | 3 weeks | OS APIs |
-| **SS-002** | Multi-monitor screen sharing support | Platform Team | 2 weeks | SS-001, MW-003 |
-| **SS-003** | Hardware-accelerated video encoding | Platform Team | 3 weeks | GPU APIs |
-| **SS-004** | Streaming integration (OBS, XSplit) | Integration Team | 2 weeks | Third-party SDKs |
+| - [ ] **SS-001** | Native screen capture API integration | Platform Team | 3 weeks | OS APIs |
+| - [ ] **SS-002** | Multi-monitor screen sharing support | Platform Team | 2 weeks | SS-001, MW-003 |
+| - [ ] **SS-003** | Hardware-accelerated video encoding | Platform Team | 3 weeks | GPU APIs |
+| - [ ] **SS-004** | Streaming integration (OBS, XSplit) | Integration Team | 2 weeks | Third-party SDKs |
 
 ### Mobile Synchronization (Existing)
 | Task | Description | Owner | Estimate | Dependencies |
 |------|-------------|--------|----------|-------------|
-| **MS-001** | Cross-platform sync architecture design | Backend Team | 2 weeks | Cloud infrastructure |
-| **MS-002** | Real-time message synchronization | Backend Team | 3 weeks | MS-001 |
-| **MS-003** | Presence status sync across devices | Backend Team | 1 week | MS-001 |
-| **MS-004** | Mobile notification proxy system | Backend Team | 2 weeks | Push notification service |
+| - [ ] **MS-001** | Cross-platform sync architecture design | Backend Team | 2 weeks | Cloud infrastructure |
+| - [ ] **MS-002** | Real-time message synchronization | Backend Team | 3 weeks | MS-001 |
+| - [ ] **MS-003** | Presence status sync across devices | Backend Team | 1 week | MS-001 |
+| - [ ] **MS-004** | Mobile notification proxy system | Backend Team | 2 weeks | Push notification service |
 
 ---
 
