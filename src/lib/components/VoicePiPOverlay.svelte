@@ -204,7 +204,7 @@
 					class="status-indicator"
 					class:connected={$voiceState.connectionState === 'connected'}
 					class:connecting={$voiceState.connectionState === 'connecting' || $voiceState.connectionState === 'reconnecting'}
-				/>
+				></div>
 				<span class="channel-name">{channelName}</span>
 			</div>
 			<div class="connection-time">
@@ -222,12 +222,15 @@
 					title="{participant.display_name || participant.username}{participant.self_muted ? ' (muted)' : ''}{participant.speaking ? ' (speaking)' : ''}"
 				>
 					<Avatar
-						user={participant}
+						src={participant.avatar}
+						alt={participant.display_name || participant.username}
 						size="sm"
-						showOnlineStatus={false}
+						userId={participant.id}
+						username={participant.username}
+						showPresence={false}
 					/>
 					{#if participant.speaking}
-						<div class="speaking-indicator" />
+						<div class="speaking-indicator"></div>
 					{/if}
 					{#if participant.self_muted}
 						<div class="muted-indicator">
