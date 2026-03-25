@@ -182,6 +182,7 @@ mod tasklist;
 mod uuidgen;
 mod charmap;
 mod httptester;
+mod multimonitor;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -692,6 +693,9 @@ fn main() {
             // Initialize Clipboard Ring
             app.manage(clipring::ClipRingManager::default());
 
+            // Initialize multi-monitor state
+            app.manage(multimonitor::MultiMonitorState::default());
+
             Ok(())
         })
         .on_menu_event(|app, event| {
@@ -755,6 +759,14 @@ fn main() {
             // Screen source enumeration for screen sharing
             screensources::get_screen_sources,
             screensources::capture_source_thumbnail,
+            // Multi-monitor commands
+            multimonitor::get_monitors,
+            multimonitor::get_window_monitor,
+            multimonitor::move_window_to_monitor,
+            multimonitor::get_virtual_screen_bounds,
+            multimonitor::save_monitor_preference,
+            multimonitor::get_monitor_preferences,
+            multimonitor::set_preferred_monitor,
             // Audio commands
             audio::get_audio_input_devices,
             audio::get_audio_output_devices,
