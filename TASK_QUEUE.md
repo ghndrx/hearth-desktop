@@ -1,5 +1,5 @@
 # Hearth Desktop Task Queue
-**Last Updated:** March 24, 2026
+**Last Updated:** March 25, 2026
 **Sprint Planning:** Weekly Review Cycle
 
 ## Priority Legend
@@ -16,10 +16,28 @@
 | Task | Description | Owner | Estimate | Dependencies |
 |------|-------------|--------|----------|-------------|
 | - [x] **MW-001** | Implement Tauri multi-window architecture foundation | Platform Team | 3 weeks | Tauri 2.0 upgrade |
-| - [ ] **MW-002** | Basic picture-in-picture voice channel overlay | Frontend Team | 2 weeks | MW-001 |
+| - [x] **MW-002** | Basic picture-in-picture voice channel overlay | Frontend Team | 2 weeks | MW-001 |
 | - [ ] **MW-003** | Multi-monitor detection and configuration system | Platform Team | 2 weeks | None |
 | - [ ] **MW-004** | Window state persistence across app restarts | Backend Team | 1 week | MW-001 |
 | - [ ] **MW-005** | Smart window positioning engine (basic) | Platform Team | 2 weeks | MW-001, MW-003 |
+
+### Rich Media & File Management System **(NEW)**
+| Task | Description | Owner | Estimate | Dependencies |
+|------|-------------|--------|----------|-------------|
+| - [ ] **RM-001** | Core file upload/download infrastructure with CDN | Platform Team | 3 weeks | CDN provider setup |
+| - [ ] **RM-002** | Image and video preview generation system | Backend Team | 2 weeks | ImageMagick, FFmpeg |
+| - [ ] **RM-003** | Rich embed engine for social media and video links | Backend Team | 3 weeks | External API integrations |
+| - [ ] **RM-004** | Advanced file management UI with galleries | Frontend Team | 2 weeks | RM-001, RM-002 |
+| - [ ] **RM-005** | Media transcoding and optimization pipeline | DevOps Team | 3 weeks | Cloud processing setup |
+
+### Advanced Security & Identity System **(NEW)**
+| Task | Description | Owner | Estimate | Dependencies |
+|------|-------------|--------|----------|-------------|
+| - [ ] **SEC-001** | Two-factor authentication with TOTP and backup codes | Security Team | 2 weeks | None |
+| - [ ] **SEC-002** | Device management and session control system | Security Team | 3 weeks | SEC-001 |
+| - [ ] **SEC-003** | Security audit logging and monitoring | Backend Team | 2 weeks | Logging infrastructure |
+| - [ ] **SEC-004** | WebAuthn/FIDO2 hardware security key support | Security Team | 3 weeks | SEC-001 |
+| - [ ] **SEC-005** | Enterprise SSO integration (SAML, OIDC) | Backend Team | 4 weeks | Identity provider testing |
 
 ### AI-Powered Desktop Intelligence (MVP)
 | Task | Description | Owner | Estimate | Dependencies |
@@ -41,6 +59,15 @@
 ---
 
 ## ⚡ P1 High Priority Tasks (Q3-Q4 2026)
+
+### Server Discovery & Social Growth Platform **(NEW)**
+| Task | Description | Owner | Estimate | Dependencies |
+|------|-------------|--------|----------|-------------|
+| - [ ] **SD-001** | Public server directory with categorization system | Growth Team | 3 weeks | Database schema |
+| - [ ] **SD-002** | Server search and filtering with recommendation engine | Backend Team | 4 weeks | SD-001 |
+| - [ ] **SD-003** | Custom invite links with vanity URLs | Backend Team | 2 weeks | Domain management |
+| - [ ] **SD-004** | Server verification and partner program | Growth Team | 3 weeks | Review workflow |
+| - [ ] **SD-005** | Server analytics dashboard for community managers | Frontend Team | 2 weeks | SD-001 |
 
 ### Hardware Integration & Gaming Peripherals
 | Task | Description | Owner | Estimate | Dependencies |
@@ -79,6 +106,29 @@
 
 ## 🛠 P2 Medium Priority Tasks (Q4 2026 - Q1 2027)
 
+### Advanced Security Features **(NEW)**
+| Task | Description | Owner | Estimate | Dependencies |
+|------|-------------|--------|----------|-------------|
+| **SEC-006** | Risk-based authentication with anomaly detection | Security Team | 4 weeks | SEC-002 |
+| **SEC-007** | Security analytics dashboard for administrators | Frontend Team | 2 weeks | SEC-003 |
+| **SEC-008** | Compliance reporting automation (SOC2, GDPR) | Backend Team | 3 weeks | SEC-003 |
+
+### Advanced Media Features **(NEW)**
+| Task | Description | Owner | Estimate | Dependencies |
+|------|-------------|--------|----------|-------------|
+| **RM-006** | Advanced embed support for 50+ platforms | Backend Team | 3 weeks | RM-003 |
+| **RM-007** | Collaborative media viewing and annotation | Frontend Team | 4 weeks | RM-001 |
+| **RM-008** | AI-powered content moderation for media | AI Team | 3 weeks | AI-002, RM-002 |
+| **RM-009** | Media analytics and engagement tracking | Backend Team | 2 weeks | RM-001 |
+
+### Advanced Discovery Features **(NEW)**
+| Task | Description | Owner | Estimate | Dependencies |
+|------|-------------|--------|----------|-------------|
+| **SD-006** | AI-powered server recommendations | AI Team | 4 weeks | SD-002, AI-002 |
+| **SD-007** | Cross-server events and competitions | Growth Team | 3 weeks | SD-001 |
+| **SD-008** | Server boosting and monetization features | Growth Team | 4 weeks | Payment processing |
+| **SD-009** | Creator program with revenue sharing | Business Team | 2 weeks | SD-004 |
+
 ### Advanced AI Features
 | Task | Description | Owner | Estimate | Dependencies |
 |------|-------------|--------|----------|-------------|
@@ -115,86 +165,86 @@
 
 ## 📊 Sprint Allocation Recommendations
 
-### Q2 2026 Sprint Focus (12 weeks)
-**Primary Focus:** Multi-window foundation + AI MVP
-- **Weeks 1-4:** Multi-window architecture (MW-001, MW-002, MW-003)
-- **Weeks 5-8:** AI context detection (AI-001, AI-002, AI-003)
-- **Weeks 9-12:** Integration and polish (MW-004, MW-005, AI-004, AI-005)
+### Q2 2026 Sprint Focus (12 weeks) **(UPDATED)**
+**Primary Focus:** Core competitive parity (Multi-window + Security + Media)
+- **Weeks 1-4:** Multi-window foundation and security basics (MW-003-005, SEC-001-002)
+- **Weeks 5-8:** Rich media and file management (RM-001-003, SEC-003)
+- **Weeks 9-12:** Advanced security and media polish (RM-004-005, SEC-004-005)
 
-### Q3 2026 Sprint Focus (12 weeks)
-**Primary Focus:** Hardware integration + Advanced voice
-- **Weeks 1-4:** RGB hardware foundation (HW-001, HW-002, HW-003)
-- **Weeks 5-8:** Voice improvements (VF-001, VF-002, VF-003)
-- **Weeks 9-12:** Screen sharing basics (SS-001, SS-002)
+### Q3 2026 Sprint Focus (12 weeks) **(UPDATED)**
+**Primary Focus:** Social growth and advanced features
+- **Weeks 1-4:** Server discovery foundation (SD-001-003, HW-001-003)
+- **Weeks 5-8:** Voice improvements and hardware sync (VF-001-003, HW-004-005)
+- **Weeks 9-12:** Discovery polish and verification (SD-004-005, VF-004)
 
-### Q4 2026 Sprint Focus (12 weeks)
-**Primary Focus:** Mobile sync + Advanced features
-- **Weeks 1-4:** Mobile synchronization (MS-001, MS-002, MS-003)
-- **Weeks 5-8:** Advanced AI features (AI-006, AI-007)
-- **Weeks 9-12:** Polish and optimization
+### Q4 2026 Sprint Focus (12 weeks) **(UPDATED)**
+**Primary Focus:** Platform maturity and monetization
+- **Weeks 1-4:** Mobile synchronization and streaming (MS-001-003, SS-001-002)
+- **Weeks 5-8:** Advanced AI and security features (AI-006-007, SEC-006-007)
+- **Weeks 9-12:** Monetization and enterprise features (SD-008-009, SEC-008)
 
 ---
 
 ## 🔄 Ongoing Tasks
 
-### Performance & Optimization
+### Performance & Optimization **(UPDATED)**
 - Memory usage optimization for multi-window architecture
-- CPU usage monitoring for AI inference
-- Hardware compatibility testing across major brands
-- Cross-platform testing for workspace features
+- CDN performance monitoring and optimization
+- Security audit logging performance tuning
+- Cross-platform media processing optimization
 
-### Documentation & Developer Experience
-- Plugin development documentation and tutorials
-- Hardware integration guides for developers
-- Workspace management user documentation
-- API documentation updates
+### Documentation & Developer Experience **(UPDATED)**
+- Security implementation documentation and best practices
+- Media handling API documentation for developers
+- Server discovery integration guides for communities
+- Compliance and privacy documentation updates
 
-### Security & Privacy
-- AI data privacy audits
-- Plugin security sandbox testing
-- Hardware access permission management
-- Cross-platform security validation
+### Security & Privacy **(UPDATED)**
+- AI data privacy audits and GDPR compliance
+- Media content moderation accuracy testing
+- Security penetration testing for new authentication features
+- Cross-platform security validation for all new features
 
 ---
 
-## 📈 Success Metrics Tracking
+## 📈 Success Metrics Tracking **(UPDATED)**
 
-### Technical Metrics
+### Technical Metrics **(UPDATED)**
 - Multi-window performance: <5ms window positioning
-- AI inference: <100ms context detection
-- Hardware sync: <10ms RGB response time
-- Memory usage: <200MB for full feature set
+- Media delivery: <2s global file delivery (CDN)
+- Security: 99.9% authentication service uptime
+- Discovery: <500ms server search response time
 
-### User Adoption Metrics
-- 85% of multi-monitor users enable workspace features
-- 70% of gaming users enable RGB integration
-- 60% of users enable AI automation features
-- 90% user satisfaction with new native capabilities
+### User Adoption Metrics **(UPDATED)**
+- 85% of users enable multi-window features within 30 days
+- 70% of users enable 2FA within 60 days
+- 90% of shared links generate rich embeds successfully
+- 40% of users discover new servers through built-in directory
 
-### Competitive Parity Metrics
-- Desktop native features: 95% beyond Discord capabilities
-- Multi-window experience: Unique competitive advantage
-- Hardware integration: Market-leading implementation
-- AI intelligence: Industry-first context awareness
+### Competitive Parity Metrics **(UPDATED)**
+- Security features: 85% parity with Discord security capabilities
+- Media handling: 90% parity with Discord file/embed system
+- Discovery: 75% parity with Discord server discovery features
+- Multi-window experience: Unique competitive advantage maintained
 
 ---
 
-## 🚨 Risk Management
+## 🚨 Risk Management **(UPDATED)**
 
-### High-Risk Dependencies
-- **Tauri Multi-Window:** Core platform dependency
-- **Hardware Vendor SDKs:** Third-party cooperation required
-- **AI Model Performance:** Local inference optimization critical
-- **Cross-Platform Compatibility:** Testing resource intensive
+### High-Risk Dependencies **(UPDATED)**
+- **CDN Performance:** Critical for media delivery and user experience
+- **Security Implementation:** Authentication vulnerabilities could be catastrophic
+- **Third-party Embed APIs:** Rate limiting could break preview functionality
+- **Content Moderation:** Liability for inappropriate content in discovery
 
-### Mitigation Strategies
-- Early prototype validation for high-risk features
-- Fallback implementations for hardware compatibility issues
-- Performance benchmarking gates for AI features
-- Comprehensive test coverage for workspace features
+### Mitigation Strategies **(UPDATED)**
+- Multi-CDN redundancy and fallback systems
+- Security code review and penetration testing for all new features
+- Graceful degradation for failed embeds with clear user messaging
+- Automated content moderation with human review escalation
 
 ---
 
 **Next Review:** Weekly Monday Sprint Planning
 **Escalation:** P0 delays require immediate product team review
-**Resource Requests:** New hire planning based on Q3 2026 roadmap needs
+**Resource Requests:** Consider additional hiring for security and media teams based on Q2 2026 roadmap expansion
