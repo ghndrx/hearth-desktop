@@ -2,4 +2,8 @@ export { getVoiceConnectionManager, destroyVoiceConnectionManager } from './Voic
 export { getLiveKitManager, destroyLiveKitManager, LiveKitManager } from './LiveKitManager';
 export { WebRTCConnectionManager } from './WebRTCConnectionManager';
 export { SignalingClient } from './SignalingClient';
+export { P2PConnectionDiagnostics } from './P2PConnectionDiagnostics';
+export { VoiceQualityManager } from './VoiceQualityManager';
 export type * from './types';
+export type * from './P2PConnectionDiagnostics';
+export type * from './VoiceQualityManager';
