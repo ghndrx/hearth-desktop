@@ -158,6 +158,7 @@ mod nativescreenshot;
 mod workspaceswitcher;
 mod typingspeed;
 mod floatingwindow;
+mod multiwindow;
 mod trayactions;
 mod bootmanager;
 mod filewatchlive;
@@ -254,10 +255,20 @@ fn main() {
                         _ => {}
                     }
                 }
+                // Track window focus for multi-window coordination
+                WindowEvent::Focused(focused) => {
+                    multiwindow::handle_window_focus(window.label(), *focused);
+                }
+                WindowEvent::Destroyed => {
+                    multiwindow::handle_window_destroyed(window.label());
+                }
                 _ => {}
             }
         })
         .setup(|app| {
+            // Initialize multi-window registry with existing windows
+            multiwindow::sync_registry_with_app(app.handle());
+
             // Set up system tray
             tray::setup_tray(app)?;
 
@@ -1991,6 +2002,20 @@ fn main() {
             floatingwindow::floating_move_corner,
             floatingwindow::floating_resize,
             floatingwindow::floating_navigate,
+            // Multi-window architecture commands
+            multiwindow::mw_create_window,
+            multiwindow::mw_close_window,
+            multiwindow::mw_focus_window,
+            multiwindow::mw_show_window,
+            multiwindow::mw_hide_window,
+            multiwindow::mw_resize_window,
+            multiwindow::mw_move_window,
+            multiwindow::mw_get_window_state,
+            multiwindow::mw_list_windows,
+            multiwindow::mw_send_message,
+            multiwindow::mw_set_always_on_top,
+            multiwindow::mw_set_title,
+            multiwindow::mw_center_window,
             // Weather commands
             weather::weather_search_city,
             weather::weather_fetch,
