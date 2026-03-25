@@ -3,48 +3,62 @@ import { get } from 'svelte/store';
 import { gateway, Op, onGatewayEvent } from '$lib/stores/gateway';
 import { voiceState, voiceActions } from '$lib/stores/voice';
 import { user as authUser } from '$lib/stores/auth';
+import { WebRTCConnectionManager } from './WebRTCConnectionManager';
+import type { AnySignalingMessage } from './types';
 
-// ICE servers for STUN/TURN
-const ICE_SERVERS: RTCIceServer[] = [
-	{ urls: 'stun:stun.l.google.com:19302' },
-	{ urls: 'stun:stun1.l.google.com:19302' },
-	{ urls: 'stun:stun2.l.google.com:19302' },
-];
-
-interface PeerConnection {
-	connection: RTCPeerConnection;
-	audioTrack: MediaStreamTrack | null;
-	remoteStream: MediaStream;
-	userId: string;
-}
-
+/**
+ * VoiceConnectionManager bridges the app's gateway (WebSocket) signaling
+ * with the WebRTCConnectionManager for peer-to-peer voice.
+ *
+ * The gateway acts as the signaling transport: voice offers, answers, and
+ * ICE candidates are sent/received through gateway events, then forwarded
+ * to/from the WebRTCConnectionManager.
+ */
 class VoiceConnectionManager {
-	private localStream: MediaStream | null = null;
-	private peers: Map<string, PeerConnection> = new Map();
+	private webrtc: WebRTCConnectionManager;
 	private audioContext: AudioContext | null = null;
 	private analyser: AnalyserNode | null = null;
 	private speakingCheckInterval: ReturnType<typeof setInterval> | null = null;
 	private isSpeaking = false;
 	private cleanupFunctions: Array<() => void> = [];
+	private webrtcCleanups: Array<() => void> = [];
 
 	constructor() {
+		this.webrtc = new WebRTCConnectionManager();
+
 		if (!browser) return;
 		this.setupGatewayListeners();
+		this.setupWebRTCListeners();
 	}
 
+	/**
+	 * Listen for WebRTC signaling messages arriving via the gateway
+	 * and forward them into the WebRTCConnectionManager as signaling messages.
+	 */
 	private setupGatewayListeners() {
-		// Listen for WebRTC signaling messages
 		this.cleanupFunctions.push(
 			onGatewayEvent('VOICE_OFFER', (data: unknown) => {
-				const offer = data as { from_user_id: string; sdp: string };
-				this.handleOffer(offer.from_user_id, offer.sdp);
+				const offer = data as { from_user_id: string; sdp: string; channel_id?: string };
+				const channelId = offer.channel_id ?? get(voiceState).channelId ?? '';
+				this.webrtc['handleSignalingMessage']({
+					type: 'offer',
+					fromUserId: offer.from_user_id,
+					channelId,
+					sdp: offer.sdp,
+				} as AnySignalingMessage);
 			})
 		);
 
 		this.cleanupFunctions.push(
 			onGatewayEvent('VOICE_ANSWER', (data: unknown) => {
-				const answer = data as { from_user_id: string; sdp: string };
-				this.handleAnswer(answer.from_user_id, answer.sdp);
+				const answer = data as { from_user_id: string; sdp: string; channel_id?: string };
+				const channelId = answer.channel_id ?? get(voiceState).channelId ?? '';
+				this.webrtc['handleSignalingMessage']({
+					type: 'answer',
+					fromUserId: answer.from_user_id,
+					channelId,
+					sdp: answer.sdp,
+				} as AnySignalingMessage);
 			})
 		);
 
@@ -55,12 +69,20 @@ class VoiceConnectionManager {
 					candidate: string;
 					sdpMid: string;
 					sdpMLineIndex: number;
+					channel_id?: string;
 				};
-				this.handleICECandidate(candidate.from_user_id, candidate);
+				const channelId = candidate.channel_id ?? get(voiceState).channelId ?? '';
+				this.webrtc['handleSignalingMessage']({
+					type: 'ice-candidate',
+					fromUserId: candidate.from_user_id,
+					channelId,
+					candidate: candidate.candidate,
+					sdpMid: candidate.sdpMid,
+					sdpMLineIndex: candidate.sdpMLineIndex,
+				} as AnySignalingMessage);
 			})
 		);
 
-		// Listen for voice state updates to know when to connect/disconnect peers
 		this.cleanupFunctions.push(
 			onGatewayEvent('VOICE_SERVER_UPDATE', (data: unknown) => {
 				const update = data as {
@@ -68,7 +90,18 @@ class VoiceConnectionManager {
 					server_id: string;
 					peers: Array<{ user_id: string }>;
 				};
-				this.handlePeerList(update.peers.map(p => p.user_id));
+				const currentUser = get(authUser);
+				if (!currentUser) return;
+				for (const peer of update.peers) {
+					if (peer.user_id !== currentUser.id && !this.webrtc.getPeer(peer.user_id)) {
+						// Simulate a join message so WebRTCConnectionManager creates the connection
+						this.webrtc['handleSignalingMessage']({
+							type: 'join',
+							fromUserId: peer.user_id,
+							channelId: update.channel_id,
+						} as AnySignalingMessage);
+					}
+				}
 			})
 		);
 
@@ -80,16 +113,49 @@ class VoiceConnectionManager {
 				};
 
 				const currentState = get(voiceState);
+				const currentUser = get(authUser);
+				if (!currentUser) return;
+
 				if (update.channel_id === currentState.channelId && update.channel_id !== null) {
-					// New peer joined our channel
-					const currentUser = get(authUser);
-					if (currentUser && update.user_id !== currentUser.id) {
-						this.createPeerConnection(update.user_id, true);
+					if (update.user_id !== currentUser.id) {
+						this.webrtc['handleSignalingMessage']({
+							type: 'join',
+							fromUserId: update.user_id,
+							channelId: update.channel_id,
+						} as AnySignalingMessage);
 					}
 				} else if (update.channel_id === null) {
-					// Peer left
-					this.closePeerConnection(update.user_id);
+					this.webrtc['handleSignalingMessage']({
+						type: 'leave',
+						fromUserId: update.user_id,
+						channelId: currentState.channelId ?? '',
+					} as AnySignalingMessage);
 				}
+			})
+		);
+	}
+
+	/**
+	 * Listen for WebRTCConnectionManager events and bridge outgoing signaling
+	 * messages back through the gateway.
+	 */
+	private setupWebRTCListeners() {
+		this.webrtcCleanups.push(
+			this.webrtc.on('remote-stream', (userId: string, stream: MediaStream) => {
+				this.playRemoteAudio(userId, stream);
+			})
+		);
+
+		this.webrtcCleanups.push(
+			this.webrtc.on('peer-disconnected', (userId: string) => {
+				const audio = document.getElementById(`voice-audio-${userId}`);
+				if (audio) audio.remove();
+			})
+		);
+
+		this.webrtcCleanups.push(
+			this.webrtc.on('error', (error: Error) => {
+				console.error('[Voice] WebRTC error:', error.message);
 			})
 		);
 	}
@@ -98,28 +164,30 @@ class VoiceConnectionManager {
 		if (!browser) return;
 
 		try {
-			// Request microphone access
-			this.localStream = await navigator.mediaDevices.getUserMedia({
-				audio: {
-					echoCancellation: true,
-					noiseSuppression: true,
-					autoGainControl: true
-				},
-				video: false
-			});
+			// Acquire microphone via WebRTCConnectionManager
+			await this.webrtc.acquireLocalStream();
+			const localStream = this.webrtc.getLocalStream();
+
+			// Set the local user ID so WebRTCConnectionManager can filter own messages
+			const currentUser = get(authUser);
+			if (currentUser) {
+				// Store userId for gateway-based signaling forwarding
+				this.webrtc['localUserId'] = currentUser.id;
+				this.webrtc['channelId'] = _channelId;
+			}
 
 			// Setup audio analysis for speaking detection
-			this.setupSpeakingDetection();
+			if (localStream) {
+				this.setupSpeakingDetection(localStream);
 
-			// Apply current mute state
-			const state = get(voiceState);
-			this.localStream.getAudioTracks().forEach(track => {
-				track.enabled = !state.selfMuted;
-			});
+				// Apply current mute state
+				const state = get(voiceState);
+				localStream.getAudioTracks().forEach(track => {
+					track.enabled = !state.selfMuted;
+				});
+			}
 
-			// Mark as connected
 			voiceActions.setConnected();
-
 			console.log('[Voice] Connected to voice channel');
 		} catch (error) {
 			console.error('[Voice] Failed to connect:', error);
@@ -130,11 +198,9 @@ class VoiceConnectionManager {
 		}
 	}
 
-	private setupSpeakingDetection() {
-		if (!this.localStream) return;
-
+	private setupSpeakingDetection(stream: MediaStream) {
 		this.audioContext = new AudioContext();
-		const source = this.audioContext.createMediaStreamSource(this.localStream);
+		const source = this.audioContext.createMediaStreamSource(stream);
 		this.analyser = this.audioContext.createAnalyser();
 		this.analyser.fftSize = 256;
 
@@ -147,7 +213,7 @@ class VoiceConnectionManager {
 
 			this.analyser.getByteFrequencyData(dataArray);
 			const average = dataArray.reduce((a, b) => a + b) / dataArray.length;
-			const speaking = average > 20; // Threshold for speaking detection
+			const speaking = average > 20;
 
 			if (speaking !== this.isSpeaking) {
 				this.isSpeaking = speaking;
@@ -172,239 +238,53 @@ class VoiceConnectionManager {
 		});
 	}
 
-	private handlePeerList(peerUserIds: string[]) {
-		const currentUser = get(authUser);
-		if (!currentUser) return;
-
-		// Create connections to all peers
-		for (const userId of peerUserIds) {
-			if (userId !== currentUser.id && !this.peers.has(userId)) {
-				// We initiate the connection to existing peers
-				this.createPeerConnection(userId, true);
-			}
-		}
-	}
-
-	private createPeerConnection(userId: string, createOffer: boolean) {
-		if (this.peers.has(userId)) return;
-
-		console.log(`[Voice] Creating peer connection to ${userId}, offer: ${createOffer}`);
-
-		const connection = new RTCPeerConnection({ iceServers: ICE_SERVERS });
-		const remoteStream = new MediaStream();
-
-		const peer: PeerConnection = {
-			connection,
-			audioTrack: null,
-			remoteStream,
-			userId
-		};
-
-		this.peers.set(userId, peer);
-
-		// Add local tracks
-		if (this.localStream) {
-			this.localStream.getTracks().forEach(track => {
-				connection.addTrack(track, this.localStream!);
-			});
-		}
-
-		// Handle incoming tracks
-		connection.ontrack = (event) => {
-			console.log(`[Voice] Received track from ${userId}`);
-			event.streams[0].getTracks().forEach(track => {
-				remoteStream.addTrack(track);
-			});
-			peer.audioTrack = event.streams[0].getAudioTracks()[0] || null;
-			this.playRemoteAudio(userId, remoteStream);
-		};
-
-		// Handle ICE candidates
-		connection.onicecandidate = (event) => {
-			if (event.candidate) {
-				gateway.send({
-					op: Op.DISPATCH,
-					d: {
-						t: 'VOICE_ICE_CANDIDATE',
-						d: {
-							to_user_id: userId,
-							candidate: event.candidate.candidate,
-							sdpMid: event.candidate.sdpMid,
-							sdpMLineIndex: event.candidate.sdpMLineIndex
-						}
-					}
-				});
-			}
-		};
-
-		// Handle connection state
-		connection.onconnectionstatechange = () => {
-			console.log(`[Voice] Connection state with ${userId}: ${connection.connectionState}`);
-			if (connection.connectionState === 'failed' || connection.connectionState === 'disconnected') {
-				this.closePeerConnection(userId);
-			}
-		};
-
-		// Create offer if we're initiating
-		if (createOffer) {
-			this.createAndSendOffer(userId, connection);
-		}
-	}
-
-	private async createAndSendOffer(userId: string, connection: RTCPeerConnection) {
-		try {
-			const offer = await connection.createOffer();
-			await connection.setLocalDescription(offer);
-
-			gateway.send({
-				op: Op.DISPATCH,
-				d: {
-					t: 'VOICE_OFFER',
-					d: {
-						to_user_id: userId,
-						sdp: offer.sdp
-					}
-				}
-			});
-		} catch (error) {
-			console.error(`[Voice] Failed to create offer for ${userId}:`, error);
-		}
-	}
-
-	private async handleOffer(fromUserId: string, sdp: string) {
-		console.log(`[Voice] Received offer from ${fromUserId}`);
-
-		// Create peer connection if it doesn't exist
-		if (!this.peers.has(fromUserId)) {
-			this.createPeerConnection(fromUserId, false);
-		}
-
-		const peer = this.peers.get(fromUserId);
-		if (!peer) return;
-
-		try {
-			await peer.connection.setRemoteDescription({ type: 'offer', sdp });
-			const answer = await peer.connection.createAnswer();
-			await peer.connection.setLocalDescription(answer);
-
-			gateway.send({
-				op: Op.DISPATCH,
-				d: {
-					t: 'VOICE_ANSWER',
-					d: {
-						to_user_id: fromUserId,
-						sdp: answer.sdp
-					}
-				}
-			});
-		} catch (error) {
-			console.error(`[Voice] Failed to handle offer from ${fromUserId}:`, error);
-		}
-	}
-
-	private async handleAnswer(fromUserId: string, sdp: string) {
-		console.log(`[Voice] Received answer from ${fromUserId}`);
-
-		const peer = this.peers.get(fromUserId);
-		if (!peer) return;
-
-		try {
-			await peer.connection.setRemoteDescription({ type: 'answer', sdp });
-		} catch (error) {
-			console.error(`[Voice] Failed to handle answer from ${fromUserId}:`, error);
-		}
-	}
-
-	private async handleICECandidate(
-		fromUserId: string,
-		candidate: { candidate: string; sdpMid: string; sdpMLineIndex: number }
-	) {
-		const peer = this.peers.get(fromUserId);
-		if (!peer) return;
-
-		try {
-			await peer.connection.addIceCandidate(new RTCIceCandidate(candidate));
-		} catch (error) {
-			console.error(`[Voice] Failed to add ICE candidate from ${fromUserId}:`, error);
-		}
-	}
-
 	private playRemoteAudio(userId: string, stream: MediaStream) {
-		// Create audio element for remote stream
+		// Remove existing audio element if any
+		const existing = document.getElementById(`voice-audio-${userId}`);
+		if (existing) existing.remove();
+
 		const audio = document.createElement('audio');
 		audio.srcObject = stream;
 		audio.autoplay = true;
 		audio.id = `voice-audio-${userId}`;
 
-		// Apply deafen state
 		const state = get(voiceState);
 		audio.muted = state.selfDeafened;
 
-		// Add to DOM (hidden)
 		audio.style.display = 'none';
 		document.body.appendChild(audio);
 
 		console.log(`[Voice] Playing audio from ${userId}`);
 	}
 
-	private closePeerConnection(userId: string) {
-		const peer = this.peers.get(userId);
-		if (!peer) return;
-
-		console.log(`[Voice] Closing peer connection to ${userId}`);
-
-		peer.connection.close();
-		this.peers.delete(userId);
-
-		// Remove audio element
-		const audio = document.getElementById(`voice-audio-${userId}`);
-		if (audio) {
-			audio.remove();
-		}
-	}
-
 	disconnect() {
 		console.log('[Voice] Disconnecting');
 
-		// Stop speaking detection
 		if (this.speakingCheckInterval) {
 			clearInterval(this.speakingCheckInterval);
 			this.speakingCheckInterval = null;
 		}
 
-		// Close audio context
 		if (this.audioContext) {
 			this.audioContext.close();
 			this.audioContext = null;
 			this.analyser = null;
 		}
 
-		// Close all peer connections
-		for (const [userId] of this.peers) {
-			this.closePeerConnection(userId);
-		}
+		this.webrtc.disconnect();
 
-		// Stop local stream
-		if (this.localStream) {
-			this.localStream.getTracks().forEach(track => track.stop());
-			this.localStream = null;
-		}
+		// Remove all voice audio elements
+		document.querySelectorAll('[id^="voice-audio-"]').forEach(el => el.remove());
 
-		// Clear speaking state
 		this.isSpeaking = false;
 	}
 
 	setMuted(muted: boolean) {
-		if (this.localStream) {
-			this.localStream.getAudioTracks().forEach(track => {
-				track.enabled = !muted;
-			});
-		}
+		this.webrtc.setMuted(muted);
 	}
 
 	setDeafened(deafened: boolean) {
-		// Mute all remote audio elements
-		for (const [userId] of this.peers) {
+		for (const [userId] of this.webrtc.getPeers()) {
 			const audio = document.getElementById(`voice-audio-${userId}`) as HTMLAudioElement;
 			if (audio) {
 				audio.muted = deafened;
@@ -412,10 +292,18 @@ class VoiceConnectionManager {
 		}
 	}
 
+	/** Get the underlying WebRTCConnectionManager for advanced usage */
+	getWebRTCManager(): WebRTCConnectionManager {
+		return this.webrtc;
+	}
+
 	destroy() {
 		this.disconnect();
 		this.cleanupFunctions.forEach(fn => fn());
 		this.cleanupFunctions = [];
+		this.webrtcCleanups.forEach(fn => fn());
+		this.webrtcCleanups = [];
+		this.webrtc.destroy();
 	}
 }
 
