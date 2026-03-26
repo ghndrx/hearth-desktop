@@ -5,6 +5,7 @@
 	import '$lib/styles/theme.css';
 	import NativeEventBridge from '$lib/components/NativeEventBridge.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
+	import ShortcutListener from '$lib/components/ShortcutListener.svelte';
 	
 	onMount(() => {
 		auth.init();
@@ -26,6 +27,7 @@
 
 <NativeEventBridge />
 <ToastContainer />
+<ShortcutListener />
 
 {#if $isLoading}
 	<div class="loading">
