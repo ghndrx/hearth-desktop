@@ -45,6 +45,9 @@
 	import BrightnessPanel from '$lib/components/BrightnessPanel.svelte';
 	import VolumeControlPanel from '$lib/components/VolumeControlPanel.svelte';
 	import HttpTesterPanel from '$lib/components/HttpTesterPanel.svelte';
+	import ScreenShareModal from '$lib/components/ScreenShareModal.svelte';
+	import ScreenSharePreview from '$lib/components/ScreenSharePreview.svelte';
+	import ScreenShareOverlay from '$lib/components/ScreenShareOverlay.svelte';
 
 	let quickSwitcherOpen = false;
 	let notificationCenterOpen = false;
@@ -422,6 +425,12 @@
 
 <!-- Voice Picture-in-Picture Overlay - MW-002 floating voice overlay -->
 <VoicePiPOverlay />
+
+<!-- Screen Share Modal - Source selection dialog -->
+<ScreenShareModal />
+
+<!-- Screen Share Preview - Floating local preview while sharing -->
+<ScreenSharePreview />
 
 <!-- Notification Center Panel -->
 <NotificationCenterPanel

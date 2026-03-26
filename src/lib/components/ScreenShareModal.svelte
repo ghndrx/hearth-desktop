@@ -2,15 +2,16 @@
 	import { onDestroy } from 'svelte';
 	import Modal from './Modal.svelte';
 	import Button from './Button.svelte';
-	import { 
-		screenShare, 
-		isScreenShareModalOpen, 
-		isPreviewing, 
+	import {
+		screenShare,
+		isScreenShareModalOpen,
+		isPreviewing,
 		screenShareStream,
 		screenShareError,
 		selectedScreenSource,
-		type ScreenShareSourceType 
+		type ScreenShareSourceType
 	} from '$lib/stores/screenShare';
+	import { getLiveKitManager } from '$lib/voice/livekit';
 
 	let previewVideo: HTMLVideoElement;
 	let isCapturing = false;
@@ -40,8 +41,24 @@
 		}
 	}
 
-	function handleStartSharing() {
+	async function handleStartSharing() {
+		const stream = screenShare.getStream();
 		screenShare.startSharing();
+
+		// Publish the captured stream to LiveKit
+		if (stream) {
+			try {
+				const manager = getLiveKitManager();
+				await manager.publishScreenShareStream(stream);
+
+				// Register callback for browser-initiated stop (e.g. user clicks "Stop sharing" in Chrome)
+				screenShare.onStop(() => {
+					manager.unpublishScreenShare().catch(() => {});
+				});
+			} catch (err) {
+				console.error('[ScreenShare] Failed to publish to LiveKit:', err);
+			}
+		}
 	}
 
 	function handleCancel() {

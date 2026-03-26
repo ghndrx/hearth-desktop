@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { fade, fly } from 'svelte/transition';
-	import { 
-		screenShare, 
-		isScreenSharing, 
+	import {
+		screenShare,
+		isScreenSharing,
 		screenShareStream,
-		selectedScreenSource 
+		selectedScreenSource
 	} from '$lib/stores/screenShare';
+	import { getLiveKitManager } from '$lib/voice/livekit';
 	import Tooltip from './Tooltip.svelte';
 
 	let previewVideo: HTMLVideoElement;
@@ -17,7 +18,13 @@
 		previewVideo.srcObject = $screenShareStream;
 	}
 
-	function handleStopSharing() {
+	async function handleStopSharing() {
+		try {
+			const manager = getLiveKitManager();
+			await manager.unpublishScreenShare();
+		} catch {
+			// LiveKit may not have the track
+		}
 		screenShare.stopSharing();
 	}
 
