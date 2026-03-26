@@ -73,7 +73,9 @@
   "plugins": {
     "updater": {
       "pubkey": "",
-      "endpoints": []
+      "endpoints": [
+        "https://releases.hearth.io/{{target}}/{{arch}}/{{current_version}}"
+      ]
     },
     "deep-link": {
       "desktop": {

@@ -6,6 +6,7 @@
 	import NativeEventBridge from '$lib/components/NativeEventBridge.svelte';
 	import ToastContainer from '$lib/components/ToastContainer.svelte';
 	import ShortcutListener from '$lib/components/ShortcutListener.svelte';
+	import UpdateNotification from '$lib/components/UpdateNotification.svelte';
 	
 	onMount(() => {
 		auth.init();
@@ -28,6 +29,7 @@
 <NativeEventBridge />
 <ToastContainer />
 <ShortcutListener />
+<UpdateNotification />
 
 {#if $isLoading}
 	<div class="loading">

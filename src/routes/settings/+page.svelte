@@ -10,6 +10,30 @@
 	import Toggle from '$lib/components/Toggle.svelte';
 	import ThemePreviewCard from '$lib/components/ThemePreviewCard.svelte';
 	import KeyboardShortcutsSettings from '$lib/components/KeyboardShortcutsSettings.svelte';
+	import { updater, updateStatus, updateInfo } from '$lib/stores/updater';
+
+	let checkingForUpdates = false;
+	let updateCheckResult: string | null = null;
+
+	async function handleCheckForUpdates() {
+		checkingForUpdates = true;
+		updateCheckResult = null;
+		const result = await updater.checkForUpdates();
+		checkingForUpdates = false;
+		if (!result) {
+			if ($updateStatus === 'error') {
+				updateCheckResult = 'Failed to check for updates. Please try again later.';
+			} else {
+				updateCheckResult = 'You are running the latest version.';
+			}
+			// Clear the message after a few seconds
+			setTimeout(() => { updateCheckResult = null; }, 5000);
+		}
+	}
+
+	async function handleDownloadUpdate() {
+		await updater.downloadAndInstall();
+	}
 	
 	// Get section from URL query param
 	$: activeSection = $page.url.searchParams.get('section') || 'account';
@@ -444,26 +468,65 @@
 			{:else if activeSection === 'about'}
 				<section class="content-section" in:fly={{ x: 20, duration: 200 }}>
 					<h1>About Hearth</h1>
-					
+
 					<div class="about-card">
 						<div class="about-logo">🔥</div>
 						<h2>Hearth Desktop</h2>
-						<p class="about-version">Version 1.0.0</p>
+						<p class="about-version">Version 0.1.0</p>
 						<p class="about-description">
 							A native desktop client for Hearth chat platform, built with Tauri + Svelte.
 						</p>
-						
+
 						<div class="about-links">
 							<a href="https://github.com/greghendrickson/hearth" target="_blank" rel="noopener">GitHub</a>
 							<a href="#">Documentation</a>
 							<a href="#">Support</a>
 						</div>
 					</div>
-					
+
+					<div class="setting-group">
+						<h2>Updates</h2>
+						{#if $updateStatus === 'available' && $updateInfo}
+							<div class="update-available-card">
+								<div class="update-available-info">
+									<span class="update-badge">New</span>
+									<span>Version <strong>{$updateInfo.version}</strong> is available</span>
+								</div>
+								{#if $updateInfo.body}
+									<p class="update-notes">{$updateInfo.body}</p>
+								{/if}
+								<button class="btn-primary" on:click={handleDownloadUpdate}>
+									{#if $updateStatus === 'downloading'}
+										Downloading...
+									{:else}
+										Download & Install
+									{/if}
+								</button>
+							</div>
+						{:else}
+							<div class="update-check-row">
+								<button
+									class="btn-secondary"
+									on:click={handleCheckForUpdates}
+									disabled={checkingForUpdates}
+								>
+									{#if checkingForUpdates}
+										Checking...
+									{:else}
+										Check for Updates
+									{/if}
+								</button>
+								{#if updateCheckResult}
+									<span class="update-check-result">{updateCheckResult}</span>
+								{/if}
+							</div>
+						{/if}
+					</div>
+
 					<div class="setting-group">
 						<h2>Credits</h2>
 						<p class="setting-description">
-							Built with ❤️ using Tauri, Svelte, and Rust.
+							Built with Tauri, Svelte, and Rust.
 						</p>
 					</div>
 				</section>
@@ -967,6 +1030,91 @@
 		margin-top: 8px;
 	}
 	
+	/* Update Section */
+	.update-available-card {
+		background: var(--bg-secondary, #2b2d31);
+		border: 1px solid var(--brand-primary, #5865f2);
+		border-radius: 8px;
+		padding: 16px;
+	}
+
+	.update-available-info {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		color: var(--text-normal, #f2f3f5);
+		font-size: 14px;
+		margin-bottom: 12px;
+	}
+
+	.update-badge {
+		background: var(--brand-primary, #5865f2);
+		color: #fff;
+		font-size: 11px;
+		font-weight: 700;
+		padding: 2px 8px;
+		border-radius: 10px;
+		text-transform: uppercase;
+		letter-spacing: 0.02em;
+	}
+
+	.update-notes {
+		color: var(--text-muted, #b5bac1);
+		font-size: 13px;
+		line-height: 1.5;
+		margin: 0 0 12px 0;
+		white-space: pre-wrap;
+	}
+
+	.btn-primary {
+		padding: 8px 20px;
+		border: none;
+		border-radius: 4px;
+		background: var(--brand-primary, #5865f2);
+		color: #fff;
+		font-size: 14px;
+		font-weight: 600;
+		cursor: pointer;
+		transition: background 0.15s;
+	}
+
+	.btn-primary:hover {
+		background: var(--brand-hover, #4752c4);
+	}
+
+	.btn-secondary {
+		padding: 8px 20px;
+		border: 1px solid var(--bg-modifier-accent, #3f4147);
+		border-radius: 4px;
+		background: var(--bg-secondary, #2b2d31);
+		color: var(--text-normal, #f2f3f5);
+		font-size: 14px;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.15s;
+	}
+
+	.btn-secondary:hover {
+		background: var(--bg-modifier-hover, #35373c);
+		border-color: var(--text-muted, #b5bac1);
+	}
+
+	.btn-secondary:disabled {
+		opacity: 0.6;
+		cursor: not-allowed;
+	}
+
+	.update-check-row {
+		display: flex;
+		align-items: center;
+		gap: 16px;
+	}
+
+	.update-check-result {
+		color: var(--text-muted, #b5bac1);
+		font-size: 14px;
+	}
+
 	/* Responsive */
 	@media (max-width: 768px) {
 		.settings-sidebar {
