@@ -1,17 +1,28 @@
 <script lang="ts">
+  import { getShortcut, formatKeys } from '$lib/stores/shortcuts';
+
   export let text: string;
   export let position: 'top' | 'bottom' | 'left' | 'right' = 'top';
   export let delay = 300;
-  
+  /** Optional shortcut ID to display key hint alongside the text */
+  export let shortcutId: string | undefined = undefined;
+
   let visible = false;
   let timeout: ReturnType<typeof setTimeout>;
-  
+
+  $: shortcutHint = (() => {
+    if (!shortcutId) return '';
+    const s = getShortcut(shortcutId);
+    if (!s || !s.enabled || s.currentKeys.length === 0) return '';
+    return formatKeys(s.currentKeys);
+  })();
+
   function show() {
     timeout = setTimeout(() => {
       visible = true;
     }, delay);
   }
-  
+
   function hide() {
     clearTimeout(timeout);
     visible = false;
@@ -27,10 +38,13 @@
   role="tooltip"
 >
   <slot />
-  
+
   {#if visible && text}
     <div class="tooltip {position}">
-      {text}
+      <span class="tooltip-text">{text}</span>
+      {#if shortcutHint}
+        <kbd class="tooltip-shortcut">{shortcutHint}</kbd>
+      {/if}
       <div class="arrow"></div>
     </div>
   {/if}
@@ -45,6 +59,9 @@
   .tooltip {
     position: absolute;
     z-index: 1001;
+    display: flex;
+    align-items: center;
+    gap: 6px;
     padding: 8px 12px;
     background-color: var(--bg-floating, #18191c);
     color: var(--text-normal, #dcddde);
@@ -55,6 +72,19 @@
     white-space: nowrap;
     pointer-events: none;
     animation: tooltipFade 0.1s ease-out;
+  }
+
+  .tooltip-shortcut {
+    display: inline-block;
+    padding: 1px 5px;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    font-family: inherit;
+    color: var(--text-muted, #949ba4);
+    line-height: 1.4;
   }
   
   @keyframes tooltipFade {

@@ -9,6 +9,7 @@
 	import Avatar from '$lib/components/Avatar.svelte';
 	import Toggle from '$lib/components/Toggle.svelte';
 	import ThemePreviewCard from '$lib/components/ThemePreviewCard.svelte';
+	import KeyboardShortcutsSettings from '$lib/components/KeyboardShortcutsSettings.svelte';
 	
 	// Get section from URL query param
 	$: activeSection = $page.url.searchParams.get('section') || 'account';
@@ -400,44 +401,8 @@
 				</section>
 				
 			{:else if activeSection === 'keybinds'}
-				<section class="content-section" in:fly={{ x: 20, duration: 200 }}>
-					<h1>Keybinds</h1>
-					
-					<div class="setting-group">
-						<h2>Keyboard Shortcuts</h2>
-						<div class="keybind-list">
-							<div class="keybind-item">
-								<span class="keybind-action">Quick Switcher</span>
-								<kbd class="keybind-keys">Ctrl + K</kbd>
-							</div>
-							<div class="keybind-item">
-								<span class="keybind-action">Search</span>
-								<kbd class="keybind-keys">Ctrl + F</kbd>
-							</div>
-							<div class="keybind-item">
-								<span class="keybind-action">Pin to Split View</span>
-								<kbd class="keybind-keys">Alt + P</kbd>
-							</div>
-							<div class="keybind-item">
-								<span class="keybind-action">Toggle Split View</span>
-								<kbd class="keybind-keys">Alt + Shift + P</kbd>
-							</div>
-							<div class="keybind-item">
-								<span class="keybind-action">Close Modal</span>
-								<kbd class="keybind-keys">Escape</kbd>
-							</div>
-						</div>
-					</div>
-					
-					<div class="setting-group">
-						<h2>Push to Talk Key</h2>
-						<div class="ptt-key">
-							<button class="ptt-button">
-								{$voiceSettings.pushToTalkKeyDisplay || 'Space'}
-							</button>
-							<span class="ptt-hint">Click to change</span>
-						</div>
-					</div>
+				<section class="content-section keybinds-section" in:fly={{ x: 20, duration: 200 }}>
+					<KeyboardShortcutsSettings />
 				</section>
 				
 			{:else if activeSection === 'privacy'}
@@ -627,6 +592,10 @@
 	
 	.content-section {
 		max-width: 700px;
+	}
+
+	.content-section.keybinds-section {
+		max-width: 800px;
 	}
 	
 	.content-section h1 {
