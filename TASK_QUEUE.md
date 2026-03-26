@@ -10,7 +10,7 @@ This task queue prioritizes development efforts to achieve feature parity with D
 ### **NEW** Rich Text Chat System 🚨
 **Status:** Critical Gap Identified | **Target:** Q2 2026 | **Effort:** 6-8 weeks | **PRD:** PRD-001
 
-- [ ] **Core Messaging Infrastructure** - WebSocket real-time messaging with SQLite persistence **[PRD-001]**
+- [x] **Core Messaging Infrastructure** - WebSocket real-time messaging with SQLite persistence **[PRD-001]** ✅ (3fe62a16, merged via PR #30)
 - [ ] **Message Input & Display** - Rich text editor with markdown support and message history **[PRD-001]**
 - [ ] **File Upload System** - Drag-and-drop uploads with image preview and 25MB limit **[PRD-001]**
 - [ ] **Direct Messages** - 1-on-1 and group messaging with notification preferences **[PRD-001]**
