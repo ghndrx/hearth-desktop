@@ -1,5 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
+import type { Channel, Server } from '../types/channels';
 
 export interface User {
 	id: string;
@@ -14,23 +15,8 @@ export interface User {
 	created_at: string;
 }
 
-export interface Server {
-	id: string;
-	name: string;
-	icon: string | null;
-	owner_id: string;
-	created_at: string;
-}
-
-export interface Channel {
-	id: string;
-	server_id: string;
-	name: string;
-	topic: string | null;
-	type: 'text' | 'voice';
-	position: number;
-	created_at: string;
-}
+// Re-export Channel and Server for convenience
+export type { Channel, Server };
 
 export interface AppState {
 	user: User | null;

@@ -47,6 +47,28 @@ pub struct DirectMessage {
     pub updated_at: String,
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Channel {
+    pub id: String,
+    pub server_id: String,
+    pub name: String,
+    pub topic: Option<String>,
+    pub channel_type: String, // 'text' | 'voice'
+    pub position: i32,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct Server {
+    pub id: String,
+    pub name: String,
+    pub icon: Option<String>,
+    pub owner_id: String,
+    pub created_at: String,
+    pub updated_at: String,
+}
+
 pub fn get_migrations() -> Vec<Migration> {
     vec![
         // Initial schema migration
@@ -105,6 +127,37 @@ pub fn get_migrations() -> Vec<Migration> {
                 CREATE INDEX IF NOT EXISTS idx_message_reactions_message_id ON message_reactions (message_id);
                 CREATE INDEX IF NOT EXISTS idx_message_attachments_message_id ON message_attachments (message_id);
                 CREATE INDEX IF NOT EXISTS idx_direct_messages_participants ON direct_messages (participants);
+            "#,
+            kind: MigrationKind::Up,
+        },
+        // Migration 2: Add servers and channels tables
+        Migration {
+            version: 2,
+            description: "add_servers_and_channels_tables",
+            sql: r#"
+                CREATE TABLE IF NOT EXISTS servers (
+                    id TEXT PRIMARY KEY,
+                    name TEXT NOT NULL,
+                    icon TEXT,
+                    owner_id TEXT NOT NULL,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL
+                );
+
+                CREATE TABLE IF NOT EXISTS channels (
+                    id TEXT PRIMARY KEY,
+                    server_id TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    topic TEXT,
+                    channel_type TEXT NOT NULL DEFAULT 'text',
+                    position INTEGER NOT NULL DEFAULT 0,
+                    created_at TEXT NOT NULL,
+                    updated_at TEXT NOT NULL,
+                    FOREIGN KEY (server_id) REFERENCES servers (id) ON DELETE CASCADE
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_channels_server_id ON channels (server_id);
+                CREATE INDEX IF NOT EXISTS idx_channels_position ON channels (server_id, position);
             "#,
             kind: MigrationKind::Up,
         },
@@ -328,4 +381,269 @@ pub async fn db_get_direct_messages(
         .map_err(|e| format!("Database query failed: {}", e))?;
 
     Ok(result)
+}
+
+// ============ Channel Commands ============
+
+#[tauri::command]
+pub async fn db_get_channels(
+    app: tauri::AppHandle,
+    server_id: Option<String>,
+) -> Result<Vec<Channel>, String> {
+    let db = app
+        .db()
+        .map_err(|e| format!("Failed to get database: {}", e))?;
+
+    let sql = if let Some(server_id) = server_id {
+        r#"
+            SELECT id, server_id, name, topic, channel_type, position, created_at, updated_at
+            FROM channels
+            WHERE server_id = ?
+            ORDER BY position ASC
+        "#
+    } else {
+        r#"
+            SELECT id, server_id, name, topic, channel_type, position, created_at, updated_at
+            FROM channels
+            ORDER BY server_id, position ASC
+        "#
+    };
+
+    let result = if let Some(server_id) = server_id {
+        db.select(sql)
+            .bind(&server_id)?
+            .fetch()
+            .await
+            .map_err(|e| format!("Database query failed: {}", e))?
+    } else {
+        db.select(sql)
+            .fetch()
+            .await
+            .map_err(|e| format!("Database query failed: {}", e))?
+    };
+
+    Ok(result)
+}
+
+#[tauri::command]
+pub async fn db_get_channel(
+    app: tauri::AppHandle,
+    channel_id: String,
+) -> Result<Option<Channel>, String> {
+    let db = app
+        .db()
+        .map_err(|e| format!("Failed to get database: {}", e))?;
+
+    let result = db
+        .select(
+            r#"
+                SELECT id, server_id, name, topic, channel_type, position, created_at, updated_at
+                FROM channels
+                WHERE id = ?
+            "#,
+        )
+        .bind(&channel_id)?
+        .fetch()
+        .await
+        .map_err(|e| format!("Database query failed: {}", e))?;
+
+    Ok(result.into_iter().next())
+}
+
+#[tauri::command]
+pub async fn db_save_channel(
+    app: tauri::AppHandle,
+    channel: Channel,
+) -> Result<(), String> {
+    let db = app
+        .db()
+        .map_err(|e| format!("Failed to get database: {}", e))?;
+
+    db.execute(
+        r#"
+            INSERT OR REPLACE INTO channels
+            (id, server_id, name, topic, channel_type, position, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        "#,
+    )
+    .bind(&channel.id)?
+    .bind(&channel.server_id)?
+    .bind(&channel.name)?
+    .bind(&channel.topic)?
+    .bind(&channel.channel_type)?
+    .bind(&channel.position)?
+    .bind(&channel.created_at)?
+    .bind(&channel.updated_at)?
+    .fetch()
+    .await
+    .map_err(|e| format!("Failed to save channel: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn db_update_channel(
+    app: tauri::AppHandle,
+    channel_id: String,
+    name: Option<String>,
+    topic: Option<String>,
+    position: Option<i32>,
+    updated_at: String,
+) -> Result<(), String> {
+    let db = app
+        .db()
+        .map_err(|e| format!("Failed to get database: {}", e))?;
+
+    // Build dynamic update query
+    let mut updates = Vec::new();
+
+    if name.is_some() {
+        updates.push("name = ?");
+    }
+    if topic.is_some() {
+        updates.push("topic = ?");
+    }
+    if position.is_some() {
+        updates.push("position = ?");
+    }
+    updates.push("updated_at = ?");
+
+    let sql = format!("UPDATE channels SET {} WHERE id = ?", updates.join(", "));
+
+    let mut query = db.execute(&sql);
+    if let Some(ref n) = name {
+        query = query.bind(n)?;
+    }
+    if let Some(ref t) = topic {
+        query = query.bind(t)?;
+    }
+    if let Some(p) = position {
+        query = query.bind(p)?;
+    }
+    query = query.bind(&updated_at)?.bind(&channel_id)?.fetch()
+        .await
+        .map_err(|e| format!("Failed to update channel: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn db_delete_channel(
+    app: tauri::AppHandle,
+    channel_id: String,
+) -> Result<(), String> {
+    let db = app
+        .db()
+        .map_err(|e| format!("Failed to get database: {}", e))?;
+
+    db.execute(
+        r#"
+            DELETE FROM channels WHERE id = ?
+        "#,
+    )
+    .bind(&channel_id)?
+    .fetch()
+    .await
+    .map_err(|e| format!("Failed to delete channel: {}", e))?;
+
+    Ok(())
+}
+
+// ============ Server Commands ============
+
+#[tauri::command]
+pub async fn db_get_servers(app: tauri::AppHandle) -> Result<Vec<Server>, String> {
+    let db = app
+        .db()
+        .map_err(|e| format!("Failed to get database: {}", e))?;
+
+    let result = db
+        .select(
+            r#"
+                SELECT id, name, icon, owner_id, created_at, updated_at
+                FROM servers
+                ORDER BY name ASC
+            "#,
+        )
+        .fetch()
+        .await
+        .map_err(|e| format!("Database query failed: {}", e))?;
+
+    Ok(result)
+}
+
+#[tauri::command]
+pub async fn db_get_server(
+    app: tauri::AppHandle,
+    server_id: String,
+) -> Result<Option<Server>, String> {
+    let db = app
+        .db()
+        .map_err(|e| format!("Failed to get database: {}", e))?;
+
+    let result = db
+        .select(
+            r#"
+                SELECT id, name, icon, owner_id, created_at, updated_at
+                FROM servers
+                WHERE id = ?
+            "#,
+        )
+        .bind(&server_id)?
+        .fetch()
+        .await
+        .map_err(|e| format!("Database query failed: {}", e))?;
+
+    Ok(result.into_iter().next())
+}
+
+#[tauri::command]
+pub async fn db_save_server(
+    app: tauri::AppHandle,
+    server: Server,
+) -> Result<(), String> {
+    let db = app
+        .db()
+        .map_err(|e| format!("Failed to get database: {}", e))?;
+
+    db.execute(
+        r#"
+            INSERT OR REPLACE INTO servers
+            (id, name, icon, owner_id, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        "#,
+    )
+    .bind(&server.id)?
+    .bind(&server.name)?
+    .bind(&server.icon)?
+    .bind(&server.owner_id)?
+    .bind(&server.created_at)?
+    .bind(&server.updated_at)?
+    .fetch()
+    .await
+    .map_err(|e| format!("Failed to save server: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn db_delete_server(
+    app: tauri::AppHandle,
+    server_id: String,
+) -> Result<(), String> {
+    let db = app
+        .db()
+        .map_err(|e| format!("Failed to get database: {}", e))?;
+
+    db.execute(
+        r#"
+            DELETE FROM servers WHERE id = ?
+        "#,
+    )
+    .bind(&server_id)?
+    .fetch()
+    .await
+    .map_err(|e| format!("Failed to delete server: {}", e))?;
+
+    Ok(())
 }

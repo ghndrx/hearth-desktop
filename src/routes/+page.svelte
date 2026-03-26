@@ -17,7 +17,8 @@
 		topic: 'General discussion',
 		type: 'text' as const,
 		position: 0,
-		created_at: new Date().toISOString()
+		created_at: new Date().toISOString(),
+		updated_at: new Date().toISOString()
 	};
 
 	onMount(() => {

@@ -47,6 +47,17 @@ fn main() {
             database::db_delete_message,
             database::db_search_messages,
             database::db_get_direct_messages,
+            // Channel commands
+            database::db_get_channels,
+            database::db_get_channel,
+            database::db_save_channel,
+            database::db_update_channel,
+            database::db_delete_channel,
+            // Server commands
+            database::db_get_servers,
+            database::db_get_server,
+            database::db_save_server,
+            database::db_delete_server,
             // Transcription commands
             transcription::transcription_list_models,
             transcription::transcription_download_model,
