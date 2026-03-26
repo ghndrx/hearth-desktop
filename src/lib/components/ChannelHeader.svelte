@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { createEventDispatcher } from 'svelte';
+	import { derived } from 'svelte/store';
 	import { splitViewStore, canAddSplitPanel, splitViewEnabled } from '$lib/stores/splitView';
+	import { currentVoiceUsers, voiceChannel } from '$lib/stores/voice';
 	import type { Channel } from '$lib/stores/channels';
 	import Tooltip from './Tooltip.svelte';
 
@@ -41,6 +43,11 @@
 
 	$: channelIcon = channelIcons[channelType] || '#';
 	$: displayIcon = isPrivate ? '🔒' : channelIcon;
+
+	// Screen share: find users who are streaming in the current voice channel
+	$: screenShareUsers = $currentVoiceUsers.filter(u => u.self_stream);
+	$: isVoiceChannel = channelType === 'voice' || channelType === 'stage';
+	$: showScreenShareIndicator = isVoiceChannel && screenShareUsers.length > 0;
 
 	function handleToggleMemberList() {
 		dispatch('toggleMemberList');
@@ -101,6 +108,23 @@
 			<p class="channel-topic" title={topic} id="channel-topic">
 				{topic}
 			</p>
+		{/if}
+
+		{#if showScreenShareIndicator}
+			<div class="topic-divider" aria-hidden="true"></div>
+			<div class="screen-share-indicator" role="status">
+				<div class="screen-share-live-dot"></div>
+				<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+					<path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
+				</svg>
+				<span class="screen-share-text">
+					{#if screenShareUsers.length === 1}
+						{screenShareUsers[0].display_name || screenShareUsers[0].username} is sharing
+					{:else}
+						{screenShareUsers.length} sharing
+					{/if}
+				</span>
+			</div>
 		{/if}
 	</div>
 
@@ -307,6 +331,36 @@
 
 	.channel-topic:hover {
 		color: var(--text-normal, #f2f3f5);
+	}
+
+	.screen-share-indicator {
+		display: flex;
+		align-items: center;
+		gap: 6px;
+		flex-shrink: 0;
+		padding: 2px 8px;
+		background: rgba(242, 63, 67, 0.1);
+		border-radius: 4px;
+		color: #f23f43;
+		font-size: 12px;
+		font-weight: 500;
+	}
+
+	.screen-share-live-dot {
+		width: 6px;
+		height: 6px;
+		background: #f23f43;
+		border-radius: 50%;
+		animation: screen-share-pulse 2s ease-in-out infinite;
+	}
+
+	@keyframes screen-share-pulse {
+		0%, 100% { opacity: 1; }
+		50% { opacity: 0.5; }
+	}
+
+	.screen-share-text {
+		white-space: nowrap;
 	}
 
 	.header-actions {

@@ -9,6 +9,7 @@
 	import { tabsStore } from '$lib/stores/tabs';
 	import MessageList from '$lib/components/MessageList.svelte';
 	import MessageInput from '$lib/components/MessageInput.svelte';
+	import ScreenShareOverlay from '$lib/components/ScreenShareOverlay.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 	
 	$: serverId = $page.params.serverId;
@@ -145,6 +146,9 @@
 		<button class="action-btn" title="Members">👥</button>
 	</div>
 </div>
+
+<!-- Screen share overlay - shows when someone is sharing in voice -->
+<ScreenShareOverlay />
 
 <div class="messages-wrapper">
 	<MessageList />
