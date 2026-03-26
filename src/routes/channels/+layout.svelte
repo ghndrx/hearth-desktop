@@ -25,6 +25,7 @@
 	import QuickSwitcher from '$lib/components/QuickSwitcher.svelte';
 	import SearchResults from '$lib/components/SearchResults.svelte';
 	import SplitView from '$lib/components/SplitView.svelte';
+	import TabBar from '$lib/components/TabBar.svelte';
 	import CommandPalette from '$lib/components/CommandPalette.svelte';
 	import NotificationCenterPanel from '$lib/components/NotificationCenterPanel.svelte';
 	import FavoriteChannelsPanel from '$lib/components/FavoriteChannelsPanel.svelte';
@@ -343,8 +344,9 @@
 	<!-- Channel List - Second sidebar -->
 	<ChannelList on:openQuickSwitcher={handleQuickSwitcherOpen} />
 
-	<!-- Main Content with FEAT-003: Split View Container -->
+	<!-- Main Content with TabBar and FEAT-003: Split View Container -->
 	<main id="main-content" aria-label="Main content area">
+		<TabBar />
 		<SplitView>
 			<slot />
 		</SplitView>
