@@ -116,6 +116,15 @@ export {
 	type EmbeddingResponse
 } from './ai';
 
+// Channel Tabs - open channel tabs with persistence
+export {
+	tabsStore,
+	tabs,
+	activeTabId,
+	tabCount,
+	type Tab
+} from './tabs';
+
 // Desktop-specific stores
 export {
 	systemThemeInfo,
