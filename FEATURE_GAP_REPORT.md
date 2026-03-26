@@ -1,17 +1,18 @@
 # Hearth Desktop vs Discord Desktop - Feature Gap Analysis
 
-**Report Date:** March 25, 2026
+**Report Date:** March 26, 2026
 **Analysis Period:** Current State Assessment
 **Methodology:** Feature-by-feature comparison with weighted importance scoring
 
 ## Executive Summary
 
-Hearth Desktop currently achieves **50% overall parity** with Discord's native desktop application across all major feature categories — up from 32% at last assessment. Major progress has been made in Q1 2026 with the completion of the WebRTC P2P voice system and full game integration stack (Steam/Epic/Battlenet).
+Hearth Desktop currently achieves **50% overall parity** with Discord's native desktop application across all major feature categories — up from 32% at last assessment. **3 new critical P0 PRDs** have been created to address the largest competitive gaps and target **75% parity by Q3 2026**.
 
 **Key Findings:**
 - 🟢 **Strengths:** Game integration (80%), window management (60%), voice P2P infrastructure (complete)
-- 🔴 **Critical Gaps:** In-game overlay injection, noise suppression/echo cancellation, screen sharing
-- 🎯 **Target:** Achieve 65% parity by end of Q2 2026 through focused P0 initiatives
+- 🔴 **Critical Gaps:** In-game overlay injection, AI-powered communication features, real-time screen sharing
+- 🎯 **Target:** Achieve 68% parity by end of Q2 2026, 75% parity by end of Q3 2026 through new P0 PRDs
+- 📋 **New PRDs:** OVERLAY-001 (In-Game Overlay), STREAM-001 (Screen Sharing), AI-COMM-001 (AI Communication)
 
 ---
 
@@ -198,14 +199,17 @@ Hearth Desktop currently achieves **50% overall parity** with Discord's native d
 - ✅ Multi-window architecture (MW-001, MW-002)
 - ✅ Floating mini window & PiP overlays
 
-### Q2 2026 Target: 65% Parity
-- ⬜ Noise suppression (RNNoise) & echo cancellation (AEC3)
+### Q2 2026 Target: 68% Parity **[UPDATED]**
+- ⬜ **In-Game Overlay Foundation** - DirectX/OpenGL hook system, anti-cheat compatibility **[OVERLAY-001]**
+- ⬜ **AI Noise Suppression** - RNNoise + custom AI models implementation **[AI-COMM-001]**
+- ⬜ **Real-Time Transcription** - Whisper-based speech-to-text with live captions **[AI-COMM-001]**
 - ⬜ Achievement tracking & join game functionality
-- ⬜ In-game overlay injection (anti-cheat compatible)
 - ⬜ Persistent voice channels with member management
 
-### Q3 2026 Target: 80% Parity
-- ⬜ Screen sharing & streaming
+### Q3 2026 Target: 75% Parity **[UPDATED - NEW PARITY TARGET]**
+- ⬜ **Complete In-Game Overlay** - Voice controls, notifications, customization **[OVERLAY-001]**
+- ⬜ **Real-Time Screen Sharing** - Cross-platform capture, hardware encoding **[STREAM-001]**
+- ⬜ **Advanced AI Communication** - Voice enhancement, smart notifications **[AI-COMM-001]**
 - ⬜ Hardware integration platform (headsets, RGB)
 - ⬜ Advanced community features
 
@@ -239,15 +243,16 @@ Hearth Desktop currently achieves **50% overall parity** with Discord's native d
 
 ## Conclusion
 
-Hearth Desktop has built an impressive foundation of desktop utilities and system integration, but faces a **68-point parity gap** in core communication features. The path to competitive parity requires focused execution on voice/audio, game integration, and overlay systems in 2026.
+Hearth Desktop has built an impressive foundation of desktop utilities and system integration, but faces a **50-point parity gap** in core communication features. **Three new critical PRDs** (OVERLAY-001, STREAM-001, AI-COMM-001) directly target the largest competitive gaps and provide a clear path to **75% parity by Q3 2026**.
 
 **Key Success Factors:**
-1. **Prioritize P0 features** that directly compete with Discord's core value props
+1. **Execute the 3 new P0 PRDs** - In-game overlay, screen sharing, AI communication features
 2. **Leverage Hearth's strengths** in desktop productivity and performance
-3. **Maintain development velocity** through modern architecture advantages
+3. **Maintain development velocity** through modern Tauri architecture advantages
 4. **Focus on gaming communities** as the primary target market for initial traction
+5. **AI-first approach** - Differentiate with superior AI-powered communication features
 
-With disciplined execution of the 2026 roadmap, Hearth Desktop can achieve **85% parity** while maintaining its unique positioning as the productivity-focused alternative to Discord.
+With disciplined execution of the updated 2026 roadmap and the new PRDs, Hearth Desktop can achieve **75% parity by Q3 2026** and **90% parity by Q1 2027** while maintaining its unique positioning as the productivity-focused, AI-enhanced alternative to Discord.
 
 ---
 
