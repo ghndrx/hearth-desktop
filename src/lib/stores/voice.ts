@@ -34,6 +34,7 @@ export interface TranscriptionState {
 	settings: {
 		showConfidence: boolean;
 		showTimestamps: boolean;
+		showSpeakerLabels: boolean;
 		maxEntries: number;
 		minConfidence: number;
 	};
@@ -61,6 +62,7 @@ const initialTranscriptionState: TranscriptionState = {
 	settings: {
 		showConfidence: false,
 		showTimestamps: true,
+		showSpeakerLabels: true,
 		maxEntries: 100,
 		minConfidence: 0.3,
 	},

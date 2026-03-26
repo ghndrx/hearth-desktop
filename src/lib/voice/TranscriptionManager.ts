@@ -14,7 +14,7 @@ export interface TranscriptionConfig {
 
 const DEFAULT_CONFIG: TranscriptionConfig = {
 	modelName: 'Xenova/whisper-tiny',
-	language: 'en',
+	language: 'auto',
 	autoDetectLanguage: true,
 	chunk_length_s: 30,
 	stride_length_s: 5,

@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { Sidebar } from '$lib';
+	import { VoiceTranscriptionPanel } from '$lib';
 </script>
 
 <div class="flex h-screen w-screen overflow-hidden">
@@ -13,4 +14,6 @@
 			</div>
 		</div>
 	</main>
+
+	<VoiceTranscriptionPanel />
 </div>
