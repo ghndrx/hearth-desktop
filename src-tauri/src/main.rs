@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
+mod database;
 mod tray;
 mod transcription;
 
@@ -16,6 +17,11 @@ fn main() {
         ))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(
+            tauri_plugin_sql::Builder::default()
+                .add_migrations("sqlite:hearth.db", database::get_migrations())
+                .build(),
+        )
         .manage(transcription::TranscriptionManager::default())
         .setup(|app| {
             // Set up system tray
@@ -34,6 +40,13 @@ fn main() {
             commands::get_app_version,
             commands::show_notification,
             commands::set_badge_count,
+            // Database commands
+            database::db_get_messages,
+            database::db_save_message,
+            database::db_update_message,
+            database::db_delete_message,
+            database::db_search_messages,
+            database::db_get_direct_messages,
             // Transcription commands
             transcription::transcription_list_models,
             transcription::transcription_download_model,

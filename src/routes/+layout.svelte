@@ -1,13 +1,28 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
+	import { get } from 'svelte/store';
 	import { app, isLoading } from '$lib/stores/app';
+	import { messagesStore } from '$lib/stores/messages';
 	import '$lib/styles/theme.css';
 	import '../app.css';
 
 	let { children } = $props();
 
-	onMount(() => {
-		app.init();
+	onMount(async () => {
+		await app.init();
+
+		// Initialize messaging after app initialization
+		const appState = get(app);
+		if (appState.token) {
+			// Mock WebSocket URL for development
+			const wsUrl = 'ws://localhost:3001/ws';
+			try {
+				await messagesStore.init(wsUrl);
+			} catch (error) {
+				console.warn('Could not connect to WebSocket server:', error);
+				// Continue without WebSocket - app will work in offline mode
+			}
+		}
 	});
 </script>
 

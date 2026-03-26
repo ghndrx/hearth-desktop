@@ -57,6 +57,9 @@
     "updater": {
       "pubkey": "",
       "endpoints": []
+    },
+    "sql": {
+      "preload": ["sqlite:hearth.db"]
     }
   }
 }
