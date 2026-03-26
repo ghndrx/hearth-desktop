@@ -43,6 +43,8 @@
 	import BrightnessPanel from '$lib/components/BrightnessPanel.svelte';
 	import VolumeControlPanel from '$lib/components/VolumeControlPanel.svelte';
 	import HttpTesterPanel from '$lib/components/HttpTesterPanel.svelte';
+	import TranscriptPanel from '$lib/components/TranscriptPanel.svelte';
+	import { isTranscriptionPanelOpen, transcriptionStore } from '$lib/stores/transcription';
 
 	let quickSwitcherOpen = false;
 	let notificationCenterOpen = false;
@@ -181,6 +183,11 @@
 		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'H') {
 			e.preventDefault();
 			httpTesterOpen = !httpTesterOpen;
+		}
+		// Ctrl+Shift+T to toggle transcript panel
+		if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === 'T') {
+			e.preventDefault();
+			transcriptionStore.togglePanel();
 		}
 		// Escape to close modals
 		if (e.key === 'Escape') {
@@ -523,6 +530,12 @@
 <HttpTesterPanel
 	bind:open={httpTesterOpen}
 	onClose={() => httpTesterOpen = false}
+/>
+
+<!-- Real-Time Transcript Panel (AI-COMM-001) -->
+<TranscriptPanel
+	bind:open={$isTranscriptionPanelOpen}
+	onClose={() => transcriptionStore.closePanel()}
 />
 
 <!-- Image Preview Modal - Full screen image viewer -->

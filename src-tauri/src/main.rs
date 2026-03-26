@@ -182,6 +182,7 @@ mod tasklist;
 mod uuidgen;
 mod charmap;
 mod httptester;
+mod transcription;
 
 use tauri::{DragDropEvent, Emitter, Listener, Manager, WindowEvent};
 use tauri_plugin_window_state::{AppHandleExt, StateFlags};
@@ -691,6 +692,9 @@ fn main() {
 
             // Initialize Clipboard Ring
             app.manage(clipring::ClipRingManager::default());
+
+            // Initialize Transcription Manager
+            app.manage(transcription::TranscriptionManager::default());
 
             Ok(())
         })
@@ -2083,6 +2087,12 @@ fn main() {
             charmap::charmap_get_char_info,
             // HTTP Request Tester
             httptester::httptester_request,
+            // Real-time transcription commands
+            transcription::transcription_list_models,
+            transcription::transcription_download_model,
+            transcription::transcription_load_model,
+            transcription::transcription_unload_model,
+            transcription::transcription_transcribe,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

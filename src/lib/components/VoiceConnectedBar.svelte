@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { voiceState, voiceActions, isInVoice, voiceChannel } from '$lib/stores/voice';
 	import { getLiveKitManager } from '$lib/voice/livekit';
+	import { transcriptionStore, isTranscriptionPanelOpen } from '$lib/stores/transcription';
 	import { createEventDispatcher, onMount, onDestroy } from 'svelte';
 
 	const dispatch = createEventDispatcher<{
@@ -67,6 +68,10 @@
 		manager.setDeafened($voiceState.selfDeafened);
 	}
 
+	function handleTranscriptToggle() {
+		transcriptionStore.togglePanel();
+	}
+
 	onDestroy(() => {
 		stopTimer();
 	});
@@ -128,6 +133,19 @@
 						<path d="M12 3c-4.97 0-9 4.03-9 9v7c0 1.1.9 2 2 2h4v-8H5v-1c0-3.87 3.13-7 7-7s7 3.13 7 7v1h-4v8h4c1.1 0 2-.9 2-2v-7c0-4.97-4.03-9-9-9z"/>
 					</svg>
 				{/if}
+			</button>
+
+			<button
+				class="control-btn"
+				class:active={$isTranscriptionPanelOpen}
+				on:click={handleTranscriptToggle}
+				aria-label={$isTranscriptionPanelOpen ? 'Hide transcript' : 'Show transcript'}
+				title={$isTranscriptionPanelOpen ? 'Hide transcript' : 'Show transcript'}
+			>
+				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+					<path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z"/>
+					<path d="M7 9h2v2H7zm4 0h2v2h-2zm4 0h2v2h-2z"/>
+				</svg>
 			</button>
 
 			<button
