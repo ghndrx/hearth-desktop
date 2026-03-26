@@ -1,5 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import { voiceCall } from './voiceCall';
+import { voiceActions } from './voice';
 
 /**
  * Screen share source type
@@ -41,6 +42,9 @@ const initialState: ScreenShareState = {
 
 function createScreenShareStore() {
 	const { subscribe, set, update } = writable<ScreenShareState>(initialState);
+
+	/** Callback invoked when screen sharing ends (for LiveKit cleanup) */
+	let onStopCallback: (() => void) | null = null;
 
 	/**
 	 * Stop all tracks in the current stream
@@ -122,6 +126,10 @@ function createScreenShareStore() {
 						}));
 						// Update voice call state
 						voiceCall.toggleScreenShare();
+						// Broadcast stream state via gateway
+						voiceActions.setStream(false);
+						// Notify LiveKit to unpublish tracks
+						onStopCallback?.();
 					}
 				});
 
@@ -185,6 +193,9 @@ function createScreenShareStore() {
 			if (!vcState.screenSharing) {
 				voiceCall.toggleScreenShare();
 			}
+
+			// Broadcast stream state via gateway
+			voiceActions.setStream(true);
 		},
 
 		/**
@@ -192,7 +203,7 @@ function createScreenShareStore() {
 		 */
 		stopSharing: () => {
 			stopStream();
-			
+
 			update(state => ({
 				...state,
 				isSharing: false,
@@ -207,6 +218,9 @@ function createScreenShareStore() {
 			if (vcState.screenSharing) {
 				voiceCall.toggleScreenShare();
 			}
+
+			// Broadcast stream state via gateway
+			voiceActions.setStream(false);
 		},
 
 		/**
@@ -229,6 +243,14 @@ function createScreenShareStore() {
 		 */
 		getStream: () => {
 			return get({ subscribe }).stream;
+		},
+
+		/**
+		 * Register a callback to be invoked when sharing stops
+		 * (used by LiveKit to unpublish tracks when browser ends the share)
+		 */
+		onStop: (callback: (() => void) | null) => {
+			onStopCallback = callback;
 		},
 
 		/**

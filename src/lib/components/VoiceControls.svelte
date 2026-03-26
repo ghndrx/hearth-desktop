@@ -2,6 +2,7 @@
 	import { createEventDispatcher, onMount, onDestroy } from 'svelte';
 	import { voiceState, voiceActions, isInVoice, voiceChannel, currentVoiceUsers } from '$lib/stores/voice';
 	import { getLiveKitManager } from '$lib/voice/livekit';
+	import { screenShare, isScreenSharing as isScreenSharingStore } from '$lib/stores/screenShare';
 	import Tooltip from '$lib/components/Tooltip.svelte';
 
 	const dispatch = createEventDispatcher<{
@@ -13,9 +14,6 @@
 	let elapsedTime = '00:00';
 	let timeInterval: ReturnType<typeof setInterval> | null = null;
 	let connectionStartTime: Date | null = null;
-
-	// Screen share state (future feature)
-	let isScreenSharing = false;
 
 	$: if ($isInVoice && !connectionStartTime) {
 		connectionStartTime = new Date();
@@ -78,18 +76,19 @@
 	}
 
 	async function handleScreenShare() {
-		// Future feature - screen sharing
-		// const manager = getLiveKitManager();
-		// const room = manager.getRoom();
-		// if (!room) return;
-		//
-		// if (isScreenSharing) {
-		//   await room.localParticipant.setScreenShareEnabled(false);
-		// } else {
-		//   await room.localParticipant.setScreenShareEnabled(true);
-		// }
-		// isScreenSharing = !isScreenSharing;
-		console.log('Screen sharing coming soon');
+		if ($isScreenSharingStore) {
+			// Stop sharing - unpublish from LiveKit and clean up
+			try {
+				const manager = getLiveKitManager();
+				await manager.unpublishScreenShare();
+			} catch {
+				// LiveKit may not have the track; continue cleanup
+			}
+			screenShare.stopSharing();
+		} else {
+			// Open screen share modal for source selection
+			screenShare.openModal();
+		}
 	}
 
 	function handleOpenSettings() {
@@ -136,19 +135,19 @@
 
 		<!-- Right: Control Buttons -->
 		<div class="control-buttons">
-			<!-- Screen Share (future) -->
-			<button
-				class="control-btn screen-share"
-				class:active={isScreenSharing}
-				on:click={handleScreenShare}
-				aria-label="Share Screen"
-				title="Share your screen (coming soon)"
-				disabled
-			>
-				<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
-					<path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
-				</svg>
-			</button>
+			<!-- Screen Share -->
+			<Tooltip text={$isScreenSharingStore ? 'Stop Sharing' : 'Share Screen'} position="top">
+				<button
+					class="control-btn screen-share"
+					class:active={$isScreenSharingStore}
+					on:click={handleScreenShare}
+					aria-label={$isScreenSharingStore ? 'Stop sharing screen' : 'Share your screen'}
+				>
+					<svg viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+						<path d="M20 18c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2H4c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2H0v2h24v-2h-4zM4 6h16v10H4V6z"/>
+					</svg>
+				</button>
+			</Tooltip>
 
 			<!-- Mute -->
 			<Tooltip text={$voiceState.selfMuted ? 'Unmute' : 'Mute'} shortcutId="toggle-mute" position="top">

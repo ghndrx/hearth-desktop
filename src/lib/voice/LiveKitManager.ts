@@ -1,9 +1,12 @@
 import { browser } from '$app/environment';
-import { get } from 'svelte/store';
+import { get, writable } from 'svelte/store';
 import {
 	Room,
 	RoomEvent,
 	Track,
+	LocalTrack,
+	LocalVideoTrack,
+	LocalAudioTrack,
 	RemoteParticipant,
 	Participant,
 	ConnectionState,
@@ -15,6 +18,9 @@ import {
 import { voiceState, voiceActions, voiceChannelStates, type VoiceUser } from '$lib/stores/voice';
 import { user as authUser } from '$lib/stores/auth';
 import { API_BASE } from '$lib/api';
+
+/** Store for remote screen share tracks - maps participant identity to video element */
+export const remoteScreenShares = writable<Map<string, { participantName: string; track: Track }>>(new Map());
 
 interface LiveKitConfig {
 	serverUrl: string;
@@ -154,11 +160,11 @@ class LiveKitManager {
 			this.updateParticipantsList();
 		});
 
-		// Track subscribed (for remote audio)
+		// Track subscribed (for remote audio and screen share)
 		this.room.on(
 			RoomEvent.TrackSubscribed,
 			(track: Track, publication: RemoteTrackPublication, participant: RemoteParticipant) => {
-				if (track.kind === Track.Kind.Audio) {
+				if (track.kind === Track.Kind.Audio && track.source !== Track.Source.ScreenShareAudio) {
 					// Attach audio track to DOM for playback
 					const audioElement = track.attach();
 					audioElement.id = `voice-audio-${participant.identity}`;
@@ -168,6 +174,22 @@ class LiveKitManager {
 					audioElement.muted = state.selfDeafened;
 
 					document.body.appendChild(audioElement);
+				} else if (track.source === Track.Source.ScreenShare) {
+					// Remote participant started screen sharing
+					remoteScreenShares.update(shares => {
+						const updated = new Map(shares);
+						updated.set(participant.identity, {
+							participantName: participant.name || participant.identity,
+							track,
+						});
+						return updated;
+					});
+					this.updateParticipantsList();
+				} else if (track.source === Track.Source.ScreenShareAudio) {
+					// Attach screen share audio
+					const audioElement = track.attach();
+					audioElement.id = `screen-audio-${participant.identity}`;
+					document.body.appendChild(audioElement);
 				}
 			}
 		);
@@ -175,7 +197,16 @@ class LiveKitManager {
 		// Track unsubscribed
 		this.room.on(
 			RoomEvent.TrackUnsubscribed,
-			(track: Track, _publication: RemoteTrackPublication, _participant: RemoteParticipant) => {
+			(track: Track, _publication: RemoteTrackPublication, participant: RemoteParticipant) => {
+				if (track.source === Track.Source.ScreenShare) {
+					// Remote participant stopped screen sharing
+					remoteScreenShares.update(shares => {
+						const updated = new Map(shares);
+						updated.delete(participant.identity);
+						return updated;
+					});
+					this.updateParticipantsList();
+				}
 				track.detach().forEach(element => element.remove());
 			}
 		);
@@ -362,6 +393,10 @@ class LiveKitManager {
 
 		// Remove all audio elements
 		document.querySelectorAll('[id^="voice-audio-"]').forEach(el => el.remove());
+		document.querySelectorAll('[id^="screen-audio-"]').forEach(el => el.remove());
+
+		// Clear remote screen shares
+		remoteScreenShares.set(new Map());
 
 		this.isSpeaking = false;
 	}
@@ -378,6 +413,83 @@ class LiveKitManager {
 		} catch (error) {
 			console.error('[LiveKit] Failed to toggle mute:', error);
 		}
+	}
+
+	/**
+	 * Enable or disable screen sharing via LiveKit
+	 */
+	async setScreenShareEnabled(enabled: boolean): Promise<void> {
+		if (!this.room) return;
+
+		try {
+			await this.room.localParticipant.setScreenShareEnabled(enabled, {
+				audio: true,
+				contentHint: 'detail',
+				resolution: { width: 1920, height: 1080, frameRate: 30 },
+			});
+			this.updateParticipantsList();
+		} catch (error) {
+			console.error('[LiveKit] Failed to toggle screen share:', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Publish an existing MediaStream as a screen share to LiveKit.
+	 * This avoids LiveKit showing its own display picker.
+	 */
+	async publishScreenShareStream(stream: MediaStream): Promise<void> {
+		if (!this.room) return;
+
+		try {
+			const videoTrack = stream.getVideoTracks()[0];
+			if (videoTrack) {
+				const localVideo = new LocalVideoTrack(videoTrack, undefined, false);
+				await this.room.localParticipant.publishTrack(localVideo, {
+					source: Track.Source.ScreenShare,
+					videoCodec: 'vp8',
+				});
+			}
+
+			const audioTrack = stream.getAudioTracks()[0];
+			if (audioTrack) {
+				const localAudio = new LocalAudioTrack(audioTrack, undefined, false);
+				await this.room.localParticipant.publishTrack(localAudio, {
+					source: Track.Source.ScreenShareAudio,
+				});
+			}
+
+			this.updateParticipantsList();
+		} catch (error) {
+			console.error('[LiveKit] Failed to publish screen share stream:', error);
+			throw error;
+		}
+	}
+
+	/**
+	 * Unpublish all screen share tracks from LiveKit
+	 */
+	async unpublishScreenShare(): Promise<void> {
+		if (!this.room) return;
+
+		const participant = this.room.localParticipant;
+		for (const [, publication] of participant.trackPublications) {
+			if (
+				publication.source === Track.Source.ScreenShare ||
+				publication.source === Track.Source.ScreenShareAudio
+			) {
+				await participant.unpublishTrack(publication.track as LocalTrack);
+			}
+		}
+
+		this.updateParticipantsList();
+	}
+
+	/**
+	 * Check if local participant is screen sharing
+	 */
+	isScreenShareEnabled(): boolean {
+		return this.room?.localParticipant.isScreenShareEnabled ?? false;
 	}
 
 	/**

@@ -379,6 +379,49 @@ export const voiceActions = {
 		});
 	},
 
+	// Toggle screen share stream state
+	toggleStream() {
+		voiceState.update(state => {
+			const newStream = !state.selfStream;
+
+			// Send update via gateway
+			if (state.serverId) {
+				gateway.send({
+					op: Op.VOICE_STATE_UPDATE,
+					d: {
+						server_id: state.serverId,
+						self_muted: state.selfMuted,
+						self_deafened: state.selfDeafened,
+						self_video: state.selfVideo,
+						self_stream: newStream
+					}
+				});
+			}
+
+			return { ...state, selfStream: newStream };
+		});
+	},
+
+	// Set screen share stream state explicitly
+	setStream(streaming: boolean) {
+		voiceState.update(state => {
+			if (state.serverId) {
+				gateway.send({
+					op: Op.VOICE_STATE_UPDATE,
+					d: {
+						server_id: state.serverId,
+						self_muted: state.selfMuted,
+						self_deafened: state.selfDeafened,
+						self_video: state.selfVideo,
+						self_stream: streaming
+					}
+				});
+			}
+
+			return { ...state, selfStream: streaming };
+		});
+	},
+
 	// Set connecting state
 	setConnecting() {
 		voiceState.update(state => ({
