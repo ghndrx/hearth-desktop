@@ -6,6 +6,7 @@
 	import { trackChannelVisit } from '$lib/stores/recentChannels';
 	import { sendMessage } from '$lib/stores/messages';
 	import { splitViewStore, canAddSplitPanel, splitViewEnabled } from '$lib/stores/splitView';
+	import { tabsStore } from '$lib/stores/tabs';
 	import MessageList from '$lib/components/MessageList.svelte';
 	import MessageInput from '$lib/components/MessageInput.svelte';
 	import Tooltip from '$lib/components/Tooltip.svelte';
@@ -26,6 +27,8 @@
 		const channel = $channels.find(c => c.id === channelId);
 		if (channel && $currentChannel?.id !== channelId) {
 			currentChannel.set(channel);
+			// Open as a tab
+			tabsStore.openTab(channel, channel.server_id);
 			// Track channel visit for tray Recent Channels menu
 			trackChannelVisit(
 				channel.id,
