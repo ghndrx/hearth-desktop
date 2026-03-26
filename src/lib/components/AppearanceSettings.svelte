@@ -10,7 +10,9 @@
 	const themes: { id: Theme; label: string; description: string; colors: string[] }[] = [
 		{ id: 'dark', label: 'Dark', description: 'Easy on the eyes', colors: ['#36393f', '#2f3136', '#202225'] },
 		{ id: 'light', label: 'Light', description: 'Classic bright look', colors: ['#ffffff', '#f2f3f5', '#e3e5e8'] },
-		{ id: 'midnight', label: 'Midnight', description: 'True dark AMOLED', colors: ['#0e0e10', '#18181b', '#1e1e22'] }
+		{ id: 'midnight', label: 'Midnight', description: 'True dark AMOLED', colors: ['#0e0e10', '#18181b', '#1e1e22'] },
+		{ id: 'sunset', label: 'Sunset', description: 'Warm amber tones', colors: ['#1c1210', '#261a16', '#140e0c'] },
+		{ id: 'ocean', label: 'Ocean', description: 'Cool deep blue', colors: ['#0c1a24', '#10222e', '#081318'] }
 	];
 
 	const displayModes: { id: MessageDisplay; label: string; description: string }[] = [
@@ -255,7 +257,7 @@
 	/* Theme Cards */
 	.theme-grid {
 		display: grid;
-		grid-template-columns: repeat(3, 1fr);
+		grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
 		gap: 12px;
 	}
 

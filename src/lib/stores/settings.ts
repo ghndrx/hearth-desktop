@@ -1,7 +1,7 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 
-export type Theme = 'dark' | 'light' | 'midnight';
+export type Theme = 'dark' | 'light' | 'midnight' | 'sunset' | 'ocean';
 export type MessageDisplay = 'cozy' | 'compact';
 export type NotificationLevel = 'all' | 'mentions' | 'none';
 
@@ -105,7 +105,7 @@ const defaultSettings: AppSettings = {
 };
 
 function isValidTheme(value: unknown): value is Theme {
-	return typeof value === 'string' && ['dark', 'light', 'midnight'].includes(value);
+	return typeof value === 'string' && ['dark', 'light', 'midnight', 'sunset', 'ocean'].includes(value);
 }
 
 function isValidMessageDisplay(value: unknown): value is MessageDisplay {
@@ -200,7 +200,11 @@ function saveSettings(settings: AppSettings) {
 
 function applyTheme(theme: Theme) {
 	if (!browser) return;
-	document.documentElement.setAttribute('data-theme', theme === 'dark' ? '' : theme);
+	const root = document.documentElement;
+	root.setAttribute('data-theme', theme === 'dark' ? '' : theme);
+	// Remove all theme classes and add the current one
+	root.classList.remove('light', 'dark', 'midnight', 'sunset', 'ocean');
+	root.classList.add(theme);
 }
 
 const initialState: SettingsState = {

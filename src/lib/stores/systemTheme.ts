@@ -161,7 +161,7 @@ function applyThemeToDOM(): void {
     const root = document.documentElement;
     
     // Set theme class
-    root.classList.remove('light', 'dark');
+    root.classList.remove('light', 'dark', 'midnight', 'sunset', 'ocean');
     root.classList.add(theme);
     root.setAttribute('data-theme', theme);
     

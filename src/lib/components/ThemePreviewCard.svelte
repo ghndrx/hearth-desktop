@@ -72,6 +72,36 @@
 				warning: '#f59e0b',
 				danger: '#ef4444'
 			}
+		},
+		sunset: {
+			name: 'Sunset',
+			colors: {
+				bg: '#1c1210',
+				bgSecondary: '#261a16',
+				bgTertiary: '#140e0c',
+				text: '#fde8d8',
+				textSecondary: '#c4a08a',
+				accent: '#f97316',
+				border: '#3d2a20',
+				success: '#22c55e',
+				warning: '#fbbf24',
+				danger: '#ef4444'
+			}
+		},
+		ocean: {
+			name: 'Ocean',
+			colors: {
+				bg: '#0c1a24',
+				bgSecondary: '#10222e',
+				bgTertiary: '#081318',
+				text: '#d4f0f8',
+				textSecondary: '#7eb8c9',
+				accent: '#06b6d4',
+				border: '#1a3040',
+				success: '#10b981',
+				warning: '#f59e0b',
+				danger: '#ef4444'
+			}
 		}
 	};
 

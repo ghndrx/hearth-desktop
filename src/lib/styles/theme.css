@@ -76,6 +76,50 @@
 	--bg-modifier-selected: rgba(255, 255, 255, 0.12);
 }
 
+/* Sunset theme - warm amber and rose tones */
+[data-theme="sunset"] {
+	--brand-primary: #f97316;
+	--brand-hover: #ea580c;
+
+	--bg-primary: #1c1210;
+	--bg-secondary: #261a16;
+	--bg-tertiary: #140e0c;
+	--bg-modifier-hover: rgba(249, 115, 22, 0.08);
+	--bg-modifier-active: rgba(249, 115, 22, 0.16);
+	--bg-modifier-selected: rgba(249, 115, 22, 0.24);
+	--bg-modifier-accent: rgba(249, 115, 22, 0.32);
+
+	--text-primary: #fde8d8;
+	--text-secondary: #c4a08a;
+	--text-muted: #9a7b68;
+	--text-link: #fb923c;
+
+	--scrollbar-thumb: #3d2a20;
+	--scrollbar-thumb-hover: #4d3528;
+}
+
+/* Ocean theme - deep blue and teal */
+[data-theme="ocean"] {
+	--brand-primary: #06b6d4;
+	--brand-hover: #0891b2;
+
+	--bg-primary: #0c1a24;
+	--bg-secondary: #10222e;
+	--bg-tertiary: #081318;
+	--bg-modifier-hover: rgba(6, 182, 212, 0.08);
+	--bg-modifier-active: rgba(6, 182, 212, 0.16);
+	--bg-modifier-selected: rgba(6, 182, 212, 0.24);
+	--bg-modifier-accent: rgba(6, 182, 212, 0.32);
+
+	--text-primary: #d4f0f8;
+	--text-secondary: #7eb8c9;
+	--text-muted: #5a8fa0;
+	--text-link: #22d3ee;
+
+	--scrollbar-thumb: #1a3040;
+	--scrollbar-thumb-hover: #243d4f;
+}
+
 /* Global Styles */
 * {
 	box-sizing: border-box;
