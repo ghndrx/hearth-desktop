@@ -15,23 +15,30 @@ fn main() {
         ))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::new().build())
+        .manage(commands::init_screen_capture_state())
         .setup(|app| {
             // Set up system tray
             tray::setup_tray(app)?;
-            
+
             // Get main window
             let window = app.get_webview_window("main").unwrap();
-            
+
             // Show window on tray icon click
             #[cfg(target_os = "macos")]
             window.set_decorations(true)?;
-            
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_app_version,
             commands::show_notification,
             commands::set_badge_count,
+            commands::list_screen_capture_devices,
+            commands::init_screen_capture,
+            commands::start_screen_capture,
+            commands::stop_screen_capture,
+            commands::capture_frame,
+            commands::get_device_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
