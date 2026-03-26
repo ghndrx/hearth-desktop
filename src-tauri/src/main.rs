@@ -160,6 +160,7 @@ mod workspaceswitcher;
 mod typingspeed;
 mod floatingwindow;
 mod multiwindow;
+mod voicepip;
 mod trayactions;
 mod bootmanager;
 mod filewatchlive;
@@ -2008,6 +2009,15 @@ fn main() {
             floatingwindow::floating_move_corner,
             floatingwindow::floating_resize,
             floatingwindow::floating_navigate,
+            // Voice PiP commands
+            voicepip::voice_pip_show,
+            voicepip::voice_pip_hide,
+            voicepip::voice_pip_toggle,
+            voicepip::voice_pip_move,
+            voicepip::voice_pip_resize,
+            voicepip::voice_pip_get_state,
+            voicepip::voice_pip_update_channel,
+            voicepip::voice_pip_close,
             // Multi-window architecture commands
             multiwindow::mw_create_window,
             multiwindow::mw_close_window,
