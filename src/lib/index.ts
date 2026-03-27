@@ -3,3 +3,4 @@ export * from './stores/app';
 
 // Re-export components
 export { default as Sidebar } from './components/Sidebar.svelte';
+export { default as GameDetection } from './components/GameDetection.svelte';

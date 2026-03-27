@@ -1,4 +1,6 @@
 use tauri_plugin_notification::NotificationExt;
+use std::sync::Mutex;
+use crate::game_detection::{GameDetectionEngine, GameDetectionResult};
 
 /// Get the application version
 #[tauri::command]
@@ -37,4 +39,46 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
         }
     }
     Ok(())
+}
+
+// Global game detection engine instance
+static GAME_ENGINE: Mutex<Option<GameDetectionEngine>> = Mutex::new(None);
+
+/// Initialize the game detection engine
+#[tauri::command]
+pub fn init_game_detection() -> Result<(), String> {
+    let mut engine = GAME_ENGINE.lock().map_err(|e| e.to_string())?;
+    *engine = Some(GameDetectionEngine::new());
+    Ok(())
+}
+
+/// Scan for currently running games
+#[tauri::command]
+pub fn scan_for_games() -> Result<GameDetectionResult, String> {
+    let mut engine_guard = GAME_ENGINE.lock().map_err(|e| e.to_string())?;
+
+    // Initialize engine if not already done
+    if engine_guard.is_none() {
+        *engine_guard = Some(GameDetectionEngine::new());
+    }
+
+    if let Some(ref mut engine) = engine_guard.as_mut() {
+        Ok(engine.scan_for_games())
+    } else {
+        Err("Game detection engine not initialized".to_string())
+    }
+}
+
+/// Check if user is currently gaming
+#[tauri::command]
+pub fn is_gaming() -> Result<bool, String> {
+    let result = scan_for_games()?;
+    Ok(result.is_gaming)
+}
+
+/// Get the list of currently detected games
+#[tauri::command]
+pub fn get_detected_games() -> Result<Vec<crate::game_detection::DetectedGame>, String> {
+    let result = scan_for_games()?;
+    Ok(result.detected_games)
 }

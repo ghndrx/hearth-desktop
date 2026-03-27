@@ -3,6 +3,7 @@
 
 mod commands;
 mod tray;
+mod game_detection;
 
 use tauri::Manager;
 
@@ -32,6 +33,10 @@ fn main() {
             commands::get_app_version,
             commands::show_notification,
             commands::set_badge_count,
+            commands::init_game_detection,
+            commands::scan_for_games,
+            commands::is_gaming,
+            commands::get_detected_games,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
