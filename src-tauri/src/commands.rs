@@ -1,5 +1,7 @@
 use tauri_plugin_notification::NotificationExt;
 use tauri::Manager;
+use tauri::WebviewWindowBuilder;
+use tauri::WebviewUrl;
 
 /// Get the application version
 #[tauri::command]
@@ -39,8 +41,9 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
     Ok(())
 }
 
-/// Set the always on top behavior for a window
-/// Supports 'main' (default) and 'voice-overlay' windows
+/// Set the always-on-top behavior for a window.
+/// Supports 'main' (default) and 'voice-overlay' windows.
+/// For the voice-overlay, the window is created on demand if it doesn't exist.
 #[tauri::command]
 pub async fn set_always_on_top(
     app: tauri::AppHandle,
@@ -48,25 +51,51 @@ pub async fn set_always_on_top(
     window_label: Option<String>,
 ) -> Result<(), String> {
     let label = window_label.as_deref().unwrap_or("main");
-    if let Some(window) = app.get_webview_window(label) {
-        window
-            .set_always_on_top(always_on_top)
-            .map_err(|e| e.to_string())?;
+    let window = if label == "voice-overlay" {
+        get_or_create_voice_overlay(&app)?
     } else {
-        return Err(format!("Window '{}' not found", label));
-    }
+        app.get_webview_window(label)
+            .ok_or_else(|| format!("Window '{}' not found", label))?
+    };
+    window
+        .set_always_on_top(always_on_top)
+        .map_err(|e| e.to_string())?;
     Ok(())
 }
 
-/// Show the voice overlay window
+/// Create or retrieve the voice overlay window.
+/// Creates a small, transparent, always-on-top window for the voice overlay.
+fn get_or_create_voice_overlay(app: &tauri::AppHandle) -> Result<tauri::WebviewWindow, String> {
+    if let Some(window) = app.get_webview_window("voice-overlay") {
+        return Ok(window);
+    }
+
+    let window = WebviewWindowBuilder::new(
+        app,
+        "voice-overlay",
+        WebviewUrl::App("/overlay".into()),
+    )
+    .title("Voice Overlay")
+    .inner_size(280.0, 300.0)
+    .min_inner_size(200.0, 52.0)
+    .resizable(true)
+    .decorations(false)
+    .transparent(true)
+    .always_on_top(true)
+    .skip_taskbar(true)
+    .visible(false)
+    .build()
+    .map_err(|e| e.to_string())?;
+
+    Ok(window)
+}
+
+/// Show the voice overlay window (creates it if it doesn't exist)
 #[tauri::command]
 pub async fn show_voice_overlay(app: tauri::AppHandle) -> Result<(), String> {
-    if let Some(window) = app.get_webview_window("voice-overlay") {
-        window.show().map_err(|e| e.to_string())?;
-        window.set_focus().map_err(|e| e.to_string())?;
-    } else {
-        return Err("Voice overlay window not found".to_string());
-    }
+    let window = get_or_create_voice_overlay(&app)?;
+    window.show().map_err(|e| e.to_string())?;
+    window.set_focus().map_err(|e| e.to_string())?;
     Ok(())
 }
 
@@ -75,9 +104,8 @@ pub async fn show_voice_overlay(app: tauri::AppHandle) -> Result<(), String> {
 pub async fn hide_voice_overlay(app: tauri::AppHandle) -> Result<(), String> {
     if let Some(window) = app.get_webview_window("voice-overlay") {
         window.hide().map_err(|e| e.to_string())?;
-    } else {
-        return Err("Voice overlay window not found".to_string());
     }
+    // No error if the window doesn't exist — it may not have been opened yet
     Ok(())
 }
 
