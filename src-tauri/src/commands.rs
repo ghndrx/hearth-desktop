@@ -1162,3 +1162,96 @@ pub async fn cancel_window_attention(window: Window) -> Result<(), String> {
     window.request_user_attention(None)
         .map_err(|e| e.to_string())
 }
+
+// ============================================================================
+// Screen Source Enumeration Commands
+// ============================================================================
+
+/// A media source for screen/window/camera sharing
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct MediaSource {
+    pub id: String,
+    pub name: String,
+    #[serde(rename = "type")]
+    pub source_type: String,
+    pub thumbnail: String, // Base64 PNG or empty
+}
+
+/// Enumerate all available screen, window, and camera sources
+#[tauri::command]
+pub async fn enumerate_sources() -> Result<Vec<MediaSource>, String> {
+    let mut sources = Vec::new();
+
+    // Enumerate screens using xcap
+    #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
+    {
+        use xcap::Screen;
+
+        if let Ok(screens) = Screen::all() {
+            for (idx, screen) in screens.iter().enumerate() {
+                let name = screen.name()
+                    .map(|n| n.to_string())
+                    .unwrap_or_else(|| format!("Display {}", idx + 1));
+
+                sources.push(MediaSource {
+                    id: format!("screen:{}", idx),
+                    name,
+                    source_type: "screen".to_string(),
+                    thumbnail: String::new(), // Empty for now, can capture later
+                });
+            }
+        }
+    }
+
+    // Enumerate windows using xcap
+    #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
+    {
+        use xcap::Window;
+
+        if let Ok(windows) = Window::all() {
+            for window in windows {
+                // Filter out hidden windows
+                if window.is_minimized() {
+                    continue;
+                }
+
+                let title = window.title();
+                if title.is_empty() {
+                    continue;
+                }
+
+                let pid = window.pid();
+                sources.push(MediaSource {
+                    id: format!("window:{}", pid),
+                    name: title,
+                    source_type: "window".to_string(),
+                    thumbnail: String::new(),
+                });
+            }
+        }
+    }
+
+    // Enumerate cameras using nokhwa
+    #[cfg(any(target_os = "windows", target_os = "linux", target_os = "macos"))]
+    {
+        use nokhwa::utils::CameraEnumerator;
+
+        if let Ok(mut enumerator) = CameraEnumerator::new() {
+            if let Ok(cameras) = enumerator.clone().detect_devices() {
+                for (idx, _camera_info) in cameras.iter().enumerate() {
+                    let name = format!("Camera {}", idx + 1);
+
+                    sources.push(MediaSource {
+                        id: format!("camera:{}", idx),
+                        name,
+                        source_type: "camera".to_string(),
+                        thumbnail: String::new(),
+                    });
+                }
+            }
+        }
+    }
+
+    Ok(sources)
+}

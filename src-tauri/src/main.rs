@@ -767,6 +767,7 @@ fn main() {
             // Screen source enumeration for screen sharing
             screensources::get_screen_sources,
             screensources::capture_source_thumbnail,
+            commands::enumerate_sources,
             // Audio commands
             audio::get_audio_input_devices,
             audio::get_audio_output_devices,
