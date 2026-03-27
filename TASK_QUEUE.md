@@ -1,11 +1,23 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
+Last updated: 2026-03-27
 Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Global Hotkeys (#06_global_hotkeys_system.md)
+
+- [ ] **T-HOTKEY-01**: Implement basic Tauri global hotkey registration system
+- [ ] **T-HOTKEY-02**: Add push-to-talk global shortcut integration with WebRTC voice
+- [ ] **T-HOTKEY-03**: Implement system-wide mute/deafen shortcuts (Ctrl+Shift+M/D)
+- [ ] **T-HOTKEY-04**: Build keybinding settings UI with conflict detection
+
+### Thread: Game Detection (#07_game_detection_activity_system.md)
+
+- [ ] **T-GAME-01**: Implement cross-platform process detection for running games
+- [ ] **T-GAME-02**: Build game database with top 50 Steam games metadata
+- [ ] **T-GAME-03**: Create "Currently Playing" status display in user profiles
+- [ ] **T-GAME-04**: Add privacy controls for activity sharing preferences
 
 ---
 
@@ -48,10 +60,22 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-THREAD-09**: Thread unread badge indicators
 - [ ] **T-THREAD-10**: Integration test with real Hearth API thread endpoints
 
+### Thread: Advanced File & Media (#08_advanced_file_media_system.md)
+
+- [ ] **T-FILE-01**: Implement drag-and-drop file handling with visual feedback
+- [ ] **T-FILE-02**: Build file upload queue with progress tracking and pause/resume
+- [ ] **T-FILE-03**: Create image thumbnail generation and optimization pipeline
+- [ ] **T-FILE-04**: Build rich media viewer (lightbox for images, custom video player)
+- [ ] **T-FILE-05**: Implement intelligent file compression for images/videos
+- [ ] **T-FILE-06**: Add basic screen recording functionality (MP4 + GIF)
+- [ ] **T-FILE-07**: Create file type validation and security scanning
+- [ ] **T-FILE-08**: Build file management interface with search and categorization
+
 ---
 
 ## P2 — Medium (Future)
 
+### Core P2 Features
 - [ ] **T-P2-01**: Screenshot capture standalone feature (screenshot hotkey → share to channel)
 - [ ] **T-P2-02**: Custom status messages (online/idle/dnd/custom)
 - [ ] **T-P2-03**: Per-channel notification sounds
@@ -59,6 +83,20 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-P2-05**: Background blur for video (TensorFlow.js WASM / MediaPipe)
 - [ ] **T-P2-06**: Rich text editor (markdown toolbar, emoji picker)
 - [ ] **T-P2-07**: Message search with filters (from:, has:embed, during:, etc.)
+
+### Advanced Gaming Features
+- [ ] **T-P2-08**: Rich Presence SDK integration (Steam, Epic Games)
+- [ ] **T-P2-09**: Game overlay implementation for in-game chat
+- [ ] **T-P2-10**: Auto-detect streaming mode (OBS, Streamlabs) with optimized settings
+- [ ] **T-P2-11**: Hardware acceleration for better gaming performance
+- [ ] **T-P2-12**: Game-specific audio profiles and noise suppression
+
+### Advanced Desktop Integration
+- [ ] **T-P2-13**: Multi-window support (detachable voice channels, floating controls)
+- [ ] **T-P2-14**: Picture-in-picture mode for voice controls during games
+- [ ] **T-P2-15**: Advanced notification system with action buttons
+- [ ] **T-P2-16**: Cloud storage integration (Google Drive, Dropbox, OneDrive)
+- [ ] **T-P2-17**: Advanced themes and accessibility features (high contrast, zoom)
 
 ---
 
