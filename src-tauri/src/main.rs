@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
+mod hotkeys;
 mod tray;
 
 use tauri::Manager;
@@ -15,7 +16,11 @@ fn main() {
         ))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
+            // Initialize hotkey state
+            hotkeys::init_state(app.handle());
+            
             // Set up system tray
             tray::setup_tray(app)?;
             
@@ -32,6 +37,8 @@ fn main() {
             commands::get_app_version,
             commands::show_notification,
             commands::set_badge_count,
+            hotkeys::register_hotkey,
+            hotkeys::unregister_hotkey,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
