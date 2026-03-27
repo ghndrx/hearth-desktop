@@ -1,0 +1,24 @@
+# Build
+build/
+dist/
+*.exe
+
+# Dependencies
+node_modules/
+
+# Environment
+.env
+.env.*
+.env.local
+
+# Local only files - NEVER commit these
+FEATURE_GAP_REPORT.md
+GAP_*.md
+*_GAP_*.md
+TASK_QUEUE.md
+BUILD_REPORT*.md
+COVERAGE_REPORT*.md
+AUDIT_REPORT*.md
+*_REPORT_*.md
+opencode-task.md
+*.backup
