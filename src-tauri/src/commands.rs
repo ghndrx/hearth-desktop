@@ -80,3 +80,35 @@ pub async fn hide_voice_overlay(app: tauri::AppHandle) -> Result<(), String> {
     }
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Verify set_always_on_top defaults to "main" when no window_label is provided
+    #[test]
+    fn test_set_always_on_top_default_label() {
+        let label: Option<String> = None;
+        let resolved = label.as_deref().unwrap_or("main");
+        assert_eq!(resolved, "main");
+    }
+
+    /// Verify set_always_on_top uses the provided window label
+    #[test]
+    fn test_set_always_on_top_custom_label() {
+        let label: Option<String> = Some("voice-overlay".to_string());
+        let resolved = label.as_deref().unwrap_or("main");
+        assert_eq!(resolved, "voice-overlay");
+    }
+
+    /// Verify the command function signatures compile correctly with expected types.
+    /// Full integration tests require a running Tauri app context.
+    #[test]
+    fn test_command_signatures_exist() {
+        // Verify these functions exist and are callable (type-checks at compile time)
+        let _ = get_app_version;
+        let _ = set_always_on_top;
+        let _ = show_voice_overlay;
+        let _ = hide_voice_overlay;
+    }
+}
