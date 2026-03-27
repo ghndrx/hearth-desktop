@@ -7,6 +7,20 @@ export interface Peer {
 	remoteStream: MediaStream;
 }
 
+// Voice Channel Participant for PiP Display
+export interface VoiceParticipant {
+	userId: string;
+	username: string;
+	displayName?: string;
+	avatarUrl?: string;
+	isSpeaking: boolean;
+	isMuted: boolean;
+	isDeafened: boolean;
+	connectionState: RTCPeerConnectionState;
+	audioLevel?: number; // 0-1 for volume visualization
+	joinedAt: Date;
+}
+
 export interface IceServerConfig {
 	urls: string | string[];
 	username?: string;

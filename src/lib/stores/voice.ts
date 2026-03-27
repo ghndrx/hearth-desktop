@@ -1,5 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
+import type { VoiceParticipant } from '$lib/voice/types';
 
 export interface VoiceState {
 	isConnected: boolean;
@@ -10,6 +11,7 @@ export interface VoiceState {
 	connecting: boolean;
 	error: string | null;
 	speaking: { [userId: string]: boolean };
+	participants: VoiceParticipant[];
 }
 
 export interface TranscriptionEntry {
@@ -48,6 +50,7 @@ const initialVoiceState: VoiceState = {
 	connecting: false,
 	error: null,
 	speaking: {},
+	participants: [],
 };
 
 const initialTranscriptionState: TranscriptionState = {
@@ -111,6 +114,43 @@ function createVoiceStore() {
 
 		clearError: () =>
 			update(state => ({ ...state, error: null })),
+
+		// Participant management
+		addParticipant: (participant: VoiceParticipant) =>
+			update(state => ({
+				...state,
+				participants: [...state.participants.filter(p => p.userId !== participant.userId), participant]
+			})),
+
+		removeParticipant: (userId: string) =>
+			update(state => {
+				const { [userId]: _, ...speaking } = state.speaking;
+				return {
+					...state,
+					participants: state.participants.filter(p => p.userId !== userId),
+					speaking
+				};
+			}),
+
+		updateParticipant: (userId: string, updates: Partial<VoiceParticipant>) =>
+			update(state => ({
+				...state,
+				participants: state.participants.map(p =>
+					p.userId === userId ? { ...p, ...updates } : p
+				)
+			})),
+
+		setParticipantSpeaking: (userId: string, speaking: boolean, audioLevel?: number) =>
+			update(state => ({
+				...state,
+				speaking: { ...state.speaking, [userId]: speaking },
+				participants: state.participants.map(p =>
+					p.userId === userId ? { ...p, isSpeaking: speaking, audioLevel } : p
+				)
+			})),
+
+		clearParticipants: () =>
+			update(state => ({ ...state, participants: [], speaking: {} })),
 	};
 }
 
@@ -213,6 +253,12 @@ export const voiceActions = {
 	removeSpeaker: voiceState.removeSpeaker,
 	setError: voiceState.setError,
 	clearError: voiceState.clearError,
+	// Participant management
+	addParticipant: voiceState.addParticipant,
+	removeParticipant: voiceState.removeParticipant,
+	updateParticipant: voiceState.updateParticipant,
+	setParticipantSpeaking: voiceState.setParticipantSpeaking,
+	clearParticipants: voiceState.clearParticipants,
 };
 
 // Transcription action helpers
@@ -237,6 +283,17 @@ export const currentVoiceChannel = derived(voiceState, $state => $state.channelI
 export const isSelfMuted = derived(voiceState, $state => $state.selfMuted);
 export const isSelfDeafened = derived(voiceState, $state => $state.selfDeafened);
 export const voiceError = derived(voiceState, $state => $state.error);
+
+// Participant derived stores
+export const voiceParticipants = derived(voiceState, $state => $state.participants);
+export const speakingParticipants = derived(voiceState, $state =>
+	$state.participants.filter(p => p.isSpeaking)
+);
+export const connectedParticipants = derived(voiceState, $state =>
+	$state.participants.filter(p => p.connectionState === 'connected')
+);
+export const participantCount = derived(voiceState, $state => $state.participants.length);
+export const hasParticipants = derived(voiceState, $state => $state.participants.length > 0);
 
 export const isTranscriptionEnabled = derived(transcriptionState, $state => $state.isEnabled);
 export const isTranscriptionReady = derived(transcriptionState, $state => $state.isReady);
