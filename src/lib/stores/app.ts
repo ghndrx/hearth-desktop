@@ -1,5 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
+import { registerCommonHotkeys, HotKeyManager } from '../hotkey';
 
 export interface User {
 	id: string;
@@ -67,6 +68,16 @@ function createAppStore() {
 			const token = localStorage.getItem('hearth_token');
 			if (!token) {
 				update((s) => ({ ...s, loading: false, initialized: true, theme: savedTheme || 'dark' }));
+
+				// Initialize global hotkeys even without authentication
+				try {
+					await registerCommonHotkeys();
+					HotKeyManager.onHotkeyPressed((event) => {
+						console.log('Hotkey pressed:', event);
+					});
+				} catch (error) {
+					console.warn('Failed to initialize hotkeys:', error);
+				}
 				return;
 			}
 
@@ -78,6 +89,19 @@ function createAppStore() {
 				initialized: true,
 				theme: savedTheme || 'dark'
 			}));
+
+			// Initialize global hotkeys
+			try {
+				await registerCommonHotkeys();
+
+				// Set up hotkey event listener
+				HotKeyManager.onHotkeyPressed((event) => {
+					console.log('Hotkey pressed:', event);
+					// Additional frontend logic can be added here
+				});
+			} catch (error) {
+				console.warn('Failed to initialize hotkeys:', error);
+			}
 		},
 
 		setTheme(theme: AppState['theme']) {

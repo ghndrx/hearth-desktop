@@ -5,6 +5,8 @@ mod commands;
 mod tray;
 
 use tauri::Manager;
+use global_hotkey::{GlobalHotKeyEvent, GlobalHotKeyEventReceiver};
+use std::sync::mpsc;
 
 fn main() {
     tauri::Builder::default()
@@ -25,13 +27,22 @@ fn main() {
             // Show window on tray icon click
             #[cfg(target_os = "macos")]
             window.set_decorations(true)?;
-            
+
+            // Initialize hotkey manager
+            let _ = commands::init_hotkey_manager().await;
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::get_app_version,
             commands::show_notification,
             commands::set_badge_count,
+            commands::init_hotkey_manager,
+            commands::register_hotkey,
+            commands::unregister_hotkey,
+            commands::is_hotkey_registered,
+            commands::get_registered_hotkeys,
+            commands::enumerate_sources,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
