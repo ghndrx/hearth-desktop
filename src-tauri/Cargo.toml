@@ -23,13 +23,13 @@ serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 
 [target.'cfg(target_os = "linux")'.dependencies]
-nokhwa = { version = "0.11", features = ["input-v4l"] }
+nokhwa = { version = "0.10", features = ["input-v4l"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
-nokhwa = { version = "0.11", features = ["input-avfoundation"] }
+nokhwa = { version = "0.10", features = ["input-avfoundation"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
-nokhwa = { version = "0.11", features = ["input-msmf"] }
+nokhwa = { version = "0.10", features = ["input-msmf"] }
 
 [profile.release]
 panic = "abort"
