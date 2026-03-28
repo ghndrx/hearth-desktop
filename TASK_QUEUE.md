@@ -5,7 +5,14 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Global Hotkeys Foundation (#12_global_hotkeys_game_overlay_system.md)
+
+- [ ] **T-HOTKEY-01**: Add `global-hotkey` crate to `src-tauri/Cargo.toml` for system-wide hotkey capture
+- [ ] **T-HOTKEY-02**: Implement cross-platform hotkey registration system (Windows/macOS/Linux)
+- [ ] **T-HOTKEY-03**: Build basic push-to-talk implementation with <50ms latency
+- [ ] **T-HOTKEY-04**: Create hotkey configuration UI in Settings with conflict detection
+- [ ] **T-HOTKEY-05**: Integrate PTT with existing WebRTC audio pipeline
+- [ ] **T-HOTKEY-06**: Implement global mute/unmute hotkey functionality
 
 ---
 
@@ -48,6 +55,36 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-THREAD-09**: Thread unread badge indicators
 - [ ] **T-THREAD-10**: Integration test with real Hearth API thread endpoints
 
+### Thread: Game Overlay System (#12_global_hotkeys_game_overlay_system.md)
+
+- [ ] **T-OVERLAY-01**: Implement game process detection and fullscreen monitoring
+- [ ] **T-OVERLAY-02**: Build DirectX/OpenGL overlay injection system for Windows
+- [ ] **T-OVERLAY-03**: Create basic overlay UI (voice activity indicators, mute controls)
+- [ ] **T-OVERLAY-04**: Implement overlay positioning and configuration system
+- [ ] **T-OVERLAY-05**: Add overlay performance optimization (<2% game impact)
+- [ ] **T-OVERLAY-06**: Test overlay compatibility with top 20 Steam games
+- [ ] **T-OVERLAY-07**: Implement macOS Metal overlay and Linux OpenGL overlay
+
+### Thread: Rich Presence System (#13_rich_presence_activity_system.md)
+
+- [ ] **T-PRESENCE-01**: Build cross-platform process monitoring for activity detection
+- [ ] **T-PRESENCE-02**: Implement game/application classification and metadata extraction
+- [ ] **T-PRESENCE-03**: Create activity broadcasting WebSocket integration
+- [ ] **T-PRESENCE-04**: Build Spotify integration for music activity sharing
+- [ ] **T-PRESENCE-05**: Implement custom status message system with emoji support
+- [ ] **T-PRESENCE-06**: Add privacy controls for selective activity sharing
+- [ ] **T-PRESENCE-07**: Create VS Code/IDE integration for development activity
+
+### Thread: Advanced Window Management (#14_advanced_window_system_tray.md)
+
+- [ ] **T-WINDOW-01**: Implement window state persistence across app restarts
+- [ ] **T-WINDOW-02**: Build multi-monitor position memory and adaptation system
+- [ ] **T-WINDOW-03**: Add always-on-top mode for voice channel popouts
+- [ ] **T-WINDOW-04**: Create enhanced system tray with rich notifications and actions
+- [ ] **T-WINDOW-05**: Implement smart badge counting (mentions vs. regular messages)
+- [ ] **T-WINDOW-06**: Build dynamic tray context menu with quick actions
+- [ ] **T-WINDOW-07**: Add window transparency and advanced behavior controls
+
 ---
 
 ## P2 — Medium (Future)
@@ -59,6 +96,13 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-P2-05**: Background blur for video (TensorFlow.js WASM / MediaPipe)
 - [ ] **T-P2-06**: Rich text editor (markdown toolbar, emoji picker)
 - [ ] **T-P2-07**: Message search with filters (from:, has:embed, during:, etc.)
+- [ ] **T-P2-08**: Advanced overlay features (text chat overlay, settings panel)
+- [ ] **T-P2-09**: Anti-cheat compatibility testing and game-specific optimizations
+- [ ] **T-P2-10**: Activity-based social features (friend suggestions, activity filtering)
+- [ ] **T-P2-11**: Window layout profiles for different work contexts
+- [ ] **T-P2-12**: Voice-controlled window management and automation triggers
+- [ ] **T-P2-13**: External integration marketplace for custom activity plugins
+- [ ] **T-P2-14**: AI-powered layout suggestions and activity recognition
 
 ---
 
