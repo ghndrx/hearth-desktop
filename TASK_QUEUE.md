@@ -73,8 +73,24 @@ Pipeline: Hearth Desktop Competitive Analysis vs Discord Desktop
 
 ## P2 — Medium (Future)
 
-- [ ] **T-P2-01**: Screenshot capture standalone feature (screenshot hotkey → share to channel)
-- [ ] **T-P2-02**: Custom status messages (online/idle/dnd/custom)
+### Overlay System Extensions
+- [ ] **T-OVERLAY-05**: Add voice participants list with speaking indicators to overlay
+- [ ] **T-OVERLAY-06**: Implement chat notifications system in overlay
+- [ ] **T-OVERLAY-07**: Build overlay settings panel with positioning controls
+- [ ] **T-OVERLAY-08**: Add advanced overlay features (party info, join buttons)
+
+### Rich Presence Extensions
+- [ ] **T-PRESENCE-05**: Add game launcher integration (Steam, Epic, etc.)
+- [ ] **T-PRESENCE-06**: Implement media player integration (Spotify, browser media)
+- [ ] **T-PRESENCE-07**: Build Rich Presence SDK for third-party developers
+
+### Media Integration Extensions
+- [ ] **T-MEDIA-07**: Add batch file upload support with metadata extraction
+- [ ] **T-MEDIA-08**: Implement smart clipboard sharing suggestions UI
+- [ ] **T-MEDIA-09**: Build link preview system with Open Graph metadata
+- [ ] **T-MEDIA-10**: Add inline image/video players with standard controls
+
+### Core UX Improvements
 - [ ] **T-P2-03**: Per-channel notification sounds
 - [ ] **T-P2-04**: Keyboard shortcut customization UI
 - [ ] **T-P2-05**: Background blur for video (TensorFlow.js WASM / MediaPipe)
@@ -114,7 +130,19 @@ Pipeline: Hearth Desktop Competitive Analysis vs Discord Desktop
 
 ## Notes
 
-- All P1 tasks depend on PRD #1 (text messaging) being stable
+### P0 Critical Dependencies
+- **Overlay System**: Depends on `global-hotkey` crate (already added), WebRTC voice pipeline (implemented)
+- **Rich Presence**: Requires cross-platform process monitoring APIs, privacy permission flows
+- Both P0 systems are Discord's core competitive advantages — essential for gaming market penetration
+
+### P1 Coordination Requirements
 - Screen share and video call both extend the WebRTC pipeline from PR #17 — coordinate to avoid conflicts
+- Media integration extends existing file upload infrastructure — coordinate with screen sharing PRD
 - Thread UI (T-THREAD-03, T-THREAD-05) needs design spec from Hearth design team
 - Tray PRDs (#06, #07) depend on `tauri-plugin-notification`, `tauri-plugin-autostart`, `tauri-plugin-window-state` being added to Cargo.toml first
+
+### Competitive Analysis Insights
+- **Tauri Performance Advantage**: Rust backend provides 10x better performance than Discord's Electron
+- **Gaming Market**: Overlay + Rich Presence are make-or-break features for Discord alternative
+- **Privacy Differentiator**: Local-only processing for activity detection vs Discord's cloud analytics
+- **Resource Efficiency**: Target <100MB RAM vs Discord's 300-500MB footprint
