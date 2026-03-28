@@ -14,6 +14,33 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-HOTKEY-05**: Integrate PTT with existing WebRTC audio pipeline
 - [ ] **T-HOTKEY-06**: Implement global mute/unmute hotkey functionality
 
+### Thread: Native OS Integration (#15_native_os_integration_file_handling.md)
+
+- [ ] **T-OS-01**: Add `tauri-plugin-dialog` and `tauri-plugin-fs` for native file handling
+- [ ] **T-OS-02**: Implement cross-platform drag-and-drop file system
+- [ ] **T-OS-03**: Build native file dialog integration with OS-specific features
+- [ ] **T-OS-04**: Create platform-specific integrations (Windows Jump Lists, macOS Touch Bar, Linux D-Bus)
+- [ ] **T-OS-05**: Implement hearth:// protocol registration and deep linking
+- [ ] **T-OS-06**: Build rich clipboard integration with multi-format support
+
+### Thread: Advanced Notification System (#16_advanced_notification_system.md)
+
+- [ ] **T-NOTIF-01**: Implement rich notification data structures with actions and media
+- [ ] **T-NOTIF-02**: Build intelligent notification grouping and prioritization engine
+- [ ] **T-NOTIF-03**: Create cross-platform notification rendering with OS integration
+- [ ] **T-NOTIF-04**: Implement inline reply and quick action functionality
+- [ ] **T-NOTIF-05**: Build notification center integration and persistent history
+- [ ] **T-NOTIF-06**: Create smart filtering system with context awareness (gaming mode, DND)
+
+### Thread: Anti-Cheat Compatibility (#17_anticheat_compatibility_gaming_integration.md)
+
+- [ ] **T-ANTICHEAT-01**: Build safe game overlay injection system with anti-cheat detection
+- [ ] **T-ANTICHEAT-02**: Create anti-cheat compatibility database and validation system
+- [ ] **T-ANTICHEAT-03**: Implement BattlEye/EasyAntiCheat/Vanguard safe overlay methods
+- [ ] **T-ANTICHEAT-04**: Build process monitoring and safety validation pipeline
+- [ ] **T-ANTICHEAT-05**: Test compatibility with top 50 Steam games
+- [ ] **T-ANTICHEAT-06**: Create performance monitoring and gaming mode optimization
+
 ---
 
 ## P1 — High (Next Sprint)
@@ -84,6 +111,16 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-WINDOW-05**: Implement smart badge counting (mentions vs. regular messages)
 - [ ] **T-WINDOW-06**: Build dynamic tray context menu with quick actions
 - [ ] **T-WINDOW-07**: Add window transparency and advanced behavior controls
+
+### Thread: Streaming & Gaming Hardware (#17_anticheat_compatibility_gaming_integration.md)
+
+- [ ] **T-STREAM-01**: Build OBS Studio plugin with voice activity and chat overlay sources
+- [ ] **T-STREAM-02**: Implement Stream Deck integration with dynamic button controls
+- [ ] **T-STREAM-03**: Create cross-platform RGB gaming peripheral integration
+- [ ] **T-STREAM-04**: Build Twitch/YouTube chat synchronization system
+- [ ] **T-STREAM-05**: Implement gaming hardware macro and hotkey integration
+- [ ] **T-STREAM-06**: Create competitive gaming mode with ultra-low latency optimization
+- [ ] **T-STREAM-07**: Build game detection and automatic performance profile switching
 
 ---
 
