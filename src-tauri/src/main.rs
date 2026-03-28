@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
+mod overlay;
 mod tray;
 
 use tauri::Manager;
@@ -32,6 +33,15 @@ fn main() {
             commands::get_app_version,
             commands::show_notification,
             commands::set_badge_count,
+            overlay::create_overlay,
+            overlay::show_overlay,
+            overlay::hide_overlay,
+            overlay::close_overlay,
+            overlay::set_overlay_opacity,
+            overlay::is_overlay_visible,
+            overlay::detect_fullscreen_apps,
+            overlay::move_overlay,
+            overlay::get_overlay_position,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

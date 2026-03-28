@@ -21,6 +21,26 @@
         "fullscreen": false,
         "decorations": true,
         "transparent": false
+      },
+      {
+        "label": "overlay",
+        "title": "Hearth Overlay",
+        "width": 300,
+        "height": 200,
+        "resizable": false,
+        "fullscreen": false,
+        "decorations": false,
+        "transparent": true,
+        "alwaysOnTop": true,
+        "visible": false,
+        "skipTaskbar": true,
+        "closable": false,
+        "minimizable": false,
+        "maximizable": false,
+        "center": false,
+        "focus": false,
+        "x": 50,
+        "y": 50
       }
     ],
     "trayIcon": {

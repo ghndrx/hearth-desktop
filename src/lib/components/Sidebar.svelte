@@ -1,5 +1,9 @@
 <script lang="ts">
 	import { currentServer, servers, type Server } from '$lib/stores/app';
+	import { invoke } from '@tauri-apps/api/core';
+	import { onMount } from 'svelte';
+
+	let overlayVisible = false;
 
 	function getInitials(name: string): string {
 		return name
@@ -12,6 +16,30 @@
 
 	function selectServer(server: Server) {
 		currentServer.set(server);
+	}
+
+	onMount(async () => {
+		// Create overlay window on app start
+		try {
+			await invoke('create_overlay');
+			overlayVisible = await invoke('is_overlay_visible');
+		} catch (error) {
+			console.error('Failed to initialize overlay:', error);
+		}
+	});
+
+	async function toggleOverlay() {
+		try {
+			if (overlayVisible) {
+				await invoke('hide_overlay');
+				overlayVisible = false;
+			} else {
+				await invoke('show_overlay');
+				overlayVisible = true;
+			}
+		} catch (error) {
+			console.error('Failed to toggle overlay:', error);
+		}
 	}
 </script>
 
@@ -87,6 +115,29 @@
 			viewBox="0 0 24 24"
 		>
 			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+		</svg>
+	</button>
+
+	<div class="flex-1"></div>
+
+	<!-- Overlay toggle button -->
+	<button
+		class="w-12 h-12 rounded-[24px] bg-dark-700 hover:bg-blue-600 hover:rounded-[16px]
+		       flex items-center justify-center transition-all duration-200 group mb-2"
+		class:bg-blue-600={overlayVisible}
+		class:rounded-[16px]={overlayVisible}
+		onclick={toggleOverlay}
+		title="Toggle Overlay"
+	>
+		<svg
+			class="w-6 h-6 text-blue-400 group-hover:text-white transition-colors"
+			class:text-white={overlayVisible}
+			fill="none"
+			stroke="currentColor"
+			viewBox="0 0 24 24"
+		>
+			<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+			      d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2m0 0v2a1 1 0 01-1 1H8a1 1 0 01-1-1V4zm0 0h4M5 8h14l-1 8H6L5 8z" />
 		</svg>
 	</button>
 </aside>
