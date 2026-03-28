@@ -1,13 +1,36 @@
 use serde::{Deserialize, Serialize};
 use tauri_plugin_notification::NotificationExt;
+use nokhwa::utils::ApiBackend;
+use nokhwa::query;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Source {
+    /// Unique identifier for the source
     pub id: String,
+    /// Display name of the source
     pub name: String,
+    /// Type of source: "camera", "screen", or "window"
     pub source_type: String,
+    /// Width in pixels (if available)
     pub width: Option<u32>,
+    /// Height in pixels (if available)
     pub height: Option<u32>,
+}
+
+impl From<nokhwa::utils::CameraInfo> for Source {
+    fn from(info: nokhwa::utils::CameraInfo) -> Self {
+        let id = match info.index() {
+            nokhwa::utils::CameraIndex::Index(i) => i.to_string(),
+            nokhwa::utils::CameraIndex::String(s) => s.to_string(),
+        };
+        Source {
+            id,
+            name: info.human_name().to_string(),
+            source_type: "camera".to_string(),
+            width: None,
+            height: None,
+        }
+    }
 }
 
 /// Get the application version
@@ -49,5 +72,15 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
     Ok(())
 }
 
-// Re-export screen capture commands
-pub use super::screen::enumerate_sources;
+/// Enumerate available capture sources.
+///
+/// Note: nokhwa is a camera capture library and does not natively support
+/// screen or window enumeration. This returns camera devices only.
+/// For true screen/window capture, a different library like xcap would be needed.
+#[tauri::command]
+pub async fn enumerate_sources() -> Result<Vec<Source>, String> {
+    match query(ApiBackend::Auto) {
+        Ok(cameras) => Ok(cameras.into_iter().map(Source::from).collect()),
+        Err(e) => Err(format!("Failed to enumerate sources: {}", e)),
+    }
+}
