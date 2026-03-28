@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use tauri_plugin_notification::NotificationExt;
 use nokhwa::utils::ApiBackend;
 use nokhwa::query;
+use crate::overlay::{OverlayPosition, OverlaySize, OverlayState};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Source {
@@ -83,4 +84,65 @@ pub async fn enumerate_sources() -> Result<Vec<Source>, String> {
         Ok(cameras) => Ok(cameras.into_iter().map(Source::from).collect()),
         Err(e) => Err(format!("Failed to enumerate sources: {}", e)),
     }
+}
+
+// ============================================================================
+// Overlay System Commands
+// ============================================================================
+
+/// Show the overlay window
+#[tauri::command]
+pub async fn show_overlay(app: tauri::AppHandle) -> Result<(), String> {
+    crate::overlay::show_overlay(&app).await
+}
+
+/// Hide the overlay window
+#[tauri::command]
+pub async fn hide_overlay(app: tauri::AppHandle) -> Result<(), String> {
+    crate::overlay::hide_overlay(&app).await
+}
+
+/// Toggle overlay window visibility
+#[tauri::command]
+pub async fn toggle_overlay(app: tauri::AppHandle) -> Result<bool, String> {
+    crate::overlay::toggle_overlay(&app).await
+}
+
+/// Set overlay window position
+#[tauri::command]
+pub async fn set_overlay_position(
+    app: tauri::AppHandle,
+    position: OverlayPosition,
+) -> Result<(), String> {
+    crate::overlay::set_overlay_position(&app, position).await
+}
+
+/// Set overlay window size
+#[tauri::command]
+pub async fn set_overlay_size(
+    app: tauri::AppHandle,
+    size: OverlaySize,
+) -> Result<(), String> {
+    crate::overlay::set_overlay_size(&app, size).await
+}
+
+/// Set overlay opacity (0.0 to 1.0)
+#[tauri::command]
+pub async fn set_overlay_opacity(
+    app: tauri::AppHandle,
+    opacity: f64,
+) -> Result<(), String> {
+    crate::overlay::set_overlay_opacity(&app, opacity).await
+}
+
+/// Get current overlay state
+#[tauri::command]
+pub async fn get_overlay_state(app: tauri::AppHandle) -> Result<OverlayState, String> {
+    crate::overlay::get_overlay_state(&app).await
+}
+
+/// Check if overlay functionality is supported on this platform
+#[tauri::command]
+pub fn check_overlay_support() -> bool {
+    crate::overlay::check_overlay_support()
 }
