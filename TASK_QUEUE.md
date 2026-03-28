@@ -1,11 +1,23 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
-Pipeline: Hearth Desktop PRD Competitive Analysis
+Last updated: 2026-03-28
+Pipeline: Hearth Desktop Competitive Analysis vs Discord Desktop
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: In-Game Overlay System (#12_overlay_system.md) — Discord's Killer Feature
+
+- [ ] **T-OVERLAY-01**: Implement Tauri transparent overlay window system
+- [ ] **T-OVERLAY-02**: Build full-screen application detection
+- [ ] **T-OVERLAY-03**: Create basic voice controls widget (mute/deafen/PTT status)
+- [ ] **T-OVERLAY-04**: Integrate with existing global hotkey system
+
+### Thread: Rich Presence & Activity Detection (#13_rich_presence_activity_detection.md) — Core Social Feature
+
+- [ ] **T-PRESENCE-01**: Implement system process monitoring and enumeration
+- [ ] **T-PRESENCE-02**: Build application detection database with game/app metadata
+- [ ] **T-PRESENCE-03**: Create activity state management system
+- [ ] **T-PRESENCE-04**: Implement basic presence display in user profile
 
 ---
 
@@ -48,6 +60,15 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-THREAD-09**: Thread unread badge indicators
 - [ ] **T-THREAD-10**: Integration test with real Hearth API thread endpoints
 
+### Thread: Advanced Media Integration (#14_advanced_media_integration.md) — Productivity Differentiator
+
+- [ ] **T-MEDIA-01**: Implement cross-platform screenshot capture (full screen, window, region)
+- [ ] **T-MEDIA-02**: Build screenshot annotation UI with basic drawing tools
+- [ ] **T-MEDIA-03**: Integrate global hotkey system for screenshot triggers
+- [ ] **T-MEDIA-04**: Add instant upload pipeline for captured screenshots
+- [ ] **T-MEDIA-05**: Implement clipboard monitoring with privacy controls
+- [ ] **T-MEDIA-06**: Build drag-and-drop upload system with progress tracking
+
 ---
 
 ## P2 — Medium (Future)
@@ -62,8 +83,38 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ---
 
+### Thread: System Tray & Background (#06_system_tray_and_background_operation.md)
+
+- [ ] **T-TRAY-01**: Extend `tray.rs` with full context menu (server/channel, mute/deafen, quit)
+- [ ] **T-TRAY-02**: Implement window-close → minimize-to-tray (prevent quit on close)
+- [ ] **T-TRAY-03**: Add unread badge counts to tray icon via platform APIs
+- [ ] **T-TRAY-04**: Wire up `unread-count-changed` events from WebSocket to tray badge
+- [ ] **T-TRAY-05**: Integrate `tauri-plugin-notification` for background desktop notifications
+- [ ] **T-TRAY-06**: Handle notification click → open relevant channel
+- [ ] **T-TRAY-07**: Test tray behavior on Windows, macOS, Linux
+
+### Thread: Auto-Start & Window State (#07_auto_start_and_window_state.md)
+
+- [ ] **T-AUTO-01**: Add `tauri-plugin-autostart` and `tauri-plugin-window-state` to `Cargo.toml`
+- [ ] **T-AUTO-02**: Wire `is_autostart_enabled()` and `set_autostart(enabled)` Tauri commands
+- [ ] **T-AUTO-03**: Configure `window-state` in `tauri.conf.json` plugins section
+- [ ] **T-AUTO-04**: Add "Open on Startup" toggle to Settings UI
+- [ ] **T-AUTO-05**: Test autostart registration on Windows, macOS, Ubuntu
+
+### Thread: App Settings UI (#08_app_settings_and_preferences_ui.md)
+
+- [ ] **T-SETTINGS-01**: Build `SettingsModal.svelte` container with sidebar navigation
+- [ ] **T-SETTINGS-02**: Implement Appearance section (theme, font size, compact mode)
+- [ ] **T-SETTINGS-03**: Implement Voice & Video section (device selectors, test buttons)
+- [ ] **T-SETTINGS-04**: Implement Notifications section (desktop notifs, sounds toggles)
+- [ ] **T-SETTINGS-05**: Implement App Settings section (autostart, minimize-to-tray, tray icon toggles)
+- [ ] **T-SETTINGS-06**: Add My Account section (profile display, sign out)
+- [ ] **T-SETTINGS-07**: Wire all settings to `settings` store with localStorage persistence
+- [ ] **T-SETTINGS-08**: Integrate `tauri-plugin-store` for cross-session settings persistence
+
 ## Notes
 
 - All P1 tasks depend on PRD #1 (text messaging) being stable
 - Screen share and video call both extend the WebRTC pipeline from PR #17 — coordinate to avoid conflicts
 - Thread UI (T-THREAD-03, T-THREAD-05) needs design spec from Hearth design team
+- Tray PRDs (#06, #07) depend on `tauri-plugin-notification`, `tauri-plugin-autostart`, `tauri-plugin-window-state` being added to Cargo.toml first
