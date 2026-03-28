@@ -5,6 +5,22 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
+### Thread: Native OS Integration (#12_native_os_integration_system.md)
+
+- [ ] **T-OS-01**: Implement system tray with show/hide toggle and status indicator
+- [ ] **T-OS-02**: Add minimize-to-tray functionality with user preferences
+- [ ] **T-OS-03**: Build native OS notifications with action buttons (Reply, Mark Read)
+- [ ] **T-OS-04**: Implement auto-startup registration for Windows/macOS/Linux
+- [ ] **T-OS-05**: Add always-on-top window management for voice channels
+
+### Thread: Advanced Moderation & Safety (#13_advanced_moderation_safety_system.md)
+
+- [ ] **T-MOD-01**: Build role-based permission system with granular channel controls
+- [ ] **T-MOD-02**: Implement auto-moderation engine for spam and explicit content detection
+- [ ] **T-MOD-03**: Create audit logging system for all moderation actions
+- [ ] **T-MOD-04**: Build advanced reporting system with evidence collection
+- [ ] **T-MOD-05**: Add content filtering with safety warnings and age-appropriate controls
+
 ### Thread: Global Hotkeys (#06_global_hotkeys_system.md)
 
 - [ ] **T-HOTKEY-01**: Implement basic Tauri global hotkey registration system
@@ -22,6 +38,16 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 ---
 
 ## P1 — High (Next Sprint)
+
+### Thread: Developer Platform & Integrations (#14_developer_platform_integrations.md)
+
+- [ ] **T-DEV-01**: Build Bot API foundation with OAuth 2.0 authentication and permissions
+- [ ] **T-DEV-02**: Implement slash commands framework with parameter validation
+- [ ] **T-DEV-03**: Create webhook infrastructure with event filtering and retry logic
+- [ ] **T-DEV-04**: Build API key management system with rate limiting and scopes
+- [ ] **T-DEV-05**: Develop rich embeds system for enhanced message formatting
+- [ ] **T-DEV-06**: Create TypeScript/JavaScript SDK with comprehensive documentation
+- [ ] **T-DEV-07**: Build developer portal with application management and testing tools
 
 ### Thread: Screen Sharing (#03_screen_share_system.md)
 
