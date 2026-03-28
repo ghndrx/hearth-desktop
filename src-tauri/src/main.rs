@@ -32,6 +32,9 @@ fn main() {
             commands::get_app_version,
             commands::show_notification,
             commands::set_badge_count,
+            commands::toggle_window_visibility,
+            commands::get_window_visibility,
+            commands::update_tray_status,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

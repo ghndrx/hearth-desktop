@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { app, isLoading } from '$lib/stores/app';
+	import { app, isLoading, isAuthenticated } from '$lib/stores/app';
+	import { windowState, trayStatus, setupWindowEventHandlers } from '$lib/stores/window';
 	import '$lib/styles/theme.css';
 	import '../app.css';
 
@@ -8,6 +9,15 @@
 
 	onMount(() => {
 		app.init();
+		windowState.init();
+		setupWindowEventHandlers();
+
+		// Update tray status when authentication state changes
+		const unsubscribe = isAuthenticated.subscribe((authenticated) => {
+			trayStatus.updateFromAppState(authenticated, false);
+		});
+
+		return unsubscribe;
 	});
 </script>
 
