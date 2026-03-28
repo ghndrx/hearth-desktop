@@ -1,4 +1,14 @@
+use serde::{Deserialize, Serialize};
 use tauri_plugin_notification::NotificationExt;
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Source {
+    pub id: String,
+    pub name: String,
+    pub source_type: String,
+    pub width: Option<u32>,
+    pub height: Option<u32>,
+}
 
 /// Get the application version
 #[tauri::command]
@@ -38,3 +48,6 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
     }
     Ok(())
 }
+
+// Re-export screen capture commands
+pub use super::screen::enumerate_sources;
