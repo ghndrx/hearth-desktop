@@ -4,6 +4,7 @@ use nokhwa::pixel_format::RgbFormat;
 use nokhwa::utils::{CameraIndex, RequestedFormat, RequestedFormatType};
 use std::sync::Mutex;
 use tauri::State;
+use screenshots::Screen;
 
 /// Get the application version
 #[tauri::command]
@@ -99,4 +100,54 @@ pub async fn capture_frame(camera_index: u32) -> Result<Vec<u8>, String> {
         }
         Err(e) => Err(format!("Failed to initialize camera: {}", e)),
     }
+}
+
+/// Get available screens/displays for capture
+#[tauri::command]
+pub async fn get_screens() -> Result<Vec<String>, String> {
+    let screens = Screen::all().map_err(|e| format!("Failed to get screens: {}", e))?;
+    let screen_names = screens
+        .into_iter()
+        .enumerate()
+        .map(|(index, screen)| {
+            format!("Display {} ({}x{})", index, screen.display_info.width, screen.display_info.height)
+        })
+        .collect();
+    Ok(screen_names)
+}
+
+/// Capture the entire screen (primary display)
+#[tauri::command]
+pub async fn capture_screen() -> Result<Vec<u8>, String> {
+    let screens = Screen::all().map_err(|e| format!("Failed to get screens: {}", e))?;
+    let primary_screen = screens.into_iter().next()
+        .ok_or("No screens available")?;
+
+    let image = primary_screen.capture()
+        .map_err(|e| format!("Failed to capture screen: {}", e))?;
+
+    // Convert image to PNG bytes
+    let mut png_data = Vec::new();
+    image.save_png(&mut png_data)
+        .map_err(|e| format!("Failed to encode PNG: {}", e))?;
+
+    Ok(png_data)
+}
+
+/// Capture a specific screen by index
+#[tauri::command]
+pub async fn capture_screen_by_index(screen_index: usize) -> Result<Vec<u8>, String> {
+    let screens = Screen::all().map_err(|e| format!("Failed to get screens: {}", e))?;
+    let screen = screens.into_iter().nth(screen_index)
+        .ok_or(format!("Screen with index {} not found", screen_index))?;
+
+    let image = screen.capture()
+        .map_err(|e| format!("Failed to capture screen: {}", e))?;
+
+    // Convert image to PNG bytes
+    let mut png_data = Vec::new();
+    image.save_png(&mut png_data)
+        .map_err(|e| format!("Failed to encode PNG: {}", e))?;
+
+    Ok(png_data)
 }
