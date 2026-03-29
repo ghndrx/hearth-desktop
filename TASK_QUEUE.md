@@ -13,7 +13,7 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ### Thread: Screen Sharing (#03_screen_share_system.md)
 
-- [ ] **T-SCREEN-01**: Add `nokhwa` crate to `src-tauri/Cargo.toml` for cross-platform screen capture
+- [x] **T-SCREEN-01**: Add `nokhwa` crate to `src-tauri/Cargo.toml` for cross-platform screen capture (PR #65)
 - [ ] **T-SCREEN-02**: Implement `enumerate_sources()` Tauri command — list screens + windows
 - [ ] **T-SCREEN-03**: Build Source Picker modal UI (Svelte) with thumbnail previews
 - [ ] **T-SCREEN-04**: Implement `start_screen_share(sourceId, quality)` Tauri command
