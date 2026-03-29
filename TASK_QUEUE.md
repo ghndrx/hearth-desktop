@@ -1,11 +1,45 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
-Pipeline: Hearth Desktop PRD Competitive Analysis
+Last updated: 2026-03-29
+Pipeline: Discord Competitive Parity Analysis - Desktop Features
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Native File Integration (#12_native_file_integration_system.md)
+
+- [ ] **T-FILE-01**: Add `tauri-plugin-dialog`, `tauri-plugin-clipboard`, `tauri-plugin-fs` to Cargo.toml
+- [ ] **T-FILE-02**: Implement file type validation and security checks (whitelist, header validation)
+- [ ] **T-FILE-03**: Build FileDropZone.svelte component with drag & drop visual feedback
+- [ ] **T-FILE-04**: Implement native file dialog integration with multi-file selection
+- [ ] **T-FILE-05**: Add clipboard paste handling for images and files (Ctrl+V in chat)
+- [ ] **T-FILE-06**: Create FilePreviewModal.svelte with thumbnail generation for images
+- [ ] **T-FILE-07**: Implement chunked file upload with progress tracking and pause/resume
+- [ ] **T-FILE-08**: Register `hearth://` protocol handler for deep linking
+- [ ] **T-FILE-09**: Add `.hearth` file association for backup/export files
+
+### Thread: Rich System Tray & Window Management (#13_rich_system_tray_window_management.md)
+
+- [ ] **T-TRAY-01**: Implement dynamic tray icon generation with status overlays
+- [ ] **T-TRAY-02**: Build rich context menu with user status controls (online/away/DND/invisible)
+- [ ] **T-TRAY-03**: Add quick actions to tray menu (mute/deafen, open channels, settings)
+- [ ] **T-TRAY-04**: Implement cross-platform badge count system (macOS dock, Windows taskbar)
+- [ ] **T-TRAY-05**: Add unread message indicator overlay to tray icon
+- [ ] **T-TRAY-06**: Implement always-on-top window mode with keyboard shortcut
+- [ ] **T-TRAY-07**: Add minimize behavior options (taskbar, tray only, close-to-tray)
+- [ ] **T-TRAY-08**: Create window state persistence (position, size, monitor)
+- [ ] **T-TRAY-09**: Enhance notifications with action buttons (Reply, Mark Read, Join Voice)
+
+### Thread: Game Integration & Rich Presence (#14_game_integration_rich_presence.md)
+
+- [ ] **T-GAME-01**: Implement cross-platform game process detection and scanning
+- [ ] **T-GAME-02**: Build game database with top 100 popular games (Steam, Epic, Battle.net)
+- [ ] **T-GAME-03**: Create rich presence display system with game details and time tracking
+- [ ] **T-GAME-04**: Integrate Steam Web API for game library and achievements
+- [ ] **T-GAME-05**: Add Epic Games Store API integration
+- [ ] **T-GAME-06**: Build GameStatusCard.svelte component for user presence display
+- [ ] **T-GAME-07**: Implement social gaming features (Join Game, Ask to Join, Spectate)
+- [ ] **T-GAME-08**: Create party system with voice channel auto-join
+- [ ] **T-GAME-09**: Add privacy controls for game detection and presence sharing
 
 ---
 
