@@ -1,4 +1,5 @@
 use tauri_plugin_notification::NotificationExt;
+use serde::{Deserialize, Serialize};
 
 /// Get the application version
 #[tauri::command]
@@ -37,4 +38,47 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
         }
     }
     Ok(())
+}
+
+/// Data structure for screen/window sources
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct DesktopSource {
+    pub id: String,
+    pub name: String,
+    pub r#type: String, // 'screen' or 'window'
+    pub thumbnail: Option<String>, // base64 preview (optional)
+}
+
+/// Enumerate available screens and windows for screen sharing
+#[tauri::command]
+pub async fn enumerate_sources() -> Result<Vec<DesktopSource>, String> {
+    let mut sources = Vec::new();
+
+    // Get available screens using the screenshots crate
+    match screenshots::Screen::all() {
+        Ok(screens) => {
+            for (index, screen) in screens.iter().enumerate() {
+                let display_info = screen.display_info;
+                sources.push(DesktopSource {
+                    id: format!("screen_{}", index),
+                    name: format!("Screen {} ({}x{})",
+                        index + 1,
+                        display_info.width,
+                        display_info.height
+                    ),
+                    r#type: "screen".to_string(),
+                    thumbnail: None, // TODO: Generate thumbnails in future iteration
+                });
+            }
+        }
+        Err(e) => {
+            eprintln!("Failed to enumerate screens: {}", e);
+            return Err(format!("Failed to enumerate screens: {}", e));
+        }
+    }
+
+    // TODO: Add window enumeration in future iteration
+    // For now, we'll focus on screens which are the primary use case
+
+    Ok(sources)
 }
