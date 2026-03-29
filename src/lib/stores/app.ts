@@ -63,6 +63,9 @@ function createAppStore() {
 				document.documentElement.setAttribute('data-theme', savedTheme);
 			}
 
+			// Initialize settings
+			settings.init();
+
 			// Load auth token
 			const token = localStorage.getItem('hearth_token');
 			if (!token) {
@@ -165,19 +168,56 @@ function createChannelStore() {
 export const channels = createChannelStore();
 export const currentChannel = writable<Channel | null>(null);
 
+// Hotkey configuration interface
+export interface HotkeyConfig {
+	id: string;
+	description: string;
+	modifiers: string[];
+	key: string;
+	action: string;
+	enabled: boolean;
+}
+
 // Settings store
 export interface Settings {
 	notifications: boolean;
 	sounds: boolean;
 	compactMode: boolean;
 	fontSize: 'small' | 'medium' | 'large';
+	hotkeys: HotkeyConfig[];
 }
 
 const defaultSettings: Settings = {
 	notifications: true,
 	sounds: true,
 	compactMode: false,
-	fontSize: 'medium'
+	fontSize: 'medium',
+	hotkeys: [
+		{
+			id: 'toggle_main_window',
+			description: 'Toggle main window visibility',
+			modifiers: ['ctrl', 'shift'],
+			key: 'h',
+			action: 'toggle_main_window',
+			enabled: true
+		},
+		{
+			id: 'show_main_window',
+			description: 'Show main window',
+			modifiers: ['ctrl', 'shift'],
+			key: 's',
+			action: 'show_main_window',
+			enabled: false
+		},
+		{
+			id: 'hide_main_window',
+			description: 'Hide main window',
+			modifiers: ['ctrl', 'shift'],
+			key: 'd',
+			action: 'hide_main_window',
+			enabled: false
+		}
+	]
 };
 
 function createSettingsStore() {
@@ -210,6 +250,47 @@ function createSettingsStore() {
 			if (browser) {
 				localStorage.removeItem('hearth_settings');
 			}
+		},
+
+		updateHotkey(hotkeyId: string, updates: Partial<HotkeyConfig>) {
+			update((s) => {
+				const newSettings = {
+					...s,
+					hotkeys: s.hotkeys.map((hotkey) =>
+						hotkey.id === hotkeyId ? { ...hotkey, ...updates } : hotkey
+					)
+				};
+				if (browser) {
+					localStorage.setItem('hearth_settings', JSON.stringify(newSettings));
+				}
+				return newSettings;
+			});
+		},
+
+		addHotkey(hotkey: HotkeyConfig) {
+			update((s) => {
+				const newSettings = {
+					...s,
+					hotkeys: [...s.hotkeys, hotkey]
+				};
+				if (browser) {
+					localStorage.setItem('hearth_settings', JSON.stringify(newSettings));
+				}
+				return newSettings;
+			});
+		},
+
+		removeHotkey(hotkeyId: string) {
+			update((s) => {
+				const newSettings = {
+					...s,
+					hotkeys: s.hotkeys.filter((hotkey) => hotkey.id !== hotkeyId)
+				};
+				if (browser) {
+					localStorage.setItem('hearth_settings', JSON.stringify(newSettings));
+				}
+				return newSettings;
+			});
 		}
 	};
 }
