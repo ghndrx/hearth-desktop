@@ -1,11 +1,21 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
+Last updated: 2026-03-29
 Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Global Hotkeys (#12_global_hotkeys_system.md)
+
+- [ ] **T-HOTKEY-01**: Add `tauri-plugin-global-shortcut` and `rdev` crates for global input monitoring
+- [ ] **T-HOTKEY-02**: Implement cross-platform hotkey registration (Windows/macOS/Linux)
+- [ ] **T-HOTKEY-03**: Build hotkey configuration UI with key combination capture
+- [ ] **T-HOTKEY-04**: Implement Push-to-Talk (PTT) functionality with voice pipeline integration
+- [ ] **T-HOTKEY-05**: Add global mute/unmute toggle hotkey
+- [ ] **T-HOTKEY-06**: Implement deafen toggle for complete audio isolation
+- [ ] **T-HOTKEY-07**: Add permission handling for global input monitoring (especially macOS)
+- [ ] **T-HOTKEY-08**: Test hotkey latency (target < 50ms) and conflict detection
+- [ ] **T-HOTKEY-09**: Integrate hotkeys with existing voice infrastructure from PR #17
 
 ---
 
@@ -47,6 +57,30 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-THREAD-08**: Thread join/leave + notification preference toggle
 - [ ] **T-THREAD-09**: Thread unread badge indicators
 - [ ] **T-THREAD-10**: Integration test with real Hearth API thread endpoints
+
+### Thread: Advanced Window Management (#13_advanced_window_management.md)
+
+- [ ] **T-WINDOW-01**: Implement multi-window support with window identifier system
+- [ ] **T-WINDOW-02**: Add window state persistence (size, position, layout)
+- [ ] **T-WINDOW-03**: Build Picture-in-Picture (PiP) mode for video calls
+- [ ] **T-WINDOW-04**: Implement always-on-top functionality for gaming overlay
+- [ ] **T-WINDOW-05**: Add window transparency and opacity controls
+- [ ] **T-WINDOW-06**: Build window manager UI for creating/managing multiple windows
+- [ ] **T-WINDOW-07**: Implement window layout save/restore system
+- [ ] **T-WINDOW-08**: Add multi-monitor support with monitor-specific positioning
+- [ ] **T-WINDOW-09**: Test cross-platform window behavior and performance
+
+### Thread: Rich Tray Integration (#14_rich_tray_integration.md)
+
+- [ ] **T-TRAY-01**: Upgrade basic tray with rich context menu and quick actions
+- [ ] **T-TRAY-02**: Implement dynamic icon generation with status overlays
+- [ ] **T-TRAY-03**: Add notification badge system with unread message count
+- [ ] **T-TRAY-04**: Build tray icon animation system (pulse, flash, bounce)
+- [ ] **T-TRAY-05**: Implement status selection from tray menu (online/away/DND)
+- [ ] **T-TRAY-06**: Add voice channel quick actions (join/leave, mute toggle)
+- [ ] **T-TRAY-07**: Implement cross-platform tray theming (light/dark modes)
+- [ ] **T-TRAY-08**: Add quick reply and notification management from tray
+- [ ] **T-TRAY-09**: Test tray functionality across Windows/macOS/Linux desktop environments
 
 ---
 
