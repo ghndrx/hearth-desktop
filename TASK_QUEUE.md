@@ -67,3 +67,59 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - All P1 tasks depend on PRD #1 (text messaging) being stable
 - Screen share and video call both extend the WebRTC pipeline from PR #17 — coordinate to avoid conflicts
 - Thread UI (T-THREAD-03, T-THREAD-05) needs design spec from Hearth design team
+
+---
+
+## P0 — Critical (NEW — API Foundation)
+
+### Thread: API Client & WebSocket (PRD #14)
+
+- [ ] **T-API-01**: Create `src/lib/api/client.ts` — typed HTTP client wrapper (GET/POST/PUT/DELETE)
+- [ ] **T-API-02**: Create `src/lib/api/websocket.ts` — WebSocket client with auto-reconnect and heartbeat
+- [ ] **T-API-03**: Build authentication store (`src/lib/stores/auth.ts`) — JWT storage via tauri-plugin-store, token refresh logic
+- [ ] **T-API-04**: Create server/channel state stores (`src/lib/stores/servers.ts`, `src/lib/stores/channels.ts`)
+- [ ] **T-API-05**: Implement reconnection logic with exponential backoff (max 30s), offline message queue
+- [ ] **T-API-06**: Wire WebSocket events to Svelte stores (messages, typing, voice state, presence)
+- [ ] **T-API-07**: Add Tauri commands `getStoredToken()` / `clearStoredToken()` in Rust
+- [ ] **T-API-08**: Connection status indicator UI in Sidebar (connected/disconnected/reconnecting)
+- [ ] **T-API-09**: Integration test with real Hearth server WebSocket endpoint
+
+### Thread: Settings UI (PRD #14 dependency)
+
+- [ ] **T-SETTINGS-01**: Create Settings route/page (`src/routes/settings/+page.svelte`)
+- [ ] **T-SETTINGS-02**: Account section (display name, avatar preview — no upload yet)
+- [ ] **T-SETTINGS-03**: Notifications section (enable/disable, sound toggle)
+- [ ] **T-SETTINGS-04**: Audio/Video device selectors (enumerate devices, preview)
+- [ ] **T-SETTINGS-05**: Window behavior section (always-on-top toggle, minimize-to-tray toggle)
+- [ ] **T-SETTINGS-06**: Persist settings via `tauri-plugin-store`
+
+---
+
+## P1 — High (NEW — Desktop Integration)
+
+### Thread: System Tray Enhancement (PRD #15)
+
+- [ ] **T-TRAY-01**: Rewrite `src-tauri/src/tray.rs` with full context menu (Show, Mute, Disconnect, Quit)
+- [ ] **T-TRAY-02**: Implement minimize-to-tray behavior — hide window on minimize/close (configurable)
+- [ ] **T-TRAY-03**: Wire unread badge count to tray icon (macOS badge, tooltip on all platforms)
+- [ ] **T-TRAY-04**: Rich notification payloads — avatar, channel name, message preview in toast
+- [ ] **T-TRAY-05**: Notification sound playback on new message (configurable)
+- [ ] **T-TRAY-06**: Test tray behavior on Linux (X11 + Wayland), macOS, Windows
+
+### Thread: Window Management (PRD #16)
+
+- [ ] **T-WINDOW-01**: Implement `set_always_on_top()` Tauri command in Rust
+- [ ] **T-WINDOW-02**: Add "Always on Top" toggle button in voice controls UI
+- [ ] **T-WINDOW-03**: Register global shortcut Ctrl+Shift+T for always-on-top toggle
+- [ ] **T-WINDOW-04**: Persist and restore window position/size on restart (tauri-plugin-store)
+- [ ] **T-WINDOW-05**: Add settings UI toggle for "Always on Top" and "Minimize to Tray"
+- [ ] **T-WINDOW-06**: Visual indicator (icon/badge) when window is in always-on-top mode
+
+---
+
+## Notes (Updated)
+
+- **P0 tasks (T-API-*) MUST be completed before any feature PRDs can be validated end-to-end**
+- Screen share (T-SCREEN-*) can proceed in parallel — does not depend on API client
+- All P1 desktop integration tasks (T-TRAY-*, T-WINDOW-*) should be started in parallel with API client
+- Existing P1 thread tasks (T-SCREEN-*, T-VIDEO-*, T-THREAD-*) remain valid but need API client before integration testing
