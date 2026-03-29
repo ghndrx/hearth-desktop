@@ -54,6 +54,7 @@
     }
   },
   "plugins": {
+    "global-shortcut": {},
     "updater": {
       "pubkey": "",
       "endpoints": []
