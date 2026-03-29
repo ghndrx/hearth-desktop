@@ -1,11 +1,21 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
+Last updated: 2026-03-29
 Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Global Hotkeys (#12_global_hotkeys_system.md)
+
+- [ ] **T-HOTKEY-01**: Add `tauri-plugin-global-shortcut` dependency to Cargo.toml
+- [ ] **T-HOTKEY-02**: Implement hotkey registration/unregistration system in src-tauri/src/hotkeys.rs
+- [ ] **T-HOTKEY-05**: Integrate with WebRTC voice pipeline (PR #17) for PTT functionality
+- [ ] **T-HOTKEY-06**: Implement push-to-talk state machine (hold key to transmit, release to mute)
+
+### Thread: Advanced Tray System (#13_advanced_tray_system.md)
+
+- [ ] **T-TRAY-01**: Extend existing tray.rs with context menu builder (Show, Status, Voice, Quit)
+- [ ] **T-TRAY-05**: Implement minimize-to-tray preference setting (intercept close button)
 
 ---
 
@@ -48,17 +58,38 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-THREAD-09**: Thread unread badge indicators
 - [ ] **T-THREAD-10**: Integration test with real Hearth API thread endpoints
 
+### Thread: Global Hotkeys (#12_global_hotkeys_system.md)
+
+- [ ] **T-HOTKEY-03**: Build hotkey conflict detection and resolution system
+- [ ] **T-HOTKEY-04**: Add permission request flow for system access (macOS accessibility)
+- [ ] **T-HOTKEY-07**: Add mute/unmute toggle with visual feedback in UI
+- [ ] **T-HOTKEY-09**: Build hotkey customization UI settings panel
+
+### Thread: Advanced Tray System (#13_advanced_tray_system.md)
+
+- [ ] **T-TRAY-02**: Add status setting (Online/Away/DND) with persistence to local storage
+- [ ] **T-TRAY-03**: Implement quick voice channel actions in tray menu
+- [ ] **T-TRAY-04**: Add unread message badge overlay on tray icon
+- [ ] **T-TRAY-06**: Add always-on-top toggle with hotkey integration
+
+### Thread: Rich Notifications (#14_rich_notifications_system.md)
+
+- [ ] **T-NOTIFY-01**: Extend notification system for action buttons (Reply, Mark Read)
+- [ ] **T-NOTIFY-02**: Implement notification grouping/stacking by conversation
+- [ ] **T-NOTIFY-05**: Implement Do Not Disturb with scheduling (weekdays/weekends)
+- [ ] **T-NOTIFY-09**: Implement automatic idle/away detection via platform APIs
+
 ---
 
 ## P2 — Medium (Future)
 
 - [ ] **T-P2-01**: Screenshot capture standalone feature (screenshot hotkey → share to channel)
-- [ ] **T-P2-02**: Custom status messages (online/idle/dnd/custom)
-- [ ] **T-P2-03**: Per-channel notification sounds
-- [ ] **T-P2-04**: Keyboard shortcut customization UI
-- [ ] **T-P2-05**: Background blur for video (TensorFlow.js WASM / MediaPipe)
-- [ ] **T-P2-06**: Rich text editor (markdown toolbar, emoji picker)
-- [ ] **T-P2-07**: Message search with filters (from:, has:embed, during:, etc.)
+- [ ] **T-P2-02**: Background blur for video (TensorFlow.js WASM / MediaPipe)
+- [ ] **T-P2-03**: Rich text editor (markdown toolbar, emoji picker)
+- [ ] **T-P2-04**: Message search with filters (from:, has:embed, during:, etc.)
+- [ ] **T-P2-05**: Game overlay system for in-game voice controls
+- [ ] **T-P2-06**: URL protocol handling (hearth:// links for deep linking)
+- [ ] **T-P2-07**: Hardware device integration (gaming headsets, RGB sync)
 
 ---
 
@@ -67,3 +98,7 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - All P1 tasks depend on PRD #1 (text messaging) being stable
 - Screen share and video call both extend the WebRTC pipeline from PR #17 — coordinate to avoid conflicts
 - Thread UI (T-THREAD-03, T-THREAD-05) needs design spec from Hearth design team
+- **NEW**: P0 hotkeys and tray features are critical for Discord desktop parity
+- Global hotkeys (T-HOTKEY-*) require platform-specific permissions on macOS/Linux
+- Tray system (T-TRAY-*) should integrate with existing notification system
+- Rich notifications (T-NOTIFY-*) complement the tray system for complete UX
