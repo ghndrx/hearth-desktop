@@ -1,6 +1,9 @@
 use tauri_plugin_notification::NotificationExt;
 use screenshots::Screen;
 use serde::{Deserialize, Serialize};
+use nokhwa::pixel_format::RgbFormat;
+use nokhwa::utils::{RequestedFormat, RequestedFormatType};
+use nokhwa::Camera;
 
 /// Get the application version
 #[tauri::command]
@@ -105,6 +108,55 @@ pub async fn capture_screen(display_id: u32) -> Result<String, String> {
     // Convert to base64 encoded PNG
     let mut buffer = Vec::new();
     image.save_with_format(&mut std::io::Cursor::new(&mut buffer), image::ImageFormat::Png)
+        .map_err(|e| e.to_string())?;
+
+    let base64_image = base64::encode(&buffer);
+    Ok(format!("data:image/png;base64,{}", base64_image))
+}
+
+/// Camera information structure
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct CameraInfo {
+    pub index: u32,
+    pub name: String,
+}
+
+/// Get list of available cameras via nokhwa
+#[tauri::command]
+pub fn get_available_cameras() -> Result<Vec<CameraInfo>, String> {
+    let cameras = nokhwa::query_devices(nokhwa::utils::ApiBackend::Auto)
+        .map_err(|e| e.to_string())?;
+
+    let camera_info: Vec<CameraInfo> = cameras
+        .into_iter()
+        .enumerate()
+        .map(|(index, cam)| CameraInfo {
+            index: index as u32,
+            name: cam.name().unwrap_or_else(|| format!("Camera {}", index)),
+        })
+        .collect();
+
+    Ok(camera_info)
+}
+
+/// Capture an image from a camera by index using nokhwa
+#[tauri::command]
+pub fn capture_image_from_camera(camera_index: u32) -> Result<String, String> {
+    let requested = RequestedFormat::new::<RgbFormat>(RequestedFormatType::Auto);
+    let mut camera = Camera::new(camera_index, requested).map_err(|e| e.to_string())?;
+
+    let frame = camera.frame().map_err(|e| e.to_string())?;
+
+    // Convert frame to PNG via image crate
+    let img = image::ImageBuffer::from_raw(
+        frame.width(),
+        frame.height(),
+        frame.to_vec(),
+    ).ok_or_else(|| "Failed to create image buffer".to_string())?;
+
+    let mut buffer = Vec::new();
+    let mut cursor = std::io::Cursor::new(&mut buffer);
+    img.write_to(&mut cursor, image::ImageFormat::Png)
         .map_err(|e| e.to_string())?;
 
     let base64_image = base64::encode(&buffer);

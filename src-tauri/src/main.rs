@@ -35,6 +35,8 @@ fn main() {
             commands::get_displays,
             commands::capture_all_screens,
             commands::capture_screen,
+            commands::get_available_cameras,
+            commands::capture_image_from_camera,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
