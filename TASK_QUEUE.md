@@ -1,11 +1,42 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
+Last updated: 2026-03-30
 Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Desktop Integration (Critical for Discord Parity)
+
+#### Global Push-to-Talk System (#06_global_push_to_talk_system.md)
+
+- [ ] **T-PTT-01**: Add `tauri-plugin-global-shortcut` dependency to `src-tauri/Cargo.toml`
+- [ ] **T-PTT-02**: Implement `register_push_to_talk(shortcut)` Tauri command
+- [ ] **T-PTT-03**: Implement `unregister_push_to_talk(shortcut)` Tauri command
+- [ ] **T-PTT-04**: Create hotkey settings UI with conflict detection
+- [ ] **T-PTT-05**: Integrate PTT activation with existing WebRTC voice pipeline
+- [ ] **T-PTT-06**: Add system permissions handling for global shortcuts
+- [ ] **T-PTT-07**: Test PTT functionality across Windows/macOS/Linux
+- [ ] **T-PTT-08**: Add PTT visual feedback in system tray
+
+#### Enhanced System Tray (#07_enhanced_system_tray.md)
+
+- [ ] **T-TRAY-01**: Enhance `src-tauri/src/tray.rs` with context menu system
+- [ ] **T-TRAY-02**: Implement voice controls menu (mute/unmute/deafen)
+- [ ] **T-TRAY-03**: Implement status change menu (online/away/dnd/invisible)
+- [ ] **T-TRAY-04**: Add `update_tray_badge(count)` command for unread indicators
+- [ ] **T-TRAY-05**: Implement platform-specific badge count display
+- [ ] **T-TRAY-06**: Add tray icon state management (voice active, notifications)
+- [ ] **T-TRAY-07**: Connect tray controls to existing voice/status systems
+
+#### Minimize to Tray System (#08_minimize_to_tray_system.md)
+
+- [ ] **T-MINTRAY-01**: Implement `minimize_to_tray()` Tauri command
+- [ ] **T-MINTRAY-02**: Implement `restore_from_tray()` Tauri command
+- [ ] **T-MINTRAY-03**: Add window close event handler with user preference check
+- [ ] **T-MINTRAY-04**: Create tray behavior settings UI panel
+- [ ] **T-MINTRAY-05**: Implement single/double-click tray restoration options
+- [ ] **T-MINTRAY-06**: Add first-run onboarding for minimize-to-tray feature
+- [ ] **T-MINTRAY-07**: Test window focus restoration across platforms
 
 ---
 
