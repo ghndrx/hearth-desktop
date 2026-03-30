@@ -1,15 +1,55 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
-Pipeline: Hearth Desktop PRD Competitive Analysis
+Last updated: 2026-03-30
+Pipeline: Hearth Desktop PRD Competitive Analysis + Desktop Feature Parity
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Global Push-to-Talk System (#06_global_push_to_talk_system.md)
+
+- [ ] **T-PTT-01**: Add `tauri-plugin-global-shortcut = "2.0"` to `src-tauri/Cargo.toml`
+- [ ] **T-PTT-02**: Implement basic hotkey registration/unregistration in Rust backend
+- [ ] **T-PTT-03**: Integrate PTT with existing voice system in `src/lib/stores/voice.ts`
+- [ ] **T-PTT-04**: Create PTT settings panel in existing settings UI
+- [ ] **T-PTT-05**: Test PTT across Windows/macOS/Linux with <50ms latency requirement
+
+### Thread: Enhanced System Tray (#07_enhanced_system_tray_window_management.md)
+
+- [ ] **T-TRAY-01**: Extend existing `src-tauri/src/tray.rs` with rich context menu
+- [ ] **T-TRAY-02**: Implement badge count system with platform-specific handlers
+- [ ] **T-TRAY-03**: Add minimize-to-tray behavior and window restoration
+- [ ] **T-TRAY-04**: Add voice controls (mute/unmute) to tray context menu
+- [ ] **T-TRAY-05**: Test badge counts on Windows taskbar, macOS dock, Linux system tray
 
 ---
 
 ## P1 — High (Next Sprint)
+
+### Thread: Gaming Integration & Overlay (#08_gaming_integration_overlay_system.md)
+
+- [ ] **T-GAME-01**: Implement cross-platform process detection and game database
+- [ ] **T-GAME-02**: Build Steam platform integration and game identification
+- [ ] **T-GAME-03**: Add Epic Games, Origin, GOG platform support
+- [ ] **T-GAME-04**: Implement basic rich presence broadcasting
+- [ ] **T-GAME-05**: Design overlay architecture and window management system
+- [ ] **T-GAME-06**: Implement Windows DirectX overlay injection (high complexity)
+- [ ] **T-GAME-07**: Add Linux X11/Wayland overlay support
+- [ ] **T-GAME-08**: Create overlay UI components with voice controls
+
+### Thread: Multi-Window Support (#07_enhanced_system_tray_window_management.md)
+
+- [ ] **T-WINDOW-01**: Implement multi-window manager architecture
+- [ ] **T-WINDOW-02**: Create voice channel pop-out windows
+- [ ] **T-WINDOW-03**: Add always-on-top and opacity controls
+- [ ] **T-WINDOW-04**: Window state persistence and restoration
+- [ ] **T-WINDOW-05**: Create text channel pop-out windows (lower priority)
+
+### Thread: Advanced PTT Features (#06_global_push_to_talk_system.md)
+
+- [ ] **T-PTT-06**: System tray PTT controls integration
+- [ ] **T-PTT-07**: Audio/visual feedback implementation
+- [ ] **T-PTT-08**: Multi-hotkey support for power users
+- [ ] **T-PTT-09**: Enterprise policy compliance features
 
 ### Thread: Screen Sharing (#03_screen_share_system.md)
 
@@ -64,6 +104,20 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## Notes
 
-- All P1 tasks depend on PRD #1 (text messaging) being stable
-- Screen share and video call both extend the WebRTC pipeline from PR #17 — coordinate to avoid conflicts
+### P0 Dependencies & Coordination
+- **T-PTT-01 through T-PTT-05**: Essential for Discord feature parity, blocks gaming user migration
+- **T-TRAY-01 through T-TRAY-05**: Core desktop UX expectations, blocks professional user adoption
+- PTT integration must coordinate with existing voice system from PR #17
+- Tray badge counts need platform-specific testing (Windows/macOS/Linux variations)
+
+### P1 Dependencies & Coordination
+- **Gaming overlay tasks (T-GAME-05, T-GAME-06, T-GAME-07)**: High complexity, requires extensive compatibility testing
+- **Multi-window support**: Coordinate with existing voice/WebRTC infrastructure from PR #17
+- All P1 tasks depend on P0 items being stable (text messaging system + new P0 desktop features)
+- Screen share and video call both extend the WebRTC pipeline — coordinate to avoid conflicts
 - Thread UI (T-THREAD-03, T-THREAD-05) needs design spec from Hearth design team
+
+### Implementation Priority
+1. **Week 1-2**: Focus on P0 PTT and Tray enhancements (user migration blockers)
+2. **Week 3-4**: Gaming integration foundation (competitive differentiation)
+3. **Week 5-6**: Multi-window support and advanced features
