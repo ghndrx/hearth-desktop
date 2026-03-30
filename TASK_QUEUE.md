@@ -105,6 +105,47 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-WINDOW-09**: Create window management UI in main app settings
 - [ ] **T-WINDOW-10**: Test multi-window performance and memory usage optimization
 
+### Thread: Screen Share Zoom & Pan (#09_screenshare_zoom_pan.md)
+
+- [ ] **T-ZOOM-01**: Implement `ZoomPanState` TypeScript interface with scale/pan tracking
+- [ ] **T-ZOOM-02**: Create `useZoomPan` Svelte store for state management
+- [ ] **T-ZOOM-03**: Build `ZoomPanControls` component with zoom slider and reset button
+- [ ] **T-ZOOM-04**: Wire mouse wheel events to zoom handler (0.5x to 4.0x scale)
+- [ ] **T-ZOOM-05**: Implement click+drag pan with boundary clamping
+- [ ] **T-ZOOM-06**: Extend WebRTC signaling protocol to broadcast zoom/pan state
+- [ ] **T-ZOOM-07**: Apply remote zoom/pan transforms on subscriber side
+- [ ] **T-ZOOM-08**: Add keyboard shortcuts (Plus/Minus for zoom, Arrow keys for pan)
+- [ ] **T-ZOOM-09**: Build minimap showing current viewport position
+- [ ] **T-ZOOM-10**: Optimize for <5ms additional latency during zoom/pan operations
+
+### Thread: Desktop Navigation UX (#10_desktop_navigation_ux.md)
+
+- [ ] **T-NAV-01**: Implement `NavigationHistory` TypeScript class with back/forward stack
+- [ ] **T-NAV-02**: Create Svelte `navigation` store for history management
+- [ ] **T-NAV-03**: Add Back/Forward buttons to app header with visual indicators
+- [ ] **T-NAV-04**: Wire Alt+Left/Right keyboard shortcuts for navigation
+- [ ] **T-NAV-05**: Support mouse buttons 4/5 via `@mousedown` events
+- [ ] **T-NAV-06**: Add history dropdown showing back stack on button hover
+- [ ] **T-NAV-07**: Implement `getRoleMembers` API method for role member lookup
+- [ ] **T-NAV-08**: Create `RoleMemberList` modal component with search functionality
+- [ ] **T-NAV-09**: Parse @role mentions in message content for clickability
+- [ ] **T-NAV-10**: Add status grouping in role member list (Online/Idle/DND/Offline)
+
+### Thread: Widget-Based Overlay System (#11_widget_based_overlay.md)
+
+- [ ] **T-WIDGET-01**: Setup overlay window infrastructure (HWND_TOPMOST/NSWindow/layer-shell)
+- [ ] **T-WIDGET-02**: Build widget rendering framework with Svelte components
+- [ ] **T-WIDGET-03**: Implement widget drag-and-drop positioning with persistence
+- [ ] **T-WIDGET-04**: Create Action Bar widget (mute/deafen/video/share/leave controls)
+- [ ] **T-WIDGET-05**: Build Participant List widget with speaking indicators
+- [ ] **T-WIDGET-06**: Implement Voice Controls widget (volume sliders, PTT toggle)
+- [ ] **T-WIDGET-07**: Create Chat widget with message display and scrolling
+- [ ] **T-WIDGET-08**: Build Stream widget for picture-in-picture friend streams
+- [ ] **T-WIDGET-09**: Implement preset system (FPS/RTS/MMO/Custom layouts)
+- [ ] **T-WIDGET-10**: Add per-game auto-load presets with game detection integration
+- [ ] **T-WIDGET-11**: Optimize for <1.5% FPS impact and anti-cheat compatibility
+- [ ] **T-WIDGET-12**: Test widget functionality with top 50 games across platforms
+
 ---
 
 ## P2 — Medium (Future)
