@@ -3,8 +3,11 @@
 
 mod commands;
 mod tray;
+mod global_input;
 
 use tauri::Manager;
+use std::sync::{Arc, Mutex};
+use global_input::GlobalInputManager;
 
 fn main() {
     tauri::Builder::default()
@@ -19,14 +22,25 @@ fn main() {
         .setup(|app| {
             // Set up system tray
             tray::setup_tray(app)?;
-            
+
             // Get main window
             let window = app.get_webview_window("main").unwrap();
-            
+
             // Show window on tray icon click
             #[cfg(target_os = "macos")]
             window.set_decorations(true)?;
-            
+
+            // Set up global input manager
+            let mut input_manager = GlobalInputManager::new();
+            input_manager.set_app_handle(app.app_handle().clone());
+
+            // Start monitoring global input events
+            input_manager.start_monitoring()
+                .map_err(|e| format!("Failed to start global input monitoring: {}", e))?;
+
+            // Store the input manager in app state
+            app.manage(Arc::new(Mutex::new(input_manager)));
+
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
@@ -39,6 +53,9 @@ fn main() {
             commands::get_screens,
             commands::capture_screen,
             commands::capture_screen_by_index,
+            commands::register_global_shortcut,
+            commands::unregister_global_shortcut,
+            commands::get_global_shortcuts,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");

@@ -2,9 +2,10 @@ use tauri_plugin_notification::NotificationExt;
 use nokhwa::{Camera, CallbackCamera};
 use nokhwa::pixel_format::RgbFormat;
 use nokhwa::utils::{CameraIndex, RequestedFormat, RequestedFormatType};
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use tauri::State;
 use screenshots::Screen;
+use crate::global_input::{GlobalInputManager, GlobalShortcut};
 
 /// Get the application version
 #[tauri::command]
@@ -150,4 +151,33 @@ pub async fn capture_screen_by_index(screen_index: usize) -> Result<Vec<u8>, Str
         .map_err(|e| format!("Failed to encode PNG: {}", e))?;
 
     Ok(png_data)
+}
+
+/// Register a global shortcut
+#[tauri::command]
+pub async fn register_global_shortcut(
+    input_manager: State<'_, Arc<Mutex<GlobalInputManager>>>,
+    shortcut: GlobalShortcut,
+) -> Result<(), String> {
+    let manager = input_manager.lock().map_err(|e| format!("Failed to acquire lock: {}", e))?;
+    manager.register_shortcut(shortcut)
+}
+
+/// Unregister a global shortcut
+#[tauri::command]
+pub async fn unregister_global_shortcut(
+    input_manager: State<'_, Arc<Mutex<GlobalInputManager>>>,
+    shortcut_id: String,
+) -> Result<(), String> {
+    let manager = input_manager.lock().map_err(|e| format!("Failed to acquire lock: {}", e))?;
+    manager.unregister_shortcut(&shortcut_id)
+}
+
+/// Get all registered global shortcuts
+#[tauri::command]
+pub async fn get_global_shortcuts(
+    input_manager: State<'_, Arc<Mutex<GlobalInputManager>>>,
+) -> Result<Vec<GlobalShortcut>, String> {
+    let manager = input_manager.lock().map_err(|e| format!("Failed to acquire lock: {}", e))?;
+    manager.get_shortcuts()
 }
