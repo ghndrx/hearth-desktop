@@ -1,5 +1,15 @@
 // WebRTC Voice Infrastructure Types
 
+// Audio device enumeration (cross-platform via Tauri)
+export interface AudioDevice {
+	deviceId: string;
+	name: string;
+	deviceType: 'input' | 'output';
+	isDefault: boolean;
+	inputChannels: number;
+	outputChannels: number;
+}
+
 export interface Peer {
 	userId: string;
 	connection: RTCPeerConnection;

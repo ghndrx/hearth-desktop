@@ -32,6 +32,7 @@ fn main() {
             commands::get_app_version,
             commands::show_notification,
             commands::set_badge_count,
+            commands::enumerate_audio_devices,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
