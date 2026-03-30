@@ -79,6 +79,32 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-THREAD-09**: Thread unread badge indicators
 - [ ] **T-THREAD-10**: Integration test with real Hearth API thread endpoints
 
+### Thread: Game Overlay & Activity Detection (#07_game_overlay_and_activity_detection.md)
+
+- [ ] **T-GAME-01**: Research anti-cheat compatibility and create game whitelist for overlay support
+- [ ] **T-GAME-02**: Implement game process detection system using `sysinfo` crate
+- [ ] **T-GAME-03**: Build game database with popular titles and process names
+- [ ] **T-GAME-04**: Implement `create_game_overlay()` Tauri command with transparent window
+- [ ] **T-GAME-05**: Build overlay UI with voice controls, participant list, and quick chat
+- [ ] **T-GAME-06**: Add overlay positioning system over fullscreen games
+- [ ] **T-GAME-07**: Implement overlay hotkey toggle (default: Shift+Tab)
+- [ ] **T-GAME-08**: Add game activity detection and rich presence broadcasting
+- [ ] **T-GAME-09**: Create overlay performance monitoring to ensure <3% FPS impact
+- [ ] **T-GAME-10**: Test overlay functionality with 15+ popular games across platforms
+
+### Thread: Multi-Window Support & Desktop Integration (#08_multi_window_and_desktop_integration.md)
+
+- [ ] **T-WINDOW-01**: Implement `create_voice_window()` for pop-out voice channels
+- [ ] **T-WINDOW-02**: Implement `create_text_window()` for pop-out text channels
+- [ ] **T-WINDOW-03**: Build Picture-in-Picture (PiP) voice overlay system
+- [ ] **T-WINDOW-04**: Implement cross-window state synchronization for voice/mute status
+- [ ] **T-WINDOW-05**: Add window state persistence (position, size, always-on-top)
+- [ ] **T-WINDOW-06**: Build window layout save/restore system for different workflows
+- [ ] **T-WINDOW-07**: Implement cross-window drag & drop for files and content
+- [ ] **T-WINDOW-08**: Add multi-monitor support and positioning
+- [ ] **T-WINDOW-09**: Create window management UI in main app settings
+- [ ] **T-WINDOW-10**: Test multi-window performance and memory usage optimization
+
 ---
 
 ## P2 — Medium (Future)
