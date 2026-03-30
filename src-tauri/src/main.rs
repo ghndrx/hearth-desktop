@@ -15,6 +15,7 @@ fn main() {
         ))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .setup(|app| {
             // Set up system tray
             tray::setup_tray(app)?;
@@ -32,6 +33,9 @@ fn main() {
             commands::get_app_version,
             commands::show_notification,
             commands::set_badge_count,
+            commands::hotkeys::register_hotkey,
+            commands::hotkeys::unregister_hotkey,
+            commands::hotkeys::unregister_all_hotkeys,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
