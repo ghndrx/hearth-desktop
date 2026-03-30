@@ -17,6 +17,42 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-HOTKEY-08**: Test hotkey latency (target < 50ms) and conflict detection
 - [ ] **T-HOTKEY-09**: Integrate hotkeys with existing voice infrastructure from PR #17
 
+### Thread: Gaming Overlay (#15_gaming_overlay_system.md)
+
+- [ ] **T-OVERLAY-01**: Add graphics API detection library (DirectX, OpenGL, Vulkan detection)
+- [ ] **T-OVERLAY-02**: Implement basic overlay injector for DirectX 11 games
+- [ ] **T-OVERLAY-03**: Build overlay window management and rendering pipeline
+- [ ] **T-OVERLAY-04**: Create game process detection and monitoring system
+- [ ] **T-OVERLAY-05**: Implement global overlay show/hide hotkey with game compatibility
+- [ ] **T-OVERLAY-06**: Build voice controls UI for overlay (mute, deafen, volume)
+- [ ] **T-OVERLAY-07**: Add text chat interface within overlay with message sending
+- [ ] **T-OVERLAY-08**: Implement anti-cheat compatibility and safe injection methods
+- [ ] **T-OVERLAY-09**: Test with top 20 Steam games and major anti-cheat systems
+
+### Thread: Rich Notifications (#16_rich_notifications_system.md)
+
+- [ ] **T-NOTIF-01**: Build notification manager with platform-specific handlers
+- [ ] **T-NOTIF-02**: Implement rich notification templates with avatars and previews
+- [ ] **T-NOTIF-03**: Add interactive notification buttons (Reply, Mark as Read, Mute)
+- [ ] **T-NOTIF-04**: Create direct reply system with inline text input
+- [ ] **T-NOTIF-05**: Implement Windows toast notifications with action buttons
+- [ ] **T-NOTIF-06**: Add macOS User Notifications with quick reply support
+- [ ] **T-NOTIF-07**: Build Linux notification system with DBus integration
+- [ ] **T-NOTIF-08**: Add notification grouping and conversation threading
+- [ ] **T-NOTIF-09**: Integrate with existing message pipeline and voice call notifications
+
+### Thread: File & Media Handling (#17_file_media_handling_system.md)
+
+- [ ] **T-FILE-01**: Implement cross-platform drag-and-drop file handling
+- [ ] **T-FILE-02**: Build file upload manager with progress tracking and cancellation
+- [ ] **T-FILE-03**: Add thumbnail generation for images, videos, and documents
+- [ ] **T-FILE-04**: Create image preview modal with zoom and navigation controls
+- [ ] **T-FILE-05**: Implement embedded video player with playback controls
+- [ ] **T-FILE-06**: Build file download manager with resume capability
+- [ ] **T-FILE-07**: Add file cache system with LRU eviction and size limits
+- [ ] **T-FILE-08**: Create file validation and security scanning system
+- [ ] **T-FILE-09**: Integrate with message system for file attachment sending/receiving
+
 ---
 
 ## P1 — High (Next Sprint)
