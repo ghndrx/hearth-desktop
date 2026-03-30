@@ -1,15 +1,53 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
-Pipeline: Hearth Desktop PRD Competitive Analysis
+Last updated: 2026-03-30
+Pipeline: Hearth Desktop Discord Parity Analysis
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Advanced Audio System (#08_advanced_audio_system.md)
+
+- [ ] **T-AUDIO-01**: Implement cross-platform audio device enumeration (WASAPI/Core Audio/PipeWire)
+- [ ] **T-AUDIO-02**: Add hot-swapping audio devices without voice disconnection
+- [ ] **T-AUDIO-03**: Implement WebRTC audio track replacement for seamless device switching
+- [ ] **T-AUDIO-04**: Build basic audio ducking system for major applications (browsers, games, Spotify)
+
+### Thread: Multi-Window Architecture (#07_multi_window_architecture.md)
+
+- [ ] **T-WINDOW-01**: Implement Tauri multi-window manager with state synchronization
+- [ ] **T-WINDOW-02**: Build voice channel popout windows with compact UI
+- [ ] **T-WINDOW-03**: Add always-on-top and click-through window modes
+- [ ] **T-WINDOW-04**: Implement cross-window WebRTC voice state synchronization
 
 ---
 
 ## P1 — High (Next Sprint)
+
+### Thread: Game Overlay System (#06_game_overlay_system.md)
+
+- [ ] **T-OVERLAY-01**: Research and implement DirectX/OpenGL hook injection for Windows
+- [ ] **T-OVERLAY-02**: Build Dear ImGui overlay renderer with WebRTC voice integration
+- [ ] **T-OVERLAY-03**: Implement game process detection and automatic overlay activation
+- [ ] **T-OVERLAY-04**: Add voice activity visualization and participant list overlay
+- [ ] **T-OVERLAY-05**: Build overlay quick controls (mute/deafen buttons with hotkeys)
+- [ ] **T-OVERLAY-06**: Implement FPS impact optimization (<2% target)
+- [ ] **T-OVERLAY-07**: Add Linux overlay support (XDG Desktop Portal, X11/Wayland)
+- [ ] **T-OVERLAY-08**: Test anti-cheat compatibility (Valorant, CS2, Apex Legends)
+
+### Thread: Advanced Audio System (Continued)
+
+- [ ] **T-AUDIO-05**: Add hardware acceleration support (NVIDIA RTX Voice, AMD, Intel GNA)
+- [ ] **T-AUDIO-06**: Implement per-application volume control with smooth fading
+- [ ] **T-AUDIO-07**: Build multi-stream audio routing (voice/media/notifications to different devices)
+- [ ] **T-AUDIO-08**: Add advanced audio processing (noise suppression, echo cancellation, AGC)
+- [ ] **T-AUDIO-09**: Build comprehensive audio device management UI with testing
+
+### Thread: Multi-Window Architecture (Continued)
+
+- [ ] **T-WINDOW-05**: Implement text channel popout windows with full functionality
+- [ ] **T-WINDOW-06**: Build Picture-in-Picture voice overlay with auto-hide
+- [ ] **T-WINDOW-07**: Add window positioning memory and edge-snapping for PiP mode
+- [ ] **T-WINDOW-08**: Implement platform-specific window management (taskbar grouping, Spaces, etc.)
 
 ### Thread: Screen Sharing (#03_screen_share_system.md)
 
