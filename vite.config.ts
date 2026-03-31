@@ -1,3 +1,4 @@
+/// <reference types="vitest" />
 import { sveltekit } from '@sveltejs/kit/vite';
 import { defineConfig } from 'vite';
 
@@ -10,5 +11,9 @@ export default defineConfig({
 		watch: {
 			ignored: ['**/src-tauri/**']
 		}
+	},
+	test: {
+		globals: true,
+		environment: 'node',
 	}
 });

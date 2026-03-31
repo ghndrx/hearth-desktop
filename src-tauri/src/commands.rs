@@ -1,4 +1,5 @@
 use tauri_plugin_notification::NotificationExt;
+use crate::idle::{self, IdleInfo};
 
 /// Get the application version
 #[tauri::command]
@@ -37,4 +38,30 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
         }
     }
     Ok(())
+}
+
+/// Get the current system idle time information
+#[tauri::command]
+pub async fn get_idle_time() -> Result<IdleInfo, String> {
+    idle::get_idle_time()
+}
+
+/// Get the current system idle time with custom threshold
+#[tauri::command]
+pub async fn get_idle_time_with_threshold(threshold_seconds: u64) -> Result<IdleInfo, String> {
+    idle::get_idle_time_with_threshold(threshold_seconds)
+}
+
+/// Check if the system is currently idle (uses default 5-minute threshold)
+#[tauri::command]
+pub async fn is_system_idle() -> Result<bool, String> {
+    let idle_info = idle::get_idle_time()?;
+    Ok(idle_info.is_idle)
+}
+
+/// Get just the idle time in seconds
+#[tauri::command]
+pub async fn get_idle_seconds() -> Result<u64, String> {
+    let idle_info = idle::get_idle_time()?;
+    Ok(idle_info.idle_seconds)
 }

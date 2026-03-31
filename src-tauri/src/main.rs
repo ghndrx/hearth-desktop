@@ -2,6 +2,7 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod commands;
+mod idle;
 mod tray;
 
 use tauri::Manager;
@@ -32,6 +33,10 @@ fn main() {
             commands::get_app_version,
             commands::show_notification,
             commands::set_badge_count,
+            commands::get_idle_time,
+            commands::get_idle_time_with_threshold,
+            commands::is_system_idle,
+            commands::get_idle_seconds,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
