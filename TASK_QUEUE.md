@@ -5,7 +5,21 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Global Hotkeys System (#07_global_hotkeys_system.md)
+
+- [ ] **T-HOTKEY-01**: Add `tauri-plugin-global-shortcut` and `rdev` dependencies to Cargo.toml
+- [ ] **T-HOTKEY-02**: Implement global push-to-talk hotkey registration (default F13)
+- [ ] **T-HOTKEY-03**: Implement global mute/unmute toggle with system tray visual feedback
+- [ ] **T-HOTKEY-04**: Add hotkey conflict detection and resolution system
+- [ ] **T-HOTKEY-05**: Build hotkey settings UI with live testing capability
+
+### Thread: Advanced System Tray (#06_advanced_system_tray_window_management.md)
+
+- [ ] **T-TRAY-01**: Implement rich context menu for system tray (voice controls, settings, quit)
+- [ ] **T-TRAY-02**: Add minimize to tray functionality and user preference setting
+- [ ] **T-TRAY-03**: Implement badge count notifications on tray icon cross-platform
+- [ ] **T-TRAY-04**: Add window state persistence (size, position, multi-monitor support)
+- [ ] **T-TRAY-05**: Implement always-on-top window mode with tray menu toggle
 
 ---
 
@@ -34,6 +48,19 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-VIDEO-07**: Implement adaptive video quality (scale resolution/FPS by participant count)
 - [ ] **T-VIDEO-08**: Integrate video toggle button into voice channel UI
 - [ ] **T-VIDEO-09**: Test WebRTC video with 4+ simultaneous participants
+
+### Thread: Game Overlay System (#08_game_overlay_system.md)
+
+- [ ] **T-OVERLAY-01**: Add overlay dependencies (wgpu, winit, imgui) to Cargo.toml
+- [ ] **T-OVERLAY-02**: Implement basic game process detection system
+- [ ] **T-OVERLAY-03**: Build core overlay rendering infrastructure with ImGui
+- [ ] **T-OVERLAY-04**: Implement overlay hotkey activation (default Shift+Tab)
+- [ ] **T-OVERLAY-05**: Create minimalist in-game voice controls interface
+- [ ] **T-OVERLAY-06**: Add DirectX 11/12 hooking for Windows game compatibility
+- [ ] **T-OVERLAY-07**: Implement performance monitoring (FPS impact, memory usage)
+- [ ] **T-OVERLAY-08**: Build in-game text chat slide-in interface
+- [ ] **T-OVERLAY-09**: Add OpenGL/Vulkan support for Linux gaming
+- [ ] **T-OVERLAY-10**: Test compatibility with top 20 Steam games
 
 ### Thread: Message Threads (#05_message_threads_system.md)
 
