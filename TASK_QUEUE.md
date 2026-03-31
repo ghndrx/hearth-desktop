@@ -5,6 +5,33 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
+### Thread: Auto-Away/Idle Detection System (#09_auto_away_idle_detection_system.md)
+
+- [ ] **T-IDLE-01**: Implement cross-platform system idle time detection (Windows/macOS/Linux)
+- [ ] **T-IDLE-02**: Add presence manager with configurable idle threshold (5-30min, default 10min)
+- [ ] **T-IDLE-03**: Implement automatic status updates (Online ↔ Away based on activity)
+- [ ] **T-IDLE-04**: Add screen lock detection for instant Away status
+- [ ] **T-IDLE-05**: Build idle detection settings UI with threshold configuration
+- [ ] **T-IDLE-06**: Integrate with voice system (disable auto-away during voice channels)
+
+### Thread: Rich Interactive Notifications (#10_rich_interactive_notifications.md)
+
+- [ ] **T-NOTIFY-01**: Enhance notification system with interactive actions (Reply, Mark Read, React)
+- [ ] **T-NOTIFY-02**: Add rich content display (avatars, server/channel context, formatted text)
+- [ ] **T-NOTIFY-03**: Implement reply-from-notification capability without opening app
+- [ ] **T-NOTIFY-04**: Build notification center with grouped notifications and history
+- [ ] **T-NOTIFY-05**: Add notification management (snooze, dismiss, batch operations)
+- [ ] **T-NOTIFY-06**: Implement quiet hours and DND integration
+
+### Thread: Custom Notification Sounds (#11_custom_notification_sounds.md)
+
+- [ ] **T-SOUND-01**: Implement audio playback engine with rodio (MP3/WAV/OGG/M4A support)
+- [ ] **T-SOUND-02**: Build hierarchical sound system (Global → Server → Channel → User)
+- [ ] **T-SOUND-03**: Add custom sound file upload, validation, and management system
+- [ ] **T-SOUND-04**: Build sound selector UI with preview capability
+- [ ] **T-SOUND-05**: Implement per-server and per-channel sound assignment interface
+- [ ] **T-SOUND-06**: Add independent notification volume control
+
 ### Thread: Global Hotkeys System (#07_global_hotkeys_system.md)
 
 - [ ] **T-HOTKEY-01**: Add `tauri-plugin-global-shortcut` and `rdev` dependencies to Cargo.toml
@@ -74,6 +101,14 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-THREAD-08**: Thread join/leave + notification preference toggle
 - [ ] **T-THREAD-09**: Thread unread badge indicators
 - [ ] **T-THREAD-10**: Integration test with real Hearth API thread endpoints
+
+### Thread: Audio Device Management (New Priority)
+
+- [ ] **T-AUDIO-01**: Implement hardware audio device detection and enumeration
+- [ ] **T-AUDIO-02**: Add independent input/output audio device selection interface
+- [ ] **T-AUDIO-03**: Implement audio device hotswapping without voice interruption
+- [ ] **T-AUDIO-04**: Add audio ducking (lower other apps during voice calls)
+- [ ] **T-AUDIO-05**: Build per-application volume control for Hearth Desktop
 
 ---
 
