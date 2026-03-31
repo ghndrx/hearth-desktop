@@ -19,6 +19,7 @@ tauri-plugin-store = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
+nokhwa = { version = "0.10", features = ["input-v4l", "input-avfoundation", "input-msmf", "decoding"] }
 
 [profile.release]
 panic = "abort"
