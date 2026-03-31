@@ -1,6 +1,8 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
 
+export type UserStatus = 'online' | 'away' | 'dnd' | 'invisible';
+
 export interface User {
 	id: string;
 	username: string;
@@ -38,6 +40,7 @@ export interface AppState {
 	loading: boolean;
 	initialized: boolean;
 	theme: 'dark' | 'light' | 'midnight';
+	userStatus: UserStatus;
 }
 
 const initialState: AppState = {
@@ -45,7 +48,8 @@ const initialState: AppState = {
 	token: null,
 	loading: true,
 	initialized: false,
-	theme: 'dark'
+	theme: 'dark',
+	userStatus: 'online'
 };
 
 function createAppStore() {
@@ -63,10 +67,19 @@ function createAppStore() {
 				document.documentElement.setAttribute('data-theme', savedTheme);
 			}
 
+			// Load user status preference
+			const savedStatus = localStorage.getItem('hearth_user_status') as UserStatus | null;
+
 			// Load auth token
 			const token = localStorage.getItem('hearth_token');
 			if (!token) {
-				update((s) => ({ ...s, loading: false, initialized: true, theme: savedTheme || 'dark' }));
+				update((s) => ({
+					...s,
+					loading: false,
+					initialized: true,
+					theme: savedTheme || 'dark',
+					userStatus: savedStatus || 'online'
+				}));
 				return;
 			}
 
@@ -76,7 +89,8 @@ function createAppStore() {
 				token,
 				loading: false,
 				initialized: true,
-				theme: savedTheme || 'dark'
+				theme: savedTheme || 'dark',
+				userStatus: savedStatus || 'online'
 			}));
 		},
 
@@ -86,6 +100,13 @@ function createAppStore() {
 				document.documentElement.setAttribute('data-theme', theme);
 			}
 			update((s) => ({ ...s, theme }));
+		},
+
+		setUserStatus(status: UserStatus) {
+			if (browser) {
+				localStorage.setItem('hearth_user_status', status);
+			}
+			update((s) => ({ ...s, userStatus: status }));
 		},
 
 		setUser(user: User | null) {
@@ -107,6 +128,7 @@ function createAppStore() {
 			if (browser) {
 				localStorage.removeItem('hearth_token');
 				localStorage.removeItem('hearth_refresh_token');
+				localStorage.removeItem('hearth_user_status');
 			}
 			set({ ...initialState, loading: false, initialized: true });
 		}
@@ -120,6 +142,7 @@ export const user = derived(app, ($app) => $app.user);
 export const isAuthenticated = derived(app, ($app) => !!$app.user);
 export const isLoading = derived(app, ($app) => $app.loading);
 export const currentTheme = derived(app, ($app) => $app.theme);
+export const userStatus = derived(app, ($app) => $app.userStatus);
 
 // Server store
 function createServerStore() {

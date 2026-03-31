@@ -38,3 +38,32 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
     }
     Ok(())
 }
+
+/// Show the main window (restore from tray)
+#[tauri::command]
+pub async fn show_main_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.show().map_err(|e| e.to_string())?;
+        window.set_focus().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+/// Hide the main window (minimize to tray)
+#[tauri::command]
+pub async fn hide_main_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.hide().map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+/// Set the tray tooltip with current status information
+#[tauri::command]
+pub async fn set_tray_tooltip(app: tauri::AppHandle, tooltip: String) -> Result<(), String> {
+    use tauri::Manager;
+    if let Some(tray) = app.tray_by_id("main") {
+        tray.set_tooltip(Some(&tooltip)).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
