@@ -16,9 +16,12 @@ tauri-plugin-notification = "2"
 tauri-plugin-autostart = "2"
 tauri-plugin-updater = "2"
 tauri-plugin-store = "2"
+tauri-plugin-global-shortcut = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
+nokhwa = { version = "0.10", features = ["input-v4l", "input-msmf", "input-avfoundation"] }
+base64 = "0.21"
 
 [profile.release]
 panic = "abort"
