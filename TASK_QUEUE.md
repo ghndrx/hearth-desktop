@@ -64,6 +64,33 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-NOTIFY-08**: Build comprehensive notification settings UI
 - [ ] **T-NOTIFY-09**: Test <500ms display latency and 95%+ delivery rate
 
+### Thread: Protocol Handler System (#12_protocol_handler_system.md)
+
+- [ ] **T-PROTO-01**: Design URL schema and routing table
+- [ ] **T-PROTO-02**: Implement `DeepLinkRouter` in Rust
+- [ ] **T-PROTO-03**: Add protocol registration to Tauri config
+- [ ] **T-PROTO-04**: Create IPC command `handle_deep_link(url)`
+- [ ] **T-PROTO-05**: Windows protocol registration (installer + registry)
+- [ ] **T-PROTO-06**: macOS URL scheme handling (Info.plist + NSAppleEventManager)
+- [ ] **T-PROTO-07**: Linux .desktop file + MIME association
+- [ ] **T-PROTO-08**: Test cross-platform protocol activation
+- [ ] **T-PROTO-09**: Extend frontend router for deep link navigation
+- [ ] **T-PROTO-10**: Add loading states for external link handling
+- [ ] **T-PROTO-11**: Error handling UI (invalid invites, network failures)
+- [ ] **T-PROTO-12**: Integration testing with real invite flows
+
+### Thread: Advanced Audio Features (#14_advanced_audio_features.md)
+
+- [ ] **T-AUDIO-01**: Research and select noise suppression library (WebRTC vs. custom)
+- [ ] **T-AUDIO-02**: Implement AudioPipeline architecture in Rust
+- [ ] **T-AUDIO-03**: Add enhanced echo cancellation algorithms
+- [ ] **T-AUDIO-04**: Build automatic gain control with attack/release settings
+- [ ] **T-AUDIO-05**: Platform-specific audio backend optimization
+- [ ] **T-AUDIO-06**: Implement AudioDeviceManager with hot-swap detection
+- [ ] **T-AUDIO-07**: Build device profile system (save/load settings per device)
+- [ ] **T-AUDIO-08**: Add automatic device switching logic
+- [ ] **T-AUDIO-09**: Hardware button integration (mute, volume, media keys)
+
 ### Thread: Game Overlay System (#07_game_overlay_system.md) *Depends on T-HOTKEY*
 
 - [ ] **T-OVERLAY-01**: Research and implement DirectX/Vulkan overlay injection
@@ -116,6 +143,25 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-THREAD-08**: Thread join/leave + notification preference toggle
 - [ ] **T-THREAD-09**: Thread unread badge indicators
 - [ ] **T-THREAD-10**: Integration test with real Hearth API thread endpoints
+
+### Thread: Multi-Window Support (#13_multi_window_support.md)
+
+- [ ] **T-WINDOW-01**: Design WindowManager architecture and state model
+- [ ] **T-WINDOW-02**: Implement multi-window Tauri configuration
+- [ ] **T-WINDOW-03**: Create window factory pattern for different types
+- [ ] **T-WINDOW-04**: Build window state persistence system
+- [ ] **T-WINDOW-05**: Add "Pop out channel" context menu option
+- [ ] **T-WINDOW-06**: Create compact channel layout for popout windows
+- [ ] **T-WINDOW-07**: Implement cross-window message synchronization
+- [ ] **T-WINDOW-08**: Add window close/restore flows
+- [ ] **T-WINDOW-09**: Build compact voice controls popout
+- [ ] **T-WINDOW-10**: Implement always-on-top toggle with system permissions
+- [ ] **T-WINDOW-11**: Create picture-in-picture video component
+- [ ] **T-WINDOW-12**: Add resizing and positioning controls
+- [ ] **T-WINDOW-13**: Multi-monitor support with DPI awareness
+- [ ] **T-WINDOW-14**: Window state restoration across app restarts
+- [ ] **T-WINDOW-15**: Keyboard shortcuts for window management
+- [ ] **T-WINDOW-16**: Integration testing across platforms
 
 ---
 
