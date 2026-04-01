@@ -1,15 +1,49 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
+Last updated: 2026-04-01
 Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Native File System Integration (#12_native_file_system_integration.md)
+
+- [ ] **T-FILES-01**: Implement platform-specific file dialog APIs (Windows, macOS, Linux)
+- [ ] **T-FILES-02**: Create unified file system abstraction layer
+- [ ] **T-FILES-03**: Add drag-drop support from OS file managers
+- [ ] **T-FILES-04**: Build file upload queue with progress tracking
+- [ ] **T-FILES-05**: Implement thumbnail generation for images/videos
+- [ ] **T-FILES-06**: Add metadata extraction for major file types
+- [ ] **T-FILES-07**: Build preview panel UI with file details
+- [ ] **T-FILES-08**: Create thumbnail caching system
+- [ ] **T-FILES-09**: Test cross-platform file operations and compatibility
+
+### Thread: Advanced Accessibility Support (#13_advanced_accessibility_support.md)
+
+- [ ] **T-A11Y-01**: Implement semantic HTML structure with ARIA landmarks
+- [ ] **T-A11Y-02**: Add comprehensive ARIA labels and descriptions
+- [ ] **T-A11Y-03**: Build accessibility tree for complex UI components
+- [ ] **T-A11Y-04**: Integrate platform accessibility APIs (UIA, NSAccessibility, AT-SPI)
+- [ ] **T-A11Y-05**: Implement high contrast themes meeting WCAG AA standards
+- [ ] **T-A11Y-06**: Add font scaling and magnification support (400% zoom)
+- [ ] **T-A11Y-07**: Build enhanced focus indicators
+- [ ] **T-A11Y-08**: Ensure complete keyboard navigation for all features
+- [ ] **T-A11Y-09**: WCAG 2.1 AA compliance validation and testing
 
 ---
 
 ## P1 — High (Next Sprint)
+
+### Thread: Advanced Audio/Video Processing (#14_advanced_audio_video_processing.md)
+
+- [ ] **T-AUDIO-01**: Implement real-time audio DSP pipeline
+- [ ] **T-AUDIO-02**: Add noise suppression using WebRTC audio processing
+- [ ] **T-AUDIO-03**: Build audio device enumeration and routing system
+- [ ] **T-AUDIO-04**: Create basic audio effects (EQ, compressor, gate)
+- [ ] **T-AUDIO-05**: Implement background blur using depth estimation
+- [ ] **T-AUDIO-06**: Add virtual background replacement with ML
+- [ ] **T-AUDIO-07**: Build real-time video filters and color correction
+- [ ] **T-AUDIO-08**: Optimize GPU acceleration for video effects
+- [ ] **T-AUDIO-09**: Test with content creator community for quality validation
 
 ### Thread: Screen Sharing (#03_screen_share_system.md)
 
