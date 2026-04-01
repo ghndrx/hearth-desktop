@@ -1,11 +1,45 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
+Last updated: 2026-04-01
 Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Global Hotkeys (#06_global_hotkeys_system.md)
+
+- [ ] **T-HOTKEY-01**: Add `global-hotkey` crate to `src-tauri/Cargo.toml`
+- [ ] **T-HOTKEY-02**: Implement `HotkeyManager` struct with cross-platform registration
+- [ ] **T-HOTKEY-03**: Create Tauri commands `register_hotkey()`, `unregister_hotkey()`
+- [ ] **T-HOTKEY-04**: Implement `ActionRouter` to map hotkey events to voice actions
+- [ ] **T-HOTKEY-05**: Connect hotkeys to existing voice system (mute, push-to-talk)
+- [ ] **T-HOTKEY-06**: Add hotkey conflict detection and resolution logic
+- [ ] **T-HOTKEY-07**: Build hotkey configuration UI in settings panel
+- [ ] **T-HOTKEY-08**: Add visual feedback for active hotkeys in system tray
+- [ ] **T-HOTKEY-09**: Test <50ms latency requirement across platforms
+
+### Thread: Rich Desktop Notifications (#08_rich_desktop_notifications.md)
+
+- [ ] **T-NOTIFY-01**: Implement `NotificationManager` with platform-specific backends
+- [ ] **T-NOTIFY-02**: Add rich content support (avatar, media previews, formatting)
+- [ ] **T-NOTIFY-03**: Implement interactive actions (reply, mark read, join voice)
+- [ ] **T-NOTIFY-04**: Build notification grouping and management system
+- [ ] **T-NOTIFY-05**: Add priority levels and quiet hours functionality
+- [ ] **T-NOTIFY-06**: Deep OS integration (Action Center, Notification Center)
+- [ ] **T-NOTIFY-07**: Implement system tray badge count display
+- [ ] **T-NOTIFY-08**: Build comprehensive notification settings UI
+- [ ] **T-NOTIFY-09**: Test <500ms display latency and 95%+ delivery rate
+
+### Thread: Game Overlay System (#07_game_overlay_system.md) *Depends on T-HOTKEY*
+
+- [ ] **T-OVERLAY-01**: Research and implement DirectX/Vulkan overlay injection
+- [ ] **T-OVERLAY-02**: Create shared memory IPC between game and host process
+- [ ] **T-OVERLAY-03**: Implement game process detection and monitoring
+- [ ] **T-OVERLAY-04**: Build basic overlay rendering with ImGui or custom renderer
+- [ ] **T-OVERLAY-05**: Connect overlay to existing WebRTC voice infrastructure
+- [ ] **T-OVERLAY-06**: Add voice participant display with speaking indicators
+- [ ] **T-OVERLAY-07**: Implement overlay positioning and transparency controls
+- [ ] **T-OVERLAY-08**: Add anti-cheat compatibility (BattlEye, EasyAntiCheat coordination)
+- [ ] **T-OVERLAY-09**: Test <5% performance impact across 50+ popular games
 
 ---
 
