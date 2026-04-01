@@ -17,6 +17,41 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-HOTKEY-08**: Add visual feedback for active hotkeys in system tray
 - [ ] **T-HOTKEY-09**: Test <50ms latency requirement across platforms
 
+### Thread: Dynamic Tray Context Menu (#09_dynamic_tray_context_menu.md)
+
+- [ ] **T-TRAY-01**: Design tray menu structure and state model
+- [ ] **T-TRAY-02**: Implement `TrayMenuState` struct and IPC commands in Rust
+- [ ] **T-TRAY-03**: Build `trayStore.ts` reactive store in frontend
+- [ ] **T-TRAY-04**: Implement dynamic menu rebuild on tray open (Linux)
+- [ ] **T-TRAY-05**: Wire up all menu item actions to IPC events
+- [ ] **T-TRAY-06**: Add tooltip update for current voice channel name
+- [ ] **T-TRAY-07**: Platform testing: Linux (GTK), macOS, Windows
+- [ ] **T-TRAY-08**: Accessibility: keyboard navigation of tray menu
+
+### Thread: Badge Count Display (#10_badge_count_display.md)
+
+- [ ] **T-BADGE-01**: Design unread state model and persistence schema
+- [ ] **T-BADGE-02**: Implement `unreadStore.ts` with per-channel counters
+- [ ] **T-BADGE-03**: Create `BadgeCount.svelte` component for channel tree
+- [ ] **T-BADGE-04**: Wire MESSAGE_CREATE WebSocket → unreadStore
+- [ ] **T-BADGE-05**: Implement `set_badge_count` / `clear_badge` Rust commands
+- [ ] **T-BADGE-06**: Windows badge implementation (TaskbarList3)
+- [ ] **T-BADGE-07**: macOS badge implementation (NSApp dockTile)
+- [ ] **T-BADGE-08**: Linux badge implementation (unity-launcher)
+- [ ] **T-BADGE-09**: Cross-platform testing: Linux, macOS, Windows
+- [ ] **T-BADGE-10**: Unread persistence on app restart (tauri-plugin-store)
+
+### Thread: Minimize to Tray Behavior (#11_minimize_to_tray_behavior.md)
+
+- [ ] **T-MINTR-01**: Intercept window close event in Rust, prevent default quit
+- [ ] **T-MINTR-02**: Implement window hide/show logic with state restoration
+- [ ] **T-MINTR-03**: Wire tray icon double-click to restore window
+- [ ] **T-MINTR-04**: Add `Minimize to tray` setting toggle (Settings UI)
+- [ ] **T-MINTR-05**: Persist setting via tauri-plugin-store
+- [ ] **T-MINTR-06**: Update tooltip on tray during background running
+- [ ] **T-MINTR-07**: Voice connection maintained during minimize-to-tray
+- [ ] **T-MINTR-08**: Platform testing: Linux, macOS, Windows
+
 ### Thread: Rich Desktop Notifications (#08_rich_desktop_notifications.md)
 
 - [ ] **T-NOTIFY-01**: Implement `NotificationManager` with platform-specific backends
@@ -25,7 +60,7 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-NOTIFY-04**: Build notification grouping and management system
 - [ ] **T-NOTIFY-05**: Add priority levels and quiet hours functionality
 - [ ] **T-NOTIFY-06**: Deep OS integration (Action Center, Notification Center)
-- [ ] **T-NOTIFY-07**: Implement system tray badge count display
+- [ ] **T-NOTIFY-07**: Implement system tray badge count display *(moved to T-BADGE-05 through T-BADGE-10)*
 - [ ] **T-NOTIFY-08**: Build comprehensive notification settings UI
 - [ ] **T-NOTIFY-09**: Test <500ms display latency and 95%+ delivery rate
 
