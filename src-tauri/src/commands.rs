@@ -1,4 +1,7 @@
 use tauri_plugin_notification::NotificationExt;
+use nokhwa::{Camera, CameraFormat, FrameFormat, Resolution, CameraIndex};
+use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 /// Get the application version
 #[tauri::command]
@@ -37,4 +40,65 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
         }
     }
     Ok(())
+}
+
+/// Camera information structure for frontend
+#[derive(Serialize, Deserialize)]
+pub struct CameraInfo {
+    pub index: u32,
+    pub name: String,
+    pub description: String,
+}
+
+/// List available cameras for screen capture
+#[tauri::command]
+pub async fn list_cameras() -> Result<Vec<CameraInfo>, String> {
+    use nokhwa::utils::{CameraIndex, RequestedFormat, RequestedFormatType};
+
+    match nokhwa::query(CameraIndex::Any) {
+        Ok(cameras) => {
+            let camera_list: Vec<CameraInfo> = cameras
+                .into_iter()
+                .enumerate()
+                .map(|(index, camera_info)| CameraInfo {
+                    index: index as u32,
+                    name: camera_info.human_name().to_string(),
+                    description: camera_info.description().to_string(),
+                })
+                .collect();
+            Ok(camera_list)
+        }
+        Err(e) => Err(format!("Failed to query cameras: {}", e)),
+    }
+}
+
+/// Capture a screenshot from the specified camera
+#[tauri::command]
+pub async fn capture_screen(camera_index: u32) -> Result<String, String> {
+    use nokhwa::utils::{CameraIndex, RequestedFormat, RequestedFormatType};
+
+    // Set up camera format - requesting highest framerate available
+    let requested_format = RequestedFormat::new::<nokhwa::pixel_format::RgbFormat>(RequestedFormatType::AbsoluteHighestFrameRate);
+
+    // Initialize camera
+    let camera_index = CameraIndex::Index(camera_index);
+    let mut camera = Camera::new(camera_index, requested_format)
+        .map_err(|e| format!("Failed to initialize camera: {}", e))?;
+
+    // Open camera stream
+    camera.open_stream()
+        .map_err(|e| format!("Failed to open camera stream: {}", e))?;
+
+    // Capture frame
+    let frame = camera.frame()
+        .map_err(|e| format!("Failed to capture frame: {}", e))?;
+
+    // Convert frame to base64 string for easy transport to frontend
+    let image_buffer = frame.buffer_bytes();
+    let base64_image = base64::encode(image_buffer);
+
+    // Stop camera
+    let _ = camera.stop_stream();
+
+    Ok(base64_image)
 }
