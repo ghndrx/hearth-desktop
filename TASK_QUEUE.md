@@ -1,6 +1,6 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-04-01
+Last updated: 2026-04-02
 Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
@@ -91,6 +91,31 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-AUDIO-08**: Add automatic device switching logic
 - [ ] **T-AUDIO-09**: Hardware button integration (mute, volume, media keys)
 
+### Thread: Enhanced Security & Privacy System (#17_enhanced_security_privacy_system.md)
+
+- [ ] **T-SECURITY-01**: Design security architecture and implement TOTP-based 2FA
+- [ ] **T-SECURITY-02**: Build SMS authentication fallback with recovery codes
+- [ ] **T-SECURITY-03**: Implement active session tracking and device management
+- [ ] **T-SECURITY-04**: Add login anomaly detection and remote session termination
+- [ ] **T-SECURITY-05**: Build GDPR-compliant data export and account deletion
+- [ ] **T-SECURITY-06**: Create privacy settings dashboard with granular controls
+- [ ] **T-SECURITY-07**: Implement Signal Protocol E2E encryption for private messages
+- [ ] **T-SECURITY-08**: Add encrypted voice calls with perfect forward secrecy
+- [ ] **T-SECURITY-09**: Build comprehensive audit logging and security monitoring
+- [ ] **T-SECURITY-10**: Implement ML-based content filtering and user reporting
+
+### Thread: Advanced Voice Communication System (#18_advanced_voice_communication_system.md)
+
+- [ ] **T-VOICE-01**: Implement voice message recording with waveform visualization
+- [ ] **T-VOICE-02**: Add voice message transcription using Whisper WASM
+- [ ] **T-VOICE-03**: Build real-time speech-to-text with live captions display
+- [ ] **T-VOICE-04**: Implement real-time voice effects and DSP processing
+- [ ] **T-VOICE-05**: Create custom soundboard with hotkey activation
+- [ ] **T-VOICE-06**: Build 3D spatial audio with Web Audio API and HRTF
+- [ ] **T-VOICE-07**: Add spatial audio zones and gaming position integration
+- [ ] **T-VOICE-08**: Implement voice call recording with consent management
+- [ ] **T-VOICE-09**: Build meeting transcription and automatic note generation
+
 ### Thread: Game Overlay System (#07_game_overlay_system.md) *Depends on T-HOTKEY*
 
 - [ ] **T-OVERLAY-01**: Research and implement DirectX/Vulkan overlay injection
@@ -162,6 +187,21 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-WINDOW-14**: Window state restoration across app restarts
 - [ ] **T-WINDOW-15**: Keyboard shortcuts for window management
 - [ ] **T-WINDOW-16**: Integration testing across platforms
+
+### Thread: Advanced File Management & Collaboration (#16_advanced_file_management_system.md)
+
+- [ ] **T-FILE-01**: Design cloud storage architecture and implement file upload/download
+- [ ] **T-FILE-02**: Build file metadata management with resumable transfers
+- [ ] **T-FILE-03**: Implement hierarchical folder system and file tagging
+- [ ] **T-FILE-04**: Build file browser UI with tree navigation and search
+- [ ] **T-FILE-05**: Create bidirectional sync engine with conflict resolution
+- [ ] **T-FILE-06**: Add offline file access and local caching system
+- [ ] **T-FILE-07**: Implement file versioning and history management
+- [ ] **T-FILE-08**: Build rich file preview generation for common formats
+- [ ] **T-FILE-09**: Add syntax highlighting for code files and document conversion
+- [ ] **T-FILE-10**: Implement Operational Transform for real-time collaborative editing
+- [ ] **T-FILE-11**: Build collaborative text editor with presence indicators
+- [ ] **T-FILE-12**: Add commenting and annotation system for documents
 
 ---
 
