@@ -21,7 +21,7 @@ fn main() {
             tray::setup_tray(app)?;
             
             // Get main window
-            let window = app.get_webview_window("main").unwrap();
+            let _window = app.get_webview_window("main").unwrap();
             
             // Show window on tray icon click
             #[cfg(target_os = "macos")]
