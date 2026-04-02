@@ -57,6 +57,39 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-PERF-06**: Add system health monitoring with predictive issue detection
 - [ ] **T-PERF-07**: Create crash recovery system with voice session state restoration
 
+### Thread: Developer Ecosystem Platform (#13_developer_ecosystem_platform.md)
+
+- [ ] **T-DEV-01**: Design Discord-compatible REST API architecture with authentication framework
+- [ ] **T-DEV-02**: Implement WebSocket gateway for real-time events and bot communication
+- [ ] **T-DEV-03**: Build OAuth2 bot authorization system with scope-based permissions
+- [ ] **T-DEV-04**: Create basic message sending/receiving API endpoints for bots
+- [ ] **T-DEV-05**: Implement slash command registration and handling system
+- [ ] **T-DEV-06**: Build interactive message components (buttons, select menus, modals)
+- [ ] **T-DEV-07**: Create developer dashboard for bot management and analytics
+- [ ] **T-DEV-08**: Implement webhook infrastructure (incoming/outgoing) with security
+
+### Thread: Advanced Community Management (#14_advanced_community_management.md)
+
+- [ ] **T-COMMUNITY-01**: Build AutoMod content analysis engine with AI toxicity detection
+- [ ] **T-COMMUNITY-02**: Implement automated moderation actions (timeout, warn, ban)
+- [ ] **T-COMMUNITY-03**: Create centralized moderation dashboard with real-time alerts
+- [ ] **T-COMMUNITY-04**: Build user moderation history tracking and case management
+- [ ] **T-COMMUNITY-05**: Implement server analytics dashboard with growth and engagement metrics
+- [ ] **T-COMMUNITY-06**: Create forum channel system with thread organization
+- [ ] **T-COMMUNITY-07**: Build community discovery and public server directory
+- [ ] **T-COMMUNITY-08**: Implement advanced user permission and role management system
+
+### Thread: Comprehensive Accessibility System (#15_comprehensive_accessibility_system.md)
+
+- [ ] **T-ACCESS-01**: Implement WCAG 2.1 AA compliant semantic HTML structure with ARIA labels
+- [ ] **T-ACCESS-02**: Build complete keyboard navigation system with focus management
+- [ ] **T-ACCESS-03**: Create high contrast theme variants (dark/light) with 7:1 contrast ratio
+- [ ] **T-ACCESS-04**: Implement screen reader support for NVDA, JAWS, VoiceOver, and Orca
+- [ ] **T-ACCESS-05**: Add scalable typography system (100%-400%) with dyslexia-friendly fonts
+- [ ] **T-ACCESS-06**: Build internationalization framework supporting 30+ languages with RTL
+- [ ] **T-ACCESS-07**: Implement visual audio indicators and real-time voice transcription
+- [ ] **T-ACCESS-08**: Create motor accessibility features (adjustable targets, alternative input)
+
 ---
 
 ## P1 — High (Next Sprint)
@@ -139,6 +172,39 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-PERF-13**: Implement automated optimization recommendations
 - [ ] **T-PERF-14**: Add cross-platform performance baseline establishment
 
+### Thread: Advanced Developer Platform Features (#13_developer_ecosystem_platform.md)
+
+- [ ] **T-DEV-09**: Build application marketplace and bot directory with search/discovery
+- [ ] **T-DEV-10**: Implement advanced bot permissions and OAuth2 scopes system
+- [ ] **T-DEV-11**: Add voice API endpoints for music bots and audio applications
+- [ ] **T-DEV-12**: Create comprehensive API documentation with interactive examples
+- [ ] **T-DEV-13**: Build bot verification system and developer support tools
+- [ ] **T-DEV-14**: Implement rate limiting and abuse prevention for developer APIs
+- [ ] **T-DEV-15**: Add webhook retry logic, failure handling, and security verification
+- [ ] **T-DEV-16**: Create official SDKs for Python, JavaScript, Java, and C#
+
+### Thread: Enterprise Community Management (#14_advanced_community_management.md)
+
+- [ ] **T-COMMUNITY-09**: Build advanced user appeals system with workflow management
+- [ ] **T-COMMUNITY-10**: Implement server monetization tools and subscription management
+- [ ] **T-COMMUNITY-11**: Add community events system with calendar integration and RSVPs
+- [ ] **T-COMMUNITY-12**: Create server backup and export functionality for data portability
+- [ ] **T-COMMUNITY-13**: Build cross-server moderation sharing and collaboration tools
+- [ ] **T-COMMUNITY-14**: Implement advanced analytics with predictive community insights
+- [ ] **T-COMMUNITY-15**: Add integration with external moderation and security services
+- [ ] **T-COMMUNITY-16**: Create comprehensive audit logging with compliance reporting
+
+### Thread: Advanced Accessibility Features (#15_comprehensive_accessibility_system.md)
+
+- [ ] **T-ACCESS-09**: Implement voice control integration with speech-to-text commands
+- [ ] **T-ACCESS-10**: Add eye tracking and head mouse support for alternative navigation
+- [ ] **T-ACCESS-11**: Build cognitive accessibility features (simplified UI, reading aids)
+- [ ] **T-ACCESS-12**: Create personalized accessibility adaptations with ML preferences
+- [ ] **T-ACCESS-13**: Add advanced screen reader optimizations and custom commands
+- [ ] **T-ACCESS-14**: Implement comprehensive cultural localization beyond language translation
+- [ ] **T-ACCESS-15**: Build accessibility testing framework for continuous compliance
+- [ ] **T-ACCESS-16**: Create accessibility onboarding and feature discovery system
+
 ---
 
 ## P2 — Medium (Future)
@@ -169,13 +235,24 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - Screen share and video call both extend the WebRTC pipeline from PR #17 — coordinate to avoid conflicts
 
 ### Critical Path for Discord Desktop Parity
-1. **Auto-Updates & Performance** (T-PERF-01 to T-PERF-07) — Essential infrastructure for competitive product
-2. **Advanced Audio Processing** (T-AUDIO-01 to T-AUDIO-07) — Critical for voice quality parity with Discord
-3. **Mobile Companion Integration** (T-MOBILE-01 to T-MOBILE-07) — Required for modern cross-device workflows
-4. **Global Shortcuts** (T-NATIVE-01 to T-NATIVE-04) — Essential for power users and gaming
-5. **Enhanced Notifications** (T-NATIVE-05 to T-NATIVE-06) — Critical for Discord parity
-6. **File Upload/Drop** (T-FILE-01 to T-FILE-04) — Required for basic chat functionality
-7. **Multi-window Support** (T-WINDOW-01 to T-WINDOW-02) — High-value differentiator
+**NEW CRITICAL GAPS IDENTIFIED (2026-04-02):**
+1. **Developer Ecosystem Platform** (T-DEV-01 to T-DEV-08) — HIGHEST PRIORITY: No bot/API support blocks community migration
+2. **Comprehensive Accessibility** (T-ACCESS-01 to T-ACCESS-08) — LEGAL REQUIREMENT: WCAG compliance for enterprise adoption
+3. **Advanced Community Management** (T-COMMUNITY-01 to T-COMMUNITY-08) — SCALING BLOCKER: No moderation tools prevent large communities
+
+**EXISTING CRITICAL PATH:**
+4. **Auto-Updates & Performance** (T-PERF-01 to T-PERF-07) — Essential infrastructure for competitive product
+5. **Advanced Audio Processing** (T-AUDIO-01 to T-AUDIO-07) — Critical for voice quality parity with Discord
+6. **Mobile Companion Integration** (T-MOBILE-01 to T-MOBILE-07) — Required for modern cross-device workflows
+7. **Global Shortcuts** (T-NATIVE-01 to T-NATIVE-04) — Essential for power users and gaming
+8. **Enhanced Notifications** (T-NATIVE-05 to T-NATIVE-06) — Critical for Discord parity
+9. **File Upload/Drop** (T-FILE-01 to T-FILE-04) — Required for basic chat functionality
+10. **Multi-window Support** (T-WINDOW-01 to T-WINDOW-02) — High-value differentiator
+
+### Updated Dependencies (Post Competitive Analysis)
+- **Developer Platform** (T-DEV-01 to T-DEV-08) has ZERO dependencies — can start immediately
+- **Accessibility Foundation** (T-ACCESS-01 to T-ACCESS-06) can start immediately with design system
+- **Community Management** (T-COMMUNITY-01 to T-COMMUNITY-05) requires basic user/permission system
 
 ### Design Dependencies
 - Thread UI (T-THREAD-03, T-THREAD-05) needs design spec from Hearth design team
