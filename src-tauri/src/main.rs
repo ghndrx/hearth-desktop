@@ -32,6 +32,9 @@ fn main() {
             commands::get_app_version,
             commands::show_notification,
             commands::set_badge_count,
+            commands::list_capture_devices,
+            commands::capture_frame,
+            commands::get_camera_info,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
