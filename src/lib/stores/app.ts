@@ -1,5 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
+import { globalShortcuts } from './globalShortcuts.js';
 
 export interface User {
 	id: string;
@@ -62,6 +63,10 @@ function createAppStore() {
 			if (savedTheme) {
 				document.documentElement.setAttribute('data-theme', savedTheme);
 			}
+
+			// Initialize stores
+			settings.init();
+			await globalShortcuts.init();
 
 			// Load auth token
 			const token = localStorage.getItem('hearth_token');
