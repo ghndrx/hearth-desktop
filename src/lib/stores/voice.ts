@@ -10,6 +10,12 @@ export interface VoiceState {
 	connecting: boolean;
 	error: string | null;
 	speaking: { [userId: string]: boolean };
+	ptt: {
+		enabled: boolean;
+		isPressed: boolean;
+		hotkey: string;
+		mutedBeforePtt: boolean;
+	};
 }
 
 export interface TranscriptionEntry {
@@ -48,6 +54,12 @@ const initialVoiceState: VoiceState = {
 	connecting: false,
 	error: null,
 	speaking: {},
+	ptt: {
+		enabled: false,
+		isPressed: false,
+		hotkey: 'F4', // Default PTT hotkey
+		mutedBeforePtt: false,
+	},
 };
 
 const initialTranscriptionState: TranscriptionState = {
@@ -111,6 +123,81 @@ function createVoiceStore() {
 
 		clearError: () =>
 			update(state => ({ ...state, error: null })),
+
+		// PTT (Push-to-Talk) methods
+		setPttEnabled: (enabled: boolean) =>
+			update(state => ({ ...state, ptt: { ...state.ptt, enabled } })),
+
+		setPttHotkey: (hotkey: string) =>
+			update(state => ({ ...state, ptt: { ...state.ptt, hotkey } })),
+
+		setPttPressed: (pressed: boolean) =>
+			update(state => {
+				if (!state.ptt.enabled) return state;
+
+				// When PTT is pressed and we're connected
+				if (pressed && state.isConnected) {
+					// Store current muted state if we're pressing PTT for first time
+					const mutedBeforePtt = state.ptt.isPressed ? state.ptt.mutedBeforePtt : state.selfMuted;
+					// Unmute when PTT is pressed
+					return {
+						...state,
+						selfMuted: false,
+						ptt: {
+							...state.ptt,
+							isPressed: true,
+							mutedBeforePtt,
+						},
+					};
+				}
+				// When PTT is released
+				else if (!pressed && state.ptt.isPressed) {
+					// Restore muted state from before PTT was used
+					return {
+						...state,
+						selfMuted: state.ptt.mutedBeforePtt,
+						ptt: {
+							...state.ptt,
+							isPressed: false,
+							mutedBeforePtt: false,
+						},
+					};
+				}
+
+				return state;
+			}),
+
+		// Load PTT settings from localStorage
+		loadPttSettings: () => {
+			if (!browser) return;
+
+			const saved = localStorage.getItem('hearth_ptt_settings');
+			if (saved) {
+				try {
+					const settings = JSON.parse(saved);
+					update(state => ({
+						...state,
+						ptt: { ...state.ptt, ...settings }
+					}));
+				} catch (e) {
+					console.warn('[PTT] Failed to load settings:', e);
+				}
+			}
+		},
+
+		// Save PTT settings to localStorage
+		savePttSettings: () => {
+			if (!browser) return;
+
+			update(state => {
+				const pttSettings = {
+					enabled: state.ptt.enabled,
+					hotkey: state.ptt.hotkey,
+				};
+				localStorage.setItem('hearth_ptt_settings', JSON.stringify(pttSettings));
+				return state;
+			});
+		},
 	};
 }
 
@@ -213,6 +300,11 @@ export const voiceActions = {
 	removeSpeaker: voiceState.removeSpeaker,
 	setError: voiceState.setError,
 	clearError: voiceState.clearError,
+	setPttEnabled: voiceState.setPttEnabled,
+	setPttHotkey: voiceState.setPttHotkey,
+	setPttPressed: voiceState.setPttPressed,
+	loadPttSettings: voiceState.loadPttSettings,
+	savePttSettings: voiceState.savePttSettings,
 };
 
 // Transcription action helpers
@@ -237,6 +329,12 @@ export const currentVoiceChannel = derived(voiceState, $state => $state.channelI
 export const isSelfMuted = derived(voiceState, $state => $state.selfMuted);
 export const isSelfDeafened = derived(voiceState, $state => $state.selfDeafened);
 export const voiceError = derived(voiceState, $state => $state.error);
+
+// PTT derived stores
+export const isPttEnabled = derived(voiceState, $state => $state.ptt.enabled);
+export const isPttPressed = derived(voiceState, $state => $state.ptt.isPressed);
+export const pttHotkey = derived(voiceState, $state => $state.ptt.hotkey);
+export const isPttActive = derived(voiceState, $state => $state.ptt.enabled && $state.ptt.isPressed);
 
 export const isTranscriptionEnabled = derived(transcriptionState, $state => $state.isEnabled);
 export const isTranscriptionReady = derived(transcriptionState, $state => $state.isReady);

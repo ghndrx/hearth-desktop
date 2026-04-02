@@ -1,3 +1,5 @@
+use tauri::Emitter;
+use tauri_plugin_global_shortcut::GlobalShortcutExt;
 use tauri_plugin_notification::NotificationExt;
 
 /// Get the application version
@@ -36,5 +38,59 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
             }
         }
     }
+    Ok(())
+}
+
+/// Register a global shortcut for Push-to-Talk (PTT)
+#[tauri::command]
+pub async fn register_ptt_shortcut(
+    app: tauri::AppHandle,
+    accelerator: String,
+) -> Result<(), String> {
+    app.global_shortcut()
+        .register(&accelerator, move |_app, _shortcut| {
+            // Emit PTT press event to frontend
+            if let Err(e) = _app.emit("ptt-pressed", ()) {
+                eprintln!("Failed to emit ptt-pressed event: {}", e);
+            }
+        })
+        .map_err(|e| format!("Failed to register PTT shortcut '{}': {}", accelerator, e))?;
+
+    Ok(())
+}
+
+/// Unregister a global shortcut
+#[tauri::command]
+pub async fn unregister_global_shortcut(
+    app: tauri::AppHandle,
+    accelerator: String,
+) -> Result<(), String> {
+    app.global_shortcut()
+        .unregister(&accelerator)
+        .map_err(|e| format!("Failed to unregister shortcut '{}': {}", accelerator, e))?;
+
+    Ok(())
+}
+
+/// Check if a global shortcut is registered
+#[tauri::command]
+pub async fn is_global_shortcut_registered(
+    app: tauri::AppHandle,
+    accelerator: String,
+) -> Result<bool, String> {
+    app.global_shortcut()
+        .is_registered(&accelerator)
+        .map_err(|e| format!("Failed to check shortcut '{}': {}", accelerator, e))
+}
+
+/// Unregister all global shortcuts
+#[tauri::command]
+pub async fn unregister_all_global_shortcuts(
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    app.global_shortcut()
+        .unregister_all()
+        .map_err(|e| format!("Failed to unregister all shortcuts: {}", e))?;
+
     Ok(())
 }

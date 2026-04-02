@@ -1,13 +1,32 @@
 <script lang="ts">
-	import { onMount } from 'svelte';
+	import { onMount, onDestroy } from 'svelte';
 	import { app, isLoading } from '$lib/stores/app';
+	import { pttManager } from '$lib/voice/PTTManager';
 	import '$lib/styles/theme.css';
 	import '../app.css';
 
 	let { children } = $props();
 
-	onMount(() => {
+	onMount(async () => {
 		app.init();
+
+		// Initialize PTT manager
+		try {
+			await pttManager.init();
+			console.log('[PTT] Manager initialized successfully');
+		} catch (error) {
+			console.error('[PTT] Failed to initialize manager:', error);
+		}
+	});
+
+	onDestroy(async () => {
+		// Clean up PTT manager
+		try {
+			await pttManager.destroy();
+			console.log('[PTT] Manager destroyed successfully');
+		} catch (error) {
+			console.error('[PTT] Failed to destroy manager:', error);
+		}
 	});
 </script>
 
