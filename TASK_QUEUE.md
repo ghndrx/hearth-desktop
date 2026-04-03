@@ -5,6 +5,30 @@ Pipeline: Hearth Desktop Competitive Analysis — Discord March 2026 Feature Sca
 
 ## P0 — Critical (Ship Now)
 
+### Thread: Advanced Audio Processing Engine (#13_advanced_audio_processing_engine.md) ⭐ NEW — HIGHEST PRIORITY
+
+- [ ] **T-AUDIO-01**: Integrate CPAL and basic audio pipeline with real-time processing framework
+- [ ] **T-AUDIO-02**: Implement RNNoise integration for AI-powered noise suppression
+- [ ] **T-AUDIO-03**: Add automatic gain control and basic noise gate functionality
+- [ ] **T-AUDIO-04**: Build voice effects pipeline (pitch shifting, robot voice, echo)
+- [ ] **T-AUDIO-05**: Implement soundboard system with hotkey triggers and audio mixing
+- [ ] **T-AUDIO-06**: Add GPU acceleration support for ML processing (CUDA/Metal/OpenCL)
+- [ ] **T-AUDIO-07**: Build acoustic echo cancellation using adaptive filters
+- [ ] **T-AUDIO-08**: Create audio settings UI with noise calibration and effect controls
+- [ ] **T-AUDIO-09**: Integrate with existing WebRTC voice pipeline for seamless operation
+
+### Thread: Gaming Performance & Hardware Integration (#14_gaming_performance_hardware_integration.md) ⭐ NEW
+
+- [ ] **T-GAMING-01**: Implement game detection engine with process and GPU monitoring
+- [ ] **T-GAMING-02**: Build RGB lighting integration (OpenRGB, Logitech G HUB, Razer Synapse)
+- [ ] **T-GAMING-03**: Add gaming headset integration with advanced audio device management
+- [ ] **T-GAMING-04**: Create performance optimization engine (CPU/memory management during gaming)
+- [ ] **T-GAMING-05**: Implement anti-cheat compatibility layer for EasyAntiCheat/BattlEye
+- [ ] **T-GAMING-06**: Build controller integration with haptic feedback for voice notifications
+- [ ] **T-GAMING-07**: Add gaming mode UI with performance metrics and hardware status
+- [ ] **T-GAMING-08**: Implement network traffic prioritization for voice during gameplay
+- [ ] **T-GAMING-09**: Test compatibility with top 50 games and measure performance impact
+
 ### Thread: Rich Presence & Activity System (#06_rich_presence_activity_system.md)
 
 - [ ] **T-PRESENCE-01**: Add `sysinfo` crate to Cargo.toml for cross-platform process monitoring
@@ -32,6 +56,18 @@ Pipeline: Hearth Desktop Competitive Analysis — Discord March 2026 Feature Sca
 ---
 
 ## P1 — High (Next Sprint)
+
+### Thread: Advanced Media & Content Creation Tools (#15_advanced_media_content_creation.md) ⭐ NEW
+
+- [ ] **T-MEDIA-01**: Implement background clip recording with circular buffer system
+- [ ] **T-MEDIA-02**: Add voice command processing for clip triggers ("clip that", "save highlight")
+- [ ] **T-MEDIA-03**: Build AI highlight detection using audio analysis and emotion detection
+- [ ] **T-MEDIA-04**: Create multi-stream screen sharing for collaborative presentations
+- [ ] **T-MEDIA-05**: Implement real-time screen annotation tools (drawing, shapes, text)
+- [ ] **T-MEDIA-06**: Add AI image enhancement (upscaling, noise reduction, compression)
+- [ ] **T-MEDIA-07**: Build real-time translation engine for voice calls
+- [ ] **T-MEDIA-08**: Implement voice transcription with speaker identification
+- [ ] **T-MEDIA-09**: Create clip editing interface with timeline and basic editing tools
 
 ### Thread: Theme & Appearance Customization (#08_theme_appearance_customization.md)
 
@@ -161,11 +197,12 @@ Pipeline: Hearth Desktop Competitive Analysis — Discord March 2026 Feature Sca
 ## Notes
 
 ### Competitive Priority
-- **P0 tasks target Discord feature parity gaps** — Rich Presence, Overlay, Tray, and File Handling are critical for desktop adoption
+- **CRITICAL AUDIO GAP**: Advanced Audio Processing Engine (PRD #13) is highest priority — audio quality is Discord's primary competitive moat
+- **GAMING PERFORMANCE**: Gaming optimization (PRD #14) essential for serious gamer adoption — zero performance impact requirement
+- **CONTENT CREATION**: Advanced media tools (PRD #15) required for 2026 feature parity — AI-powered content creation is becoming standard
 - Rich Presence system enables game detection and social features core to Discord's value proposition
 - Overlay system required for competitive gaming experience (voice controls without tabbing out)
 - Advanced tray notifications and file drag/drop create native desktop experience vs web app feeling
-- Native file handling with previews matches user expectations for desktop messaging apps
 
 ### Dependencies
 - Rich Presence tasks (T-PRESENCE-*) can run in parallel with existing development
