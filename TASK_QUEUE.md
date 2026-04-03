@@ -70,6 +70,30 @@ Pipeline: Hearth Desktop Competitive Analysis — Discord March 2026 Feature Sca
 - [ ] **T-INVITE-08**: Privacy filter: respect `hide-online-status` and `friend-requests:off`
 - [ ] **T-INVITE-09**: Keyboard navigation + screen reader labels (a11y)
 
+### Thread: System Tray & Advanced Notifications (#10_system_tray_advanced_notifications.md) ⭐ NEW
+
+- [ ] **T-TRAY-01**: Extend existing tray.rs with enhanced context menu system
+- [ ] **T-TRAY-02**: Implement status change functionality from tray (online/idle/dnd/invisible)
+- [ ] **T-TRAY-03**: Add voice controls to tray menu (mute/deafen toggles)
+- [ ] **T-TRAY-04**: Build rich notification system with action buttons
+- [ ] **T-TRAY-05**: Implement notification grouping and bundling algorithms
+- [ ] **T-TRAY-06**: Add OS Do Not Disturb detection and integration
+- [ ] **T-TRAY-07**: Build notification history and persistence system
+- [ ] **T-TRAY-08**: Add avatar/image display in notifications
+- [ ] **T-TRAY-09**: Implement cross-platform notification action callbacks
+
+### Thread: Native File Handling & Drag/Drop System (#11_native_file_handling_dragdrop.md) ⭐ NEW
+
+- [ ] **T-FILE-01**: Implement native file dialog integration with Tauri APIs
+- [ ] **T-FILE-02**: Build cross-platform drag/drop event handling system
+- [ ] **T-FILE-03**: Create file upload queue management with priority system
+- [ ] **T-FILE-04**: Implement preview generation engine (image/video/document thumbnails)
+- [ ] **T-FILE-05**: Build resumable upload system with chunking support
+- [ ] **T-FILE-06**: Add file compression and optimization options
+- [ ] **T-FILE-07**: Implement clipboard integration for image/file pasting
+- [ ] **T-FILE-08**: Build screen capture with annotation tools
+- [ ] **T-FILE-09**: Add folder drag/drop with recursive uploading support
+
 ### Thread: Video Calls (#04_video_calls_system.md)
 
 - [ ] **T-VIDEO-01**: Add camera capture to existing WebRTC pipeline (extend PR #17)
@@ -95,6 +119,18 @@ Pipeline: Hearth Desktop Competitive Analysis — Discord March 2026 Feature Sca
 - [ ] **T-THREAD-09**: Thread unread badge indicators
 - [ ] **T-THREAD-10**: Integration test with real Hearth API thread endpoints
 
+### Thread: Desktop Accessibility & Voice Control (#12_desktop_accessibility_voice_control.md) ⭐ NEW
+
+- [ ] **T-ACCESS-01**: Implement comprehensive ARIA labeling throughout application
+- [ ] **T-ACCESS-02**: Build screen reader announcement system for state changes
+- [ ] **T-ACCESS-03**: Add semantic HTML structure and landmark navigation
+- [ ] **T-ACCESS-04**: Create focus management system with proper tab ordering
+- [ ] **T-ACCESS-05**: Implement complete keyboard navigation for all UI elements
+- [ ] **T-ACCESS-06**: Add customizable keyboard shortcuts with conflict detection
+- [ ] **T-ACCESS-07**: Build voice command parsing and execution engine
+- [ ] **T-ACCESS-08**: Integrate platform-specific speech recognition APIs
+- [ ] **T-ACCESS-09**: Implement high contrast themes and visual accessibility features
+
 ---
 
 ## P2 — Medium (Future)
@@ -111,15 +147,25 @@ Pipeline: Hearth Desktop Competitive Analysis — Discord March 2026 Feature Sca
 - [ ] **T-P2-10**: ⭐ NEW (Discord Mar 2026) — Desktop Settings redesign: Notifications, Voice/Video, Clips, Streamer Mode pages
 - [ ] **T-P2-11**: ⭐ NEW (Discord Mar 2026) — Go Live stream preview load time optimization (Tauri streaming approach)
 - [ ] **T-P2-12**: ⭐ NEW (Discord Mar 2026) — Back/Forward browser-style navigation buttons in desktop chrome
+- [ ] **T-P2-13**: ⭐ NEW — Advanced tray notification scheduling and quiet hours
+- [ ] **T-P2-14**: ⭐ NEW — Cloud storage integration (Google Drive, OneDrive, Dropbox) for file sharing
+- [ ] **T-P2-15**: ⭐ NEW — Voice control custom command creation and training
+- [ ] **T-P2-16**: ⭐ NEW — File content analysis and auto-tagging with AI
+- [ ] **T-P2-17**: ⭐ NEW — Eye tracking integration for accessibility navigation
+- [ ] **T-P2-18**: ⭐ NEW — Hardware peripheral RGB sync for notifications
+- [ ] **T-P2-19**: ⭐ NEW — Advanced file versioning and collaborative editing
+- [ ] **T-P2-20**: ⭐ NEW — Enterprise accessibility audit reporting and compliance tools
 
 ---
 
 ## Notes
 
 ### Competitive Priority
-- **P0 tasks target Discord feature parity gaps** — Rich Presence and Overlay are critical for gaming community adoption
+- **P0 tasks target Discord feature parity gaps** — Rich Presence, Overlay, Tray, and File Handling are critical for desktop adoption
 - Rich Presence system enables game detection and social features core to Discord's value proposition
 - Overlay system required for competitive gaming experience (voice controls without tabbing out)
+- Advanced tray notifications and file drag/drop create native desktop experience vs web app feeling
+- Native file handling with previews matches user expectations for desktop messaging apps
 
 ### Dependencies
 - Rich Presence tasks (T-PRESENCE-*) can run in parallel with existing development
