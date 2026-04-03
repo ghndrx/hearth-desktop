@@ -1,6 +1,6 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
+Last updated: 2026-04-03
 Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
@@ -48,6 +48,41 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-THREAD-09**: Thread unread badge indicators
 - [ ] **T-THREAD-10**: Integration test with real Hearth API thread endpoints
 
+### Thread: Audio Processing Pipeline (#07_audio_processing_pipeline.md)
+
+- [ ] **T-AUDIO-01**: Add noise suppression WebAudio Worklet + WASM model (Sony DNN or RNNoise)
+- [ ] **T-AUDIO-02**: Implement `VoiceProcessingPipeline` class chaining mic → denoise → AEC → AGC → encoder
+- [ ] **T-AUDIO-03**: Integrate `AcousticEchoCanceller` and `GainNode` AGC via Web Audio API
+- [ ] **T-AUDIO-04**: Build audio settings panel (preset selector: Voice/Music/Accessibility, toggle switches)
+- [ ] **T-AUDIO-05**: Add audio level meter component for input monitoring
+- [ ] **T-AUDIO-06**: Per-channel voice settings override persistence via `tauri-plugin-store`
+- [ ] **T-AUDIO-07**: CPU profiling + optimization — target <15% CPU on i5-8250U / M1 during 4-person call
+- [ ] **T-AUDIO-08**: Browser compatibility test (Chrome, Firefox, Safari, Edge)
+
+### Thread: Message Search (#08_message_search_discovery.md)
+
+- [ ] **T-SEARCH-01**: Add `rusqlite` with FTS5 to `src-tauri/Cargo.toml`
+- [ ] **T-SEARCH-02**: Implement Rust commands: `search_messages(query, filters)`, `index_message(msg)`, `rebuild_index()`
+- [ ] **T-SEARCH-03**: Build `QueryParser` for filter tokens (`from:`, `in:`, `has:`, `during:`)
+- [ ] **T-SEARCH-04**: Build `SearchModal.svelte` with filter token input + results list
+- [ ] **T-SEARCH-05**: Implement search result click → navigate to message in context
+- [ ] **T-SEARCH-06**: Add search history (last 10 queries) via `tauri-plugin-store`
+- [ ] **T-SEARCH-07**: Background indexing queue — index new messages within 60s of receipt
+- [ ] **T-SEARCH-08**: LRU eviction for index — cap at 500K messages per server
+- [ ] **T-SEARCH-09**: `Ctrl/Cmd+F` global shortcut binding to open search modal
+
+### Thread: Rich Media Embeds (#09_rich_media_embeds.md)
+
+- [ ] **T-EMBED-01**: Build `LinkPreviewFetcher` — expand short URLs, fetch HTML, parse OG/Twitter Card meta
+- [ ] **T-EMBED-02**: Build `LinkPreview.svelte` — rich card component (title, description, thumbnail, site name)
+- [ ] **T-EMBED-03**: Add per-URL-type embed handlers: YouTube, GitHub, Twitch, Twitter/X, Spotify, SoundCloud
+- [ ] **T-EMBED-04**: Build `ImageEmbed.svelte` — inline image display with lazy-load + lightbox
+- [ ] **T-EMBED-05**: Build `VideoEmbed.svelte` — inline video player (YouTube/native)
+- [ ] **T-EMBED-06**: Build `AudioEmbed.svelte` — music service preview cards
+- [ ] **T-EMBED-07**: Implement media cache (disk-based LRU, default 500MB limit)
+- [ ] **T-EMBED-08**: Add "Disable link preview" per-message toggle in compose box
+- [ ] **T-EMBED-09**: NSFW image blur with click-to-reveal overlay
+
 ---
 
 ## P2 — Medium (Future)
@@ -58,7 +93,7 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-P2-04**: Keyboard shortcut customization UI
 - [ ] **T-P2-05**: Background blur for video (TensorFlow.js WASM / MediaPipe)
 - [ ] **T-P2-06**: Rich text editor (markdown toolbar, emoji picker)
-- [ ] **T-P2-07**: Message search with filters (from:, has:embed, during:, etc.)
+
 
 ---
 
