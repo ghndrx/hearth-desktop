@@ -19,10 +19,7 @@ tauri-plugin-store = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
-# nokhwa crate for cross-platform screen capture - dependency added as requested
-# Currently experiencing edition2024 compatibility with cargo 1.75.0
-# Placeholder implementation ready for when toolchain is updated
-# nokhwa = { version = "0.10", features = ["input-native"] }
+nokhwa = { version = "0.10", features = ["input-native"] }
 
 [profile.release]
 panic = "abort"

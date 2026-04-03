@@ -1,5 +1,8 @@
 use tauri_plugin_notification::NotificationExt;
 use serde::{Deserialize, Serialize};
+use nokhwa::{Camera, CameraInfo};
+use nokhwa::pixel_format::RgbFormat;
+use nokhwa::utils::{CameraIndex, RequestedFormat, RequestedFormatType};
 
 /// Get the application version
 #[tauri::command]
@@ -49,23 +52,42 @@ pub struct CameraDeviceInfo {
 }
 
 /// Get information about all available camera devices
-/// Note: nokhwa crate dependency added to Cargo.toml for cross-platform screen capture
+/// Using nokhwa crate for cross-platform screen capture
 #[tauri::command]
 pub async fn get_camera_devices() -> Result<Vec<CameraDeviceInfo>, String> {
-    // nokhwa crate added to dependencies as requested for cross-platform screen capture
-    // Implementation ready for activation once cargo edition2024 compatibility resolved
-    Ok(vec![
-        CameraDeviceInfo {
-            index: 0,
-            name: "Default Camera Device".to_string(),
-            description: "nokhwa integration ready for cross-platform capture".to_string(),
+    match nokhwa::query_devices() {
+        Ok(devices) => {
+            let camera_info: Vec<CameraDeviceInfo> = devices
+                .into_iter()
+                .enumerate()
+                .map(|(i, info)| CameraDeviceInfo {
+                    index: i as u32,
+                    name: info.human_name().to_string(),
+                    description: format!("{:?}", info),
+                })
+                .collect();
+            Ok(camera_info)
         }
-    ])
+        Err(e) => Err(format!("Failed to query camera devices: {}", e)),
+    }
 }
 
-/// Test camera/capture system readiness
+/// Test camera/capture system readiness using nokhwa
 #[tauri::command]
-pub async fn test_camera_connection(_camera_index: u32) -> Result<String, String> {
-    // nokhwa crate dependency successfully added for cross-platform screen capture
-    Ok("Cross-platform capture system ready - nokhwa crate integrated".to_string())
+pub async fn test_camera_connection(camera_index: u32) -> Result<String, String> {
+    // Test camera initialization with nokhwa
+    let format = RequestedFormat::new::<RgbFormat>(RequestedFormatType::AbsoluteHighestFrameRate);
+
+    match Camera::new(CameraIndex::Index(camera_index), format) {
+        Ok(mut camera) => {
+            match camera.open_stream() {
+                Ok(_) => {
+                    let _ = camera.stop_stream();
+                    Ok(format!("Camera {} successfully tested with nokhwa", camera_index))
+                }
+                Err(e) => Err(format!("Failed to open camera stream: {}", e)),
+            }
+        }
+        Err(e) => Err(format!("Failed to initialize camera {}: {}", camera_index, e)),
+    }
 }
