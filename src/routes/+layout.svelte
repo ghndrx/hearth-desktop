@@ -1,6 +1,8 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { app, isLoading } from '$lib/stores/app';
+	import GlobalShortcutManager from '$lib/components/GlobalShortcutManager.svelte';
+	import HotkeyOverlay from '$lib/components/HotkeyOverlay.svelte';
 	import '$lib/styles/theme.css';
 	import '../app.css';
 
@@ -22,6 +24,8 @@
 		<p>Loading...</p>
 	</div>
 {:else}
+	<GlobalShortcutManager />
+	<HotkeyOverlay />
 	{@render children()}
 {/if}
 

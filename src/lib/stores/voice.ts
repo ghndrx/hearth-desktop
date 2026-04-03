@@ -1,4 +1,4 @@
-import { writable, derived } from 'svelte/store';
+import { writable, derived, get } from 'svelte/store';
 import { browser } from '$app/environment';
 
 export interface VoiceState {
@@ -249,3 +249,14 @@ export const visibleTranscriptionEntries = derived(
 	transcriptionState,
 	$state => $state.entries.filter(entry => entry.confidence >= $state.settings.minConfidence)
 );
+
+// Voice toggle helpers for global shortcuts
+export function toggleMute(): void {
+	const state = get(voiceState);
+	voiceActions.setMuted(!state.selfMuted);
+}
+
+export function toggleDeafen(): void {
+	const state = get(voiceState);
+	voiceActions.setDeafened(!state.selfDeafened);
+}
