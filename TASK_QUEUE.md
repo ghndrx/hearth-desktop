@@ -1,15 +1,46 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
+Last updated: 2026-04-04
 Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Global Shortcuts System (#06_global_shortcuts_system.md)
+
+- [ ] **T-SHORTCUTS-01**: Create Tauri custom global-shortcut plugin extending tauri-plugin-global-shortcut
+- [ ] **T-SHORTCUTS-02**: Implement Windows RegisterHotKey backend with low-level hooks for gaming compatibility
+- [ ] **T-SHORTCUTS-03**: Build core VoiceShortcuts struct (PTT, mute toggle, deafen toggle, voice activation)
+- [ ] **T-SHORTCUTS-04**: Integrate shortcuts with existing voice store infrastructure from PR #17
+- [ ] **T-SHORTCUTS-05**: Create basic Settings → Shortcuts UI with shortcut recorder components
+- [ ] **T-SHORTCUTS-06**: Implement shortcut conflict detection and warning system
+- [ ] **T-SHORTCUTS-07**: Add macOS accessibility permissions request flow
+- [ ] **T-SHORTCUTS-08**: Test global PTT functionality in fullscreen games across platforms
 
 ---
 
 ## P1 — High (Next Sprint)
+
+### Thread: Multi-Window Support (#07_multi_window_support.md)
+
+- [ ] **T-WINDOWS-01**: Implement Tauri multi-window infrastructure with WindowManager and state sync
+- [ ] **T-WINDOWS-02**: Create voice channel detachment UI with "Detach" button and smooth animations
+- [ ] **T-WINDOWS-03**: Build VoiceWindow.svelte component for detached voice channel interface
+- [ ] **T-WINDOWS-04**: Implement CrossWindowStateManager for voice state synchronization across windows
+- [ ] **T-WINDOWS-05**: Add window persistence system to remember positions/sizes across restarts
+- [ ] **T-WINDOWS-06**: Create video call popout functionality (depends on PRD #04 video calls)
+- [ ] **T-WINDOWS-07**: Test multi-monitor support and DPI scaling edge cases
+- [ ] **T-WINDOWS-08**: Implement smart default positioning and reattachment workflow
+
+### Thread: Theme & Customization System (#08_theme_customization_system.md)
+
+- [ ] **T-THEME-01**: Implement ThemeEngine with CSS custom properties and safe CSS injection
+- [ ] **T-THEME-02**: Create default themes (Hearth Light, Hearth Dark, Midnight Blue)
+- [ ] **T-THEME-03**: Build Settings → Appearance page with theme picker and live preview
+- [ ] **T-THEME-04**: Implement layout customization controls (sidebar width, message density, font size)
+- [ ] **T-THEME-05**: Create ColorCustomizer component with visual color picker interface
+- [ ] **T-THEME-06**: Add CSS sanitization system with security validation and property whitelist
+- [ ] **T-THEME-07**: Implement theme persistence and cloud sync via Tauri app data
+- [ ] **T-THEME-08**: Build accessibility validator with WCAG 2.1 AA contrast checking
 
 ### Thread: Screen Sharing (#03_screen_share_system.md)
 
