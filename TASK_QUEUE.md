@@ -1,15 +1,45 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
+Last updated: 2026-04-04
 Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Global Hotkeys (#06_global_hotkeys_system.md)
+
+- [ ] **T-HOTKEY-01**: Integrate `tauri-plugin-global-shortcut` into project dependencies
+- [ ] **T-HOTKEY-02**: Implement basic Push-to-Talk (PTT) global hotkey with hold/release functionality
+- [ ] **T-HOTKEY-03**: Add Mute/Unmute toggle global hotkey for microphone control
+- [ ] **T-HOTKEY-04**: Build HotkeyRecorder UI component for key combination capture
+- [ ] **T-HOTKEY-05**: Implement hotkey conflict detection and user-friendly resolution flow
+- [ ] **T-HOTKEY-06**: Add system tray status indicators for mute/deafen states
+- [ ] **T-HOTKEY-07**: Cross-platform testing on Windows 10/11, macOS 12+, Ubuntu 20.04+
+
+### Thread: Rich Notifications (#07_rich_notifications_system.md)
+
+- [ ] **T-NOTIFY-01**: Enhance tauri-plugin-notification with action button support
+- [ ] **T-NOTIFY-02**: Implement inline reply functionality in notifications
+- [ ] **T-NOTIFY-03**: Add quick action buttons (mark as read, emoji reactions)
+- [ ] **T-NOTIFY-04**: Build notification grouping for multiple messages from same user/channel
+- [ ] **T-NOTIFY-05**: Implement rich media previews (images, videos) in notifications
+- [ ] **T-NOTIFY-06**: Add Do Not Disturb integration with system focus modes
+- [ ] **T-NOTIFY-07**: Test notification delivery and interaction across all target platforms
 
 ---
 
 ## P1 — High (Next Sprint)
+
+### Thread: File System Integration (#08_file_system_integration.md)
+
+- [ ] **T-FILE-01**: Implement drag-and-drop file detection and visual drop zones
+- [ ] **T-FILE-02**: Add multi-file upload with progress tracking and queue management
+- [ ] **T-FILE-03**: Build image thumbnail generation and inline preview system
+- [ ] **T-FILE-04**: Implement video preview with playback controls and thumbnails
+- [ ] **T-FILE-05**: Add file type validation and security scanning before upload
+- [ ] **T-FILE-06**: Build FileDropZone and FilePreview Svelte components
+- [ ] **T-FILE-07**: Implement download progress tracking and file organization
+- [ ] **T-FILE-08**: Add OS-specific integrations (context menus, file associations)
+- [ ] **T-FILE-09**: Cross-platform file system testing and error handling
 
 ### Thread: Screen Sharing (#03_screen_share_system.md)
 
@@ -64,6 +94,10 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## Notes
 
+- **P0 Priorities**: Global hotkeys and rich notifications are critical for competitive parity with Discord
+- **Gaming Focus**: Push-to-talk (T-HOTKEY-02) is essential for gaming community adoption
+- **Notification Engagement**: Inline reply (T-NOTIFY-02) can significantly reduce context switching
 - All P1 tasks depend on PRD #1 (text messaging) being stable
 - Screen share and video call both extend the WebRTC pipeline from PR #17 — coordinate to avoid conflicts
 - Thread UI (T-THREAD-03, T-THREAD-05) needs design spec from Hearth design team
+- File system integration (T-FILE-*) requires security review for malware scanning implementation
