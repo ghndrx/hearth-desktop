@@ -1,5 +1,8 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { userStatus, type UserStatus } from './app.js';
 
 export interface VoiceState {
 	isConnected: boolean;
@@ -88,11 +91,31 @@ function createVoiceStore() {
 		setChannelInfo: (channelId: string, serverId: string) =>
 			update(state => ({ ...state, channelId, serverId })),
 
-		setMuted: (muted: boolean) =>
-			update(state => ({ ...state, selfMuted: muted })),
+		setMuted: (muted: boolean) => {
+			update(state => ({ ...state, selfMuted: muted }));
+			syncTrayMenuState('mute', muted);
+		},
 
-		setDeafened: (deafened: boolean) =>
-			update(state => ({ ...state, selfDeafened: deafened })),
+		setDeafened: (deafened: boolean) => {
+			update(state => ({ ...state, selfDeafened: deafened }));
+			syncTrayMenuState('deafen', deafened);
+		},
+
+		toggleMuted: () => {
+			update(state => {
+				const newMuted = !state.selfMuted;
+				syncTrayMenuState('mute', newMuted);
+				return { ...state, selfMuted: newMuted };
+			});
+		},
+
+		toggleDeafened: () => {
+			update(state => {
+				const newDeafened = !state.selfDeafened;
+				syncTrayMenuState('deafen', newDeafened);
+				return { ...state, selfDeafened: newDeafened };
+			});
+		},
 
 		setSpeaking: (userId: string, speaking: boolean) =>
 			update(state => ({
@@ -135,8 +158,18 @@ function createTranscriptionStore() {
 			}
 		},
 
-		setEnabled: (enabled: boolean) =>
-			update(state => ({ ...state, isEnabled: enabled })),
+		setEnabled: (enabled: boolean) => {
+			update(state => ({ ...state, isEnabled: enabled }));
+			syncTrayMenuState('transcription', enabled);
+		},
+
+		toggleEnabled: () => {
+			update(state => {
+				const newEnabled = !state.isEnabled;
+				syncTrayMenuState('transcription', newEnabled);
+				return { ...state, isEnabled: newEnabled };
+			});
+		},
 
 		setInitializing: (initializing: boolean) =>
 			update(state => ({ ...state, isInitializing: initializing })),
@@ -209,6 +242,8 @@ export const voiceActions = {
 	setChannelInfo: voiceState.setChannelInfo,
 	setMuted: voiceState.setMuted,
 	setDeafened: voiceState.setDeafened,
+	toggleMuted: voiceState.toggleMuted,
+	toggleDeafened: voiceState.toggleDeafened,
 	setSpeaking: voiceState.setSpeaking,
 	removeSpeaker: voiceState.removeSpeaker,
 	setError: voiceState.setError,
@@ -219,6 +254,7 @@ export const voiceActions = {
 export const transcriptionActions = {
 	init: transcriptionState.init,
 	setEnabled: transcriptionState.setEnabled,
+	toggleEnabled: transcriptionState.toggleEnabled,
 	setInitializing: transcriptionState.setInitializing,
 	setReady: transcriptionState.setReady,
 	setLanguage: transcriptionState.setLanguage,
@@ -249,3 +285,97 @@ export const visibleTranscriptionEntries = derived(
 	transcriptionState,
 	$state => $state.entries.filter(entry => entry.confidence >= $state.settings.minConfidence)
 );
+
+// Tray synchronization functions
+async function syncTrayMenuState(itemId: string, checked: boolean) {
+	if (!browser) return;
+
+	try {
+		await invoke('update_tray_menu_item_checked', { itemId, checked });
+	} catch (error) {
+		console.warn(`[Tray] Failed to sync menu state for ${itemId}:`, error);
+	}
+}
+
+async function updateTrayTooltip(status: string) {
+	if (!browser) return;
+
+	try {
+		await invoke('update_tray_tooltip', { tooltip: `Hearth - ${status}` });
+	} catch (error) {
+		console.warn('[Tray] Failed to update tooltip:', error);
+	}
+}
+
+async function updateStatusMenuItems(selectedStatus: UserStatus) {
+	if (!browser) return;
+
+	const statusItems = ['status_online', 'status_away', 'status_dnd', 'status_invisible'];
+	const selectedItem = `status_${selectedStatus}`;
+
+	for (const item of statusItems) {
+		try {
+			await invoke('update_tray_menu_item_checked', {
+				itemId: item,
+				checked: item === selectedItem
+			});
+		} catch (error) {
+			console.warn(`[Tray] Failed to update status menu item ${item}:`, error);
+		}
+	}
+}
+
+// Initialize tray menu event listener
+if (browser) {
+	// Listen for tray menu actions
+	listen<any>('tray_menu_action', (event) => {
+		const { action } = event.payload;
+
+		switch (action) {
+			case 'toggle_mute':
+				voiceState.toggleMuted();
+				break;
+			case 'toggle_deafen':
+				voiceState.toggleDeafened();
+				break;
+			case 'toggle_transcription':
+				transcriptionState.toggleEnabled();
+				break;
+			case 'clear_transcription':
+				transcriptionState.clearEntries();
+				break;
+			case 'set_status':
+				const newStatus = event.payload.status as UserStatus;
+				userStatus.setStatus(newStatus);
+				// Update status radio buttons in tray menu
+				updateStatusMenuItems(newStatus);
+				break;
+			case 'open_settings':
+				// Handle settings opening - could emit a custom event or use a settings store
+				console.log('Settings requested from tray');
+				break;
+			case 'show_about':
+				// Handle about dialog
+				console.log('About dialog requested from tray');
+				break;
+		}
+	}).catch(error => {
+		console.warn('[Tray] Failed to set up event listener:', error);
+	});
+}
+
+// Update tray tooltip based on voice connection state
+if (browser) {
+	isVoiceConnected.subscribe(connected => {
+		if (connected) {
+			updateTrayTooltip('Connected to voice');
+		} else {
+			updateTrayTooltip('Voice Chat');
+		}
+	});
+
+	// Initialize status menu items on load
+	userStatus.subscribe(status => {
+		updateStatusMenuItems(status);
+	});
+}

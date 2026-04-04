@@ -216,3 +216,29 @@ function createSettingsStore() {
 
 export const settings = createSettingsStore();
 export const isSettingsOpen = writable(false);
+
+// User status store
+export type UserStatus = 'online' | 'away' | 'dnd' | 'invisible';
+
+function createStatusStore() {
+	const { subscribe, set, update } = writable<UserStatus>('online');
+
+	return {
+		subscribe,
+		setStatus: (status: UserStatus) => {
+			set(status);
+			if (browser) {
+				localStorage.setItem('hearth_user_status', status);
+			}
+		},
+		init: () => {
+			if (!browser) return;
+			const saved = localStorage.getItem('hearth_user_status') as UserStatus | null;
+			if (saved && ['online', 'away', 'dnd', 'invisible'].includes(saved)) {
+				set(saved);
+			}
+		}
+	};
+}
+
+export const userStatus = createStatusStore();
