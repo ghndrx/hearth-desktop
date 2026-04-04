@@ -1,11 +1,21 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
-Pipeline: Hearth Desktop PRD Competitive Analysis
+Last updated: 2026-04-04
+Pipeline: Hearth Desktop Competitive Intelligence vs Discord Desktop
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Enhanced System Tray (#12_enhanced_system_tray.md)
+
+- [ ] **T-TRAY-01**: Implement rich context menu structure with status controls and voice toggles
+- [ ] **T-TRAY-02**: Add dynamic tray icon states for unread counts and connection status
+- [ ] **T-TRAY-03**: Integrate voice controls (mute/deafen/disconnect) with existing WebRTC system
+
+### Thread: Offline Functionality (#13_offline_functionality.md)
+
+- [ ] **T-OFFLINE-01**: Implement SQLite-based message caching system (last 100 messages per channel)
+- [ ] **T-OFFLINE-02**: Build connection status monitoring and offline detection
+- [ ] **T-OFFLINE-03**: Create outgoing message queue with persistence across app restarts
 
 ---
 
@@ -48,6 +58,33 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-THREAD-09**: Thread unread badge indicators
 - [ ] **T-THREAD-10**: Integration test with real Hearth API thread endpoints
 
+### Thread: Advanced Window Management (#11_advanced_window_management.md)
+
+- [ ] **T-WINDOW-01**: Implement window transparency control with hardware acceleration
+- [ ] **T-WINDOW-02**: Add global shortcut for transparency toggle
+- [ ] **T-WINDOW-03**: Build voice channel pop-out window functionality
+- [ ] **T-WINDOW-04**: Implement window state persistence across app restarts
+- [ ] **T-WINDOW-05**: Create picture-in-picture mode for voice calls (draggable, snap-to-edges)
+- [ ] **T-WINDOW-06**: Add always-on-top mode with cross-platform compatibility
+- [ ] **T-WINDOW-07**: Build window management settings UI with transparency slider
+
+### Thread: Enhanced System Tray Completion (#12_enhanced_system_tray.md)
+
+- [ ] **T-TRAY-04**: Add platform-specific badge integration (Windows taskbar, macOS dock)
+- [ ] **T-TRAY-05**: Implement notification pause/resume controls in tray menu
+- [ ] **T-TRAY-06**: Add server navigation submenu with recent servers
+- [ ] **T-TRAY-07**: Create keyboard shortcuts for tray actions
+- [ ] **T-TRAY-08**: Test tray functionality across platforms (Windows, macOS, Linux)
+
+### Thread: Offline Functionality Completion (#13_offline_functionality.md)
+
+- [ ] **T-OFFLINE-04**: Build automatic sync engine with conflict resolution
+- [ ] **T-OFFLINE-05**: Implement progressive sync with loading states on reconnection
+- [ ] **T-OFFLINE-06**: Add offline UI indicators and cached message visual distinction
+- [ ] **T-OFFLINE-07**: Create queue management interface with manual retry controls
+- [ ] **T-OFFLINE-08**: Add cache size management and automatic cleanup (50MB limit)
+- [ ] **T-OFFLINE-09**: Test offline workflow end-to-end with network simulation
+
 ---
 
 ## P2 — Medium (Future)
@@ -64,6 +101,10 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## Notes
 
+- **P0 System Tray** and **P0 Offline** are critical for desktop app competitive parity with Discord
 - All P1 tasks depend on PRD #1 (text messaging) being stable
 - Screen share and video call both extend the WebRTC pipeline from PR #17 — coordinate to avoid conflicts
 - Thread UI (T-THREAD-03, T-THREAD-05) needs design spec from Hearth design team
+- **Window Management** requires Tauri 2.x features — verify compatibility before implementation
+- **Offline functionality** needs SQLite database schema — coordinate with backend team on data models
+- **System Tray** implementation varies significantly by platform — prioritize Windows/macOS for initial release
