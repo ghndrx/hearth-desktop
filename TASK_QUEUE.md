@@ -1,11 +1,30 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
+Last updated: 2026-04-04
 Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: Global Hotkeys (#06_global_hotkeys_system.md)
+
+- [ ] **T-HOTKEY-01**: Add `tauri-plugin-global-shortcut = "2"` to `src-tauri/Cargo.toml`
+- [ ] **T-HOTKEY-02**: Register plugin in main.rs and create hotkey manager module
+- [ ] **T-HOTKEY-03**: Implement mute/unmute hotkey integration with WebRTC voice system
+- [ ] **T-HOTKEY-04**: Implement deafen/undeafen hotkey functionality
+- [ ] **T-HOTKEY-05**: Create hotkey settings schema and storage integration
+- [ ] **T-HOTKEY-06**: Build hotkey configuration UI panel with conflict detection
+- [ ] **T-HOTKEY-07**: Test cross-platform (Windows Ctrl+Shift+M, macOS Cmd+Shift+M, Linux)
+
+### Thread: Advanced Window Management (#07_advanced_window_management.md)
+
+- [ ] **T-WINDOW-01**: Add `tauri-plugin-window-state = "2"` to dependencies
+- [ ] **T-WINDOW-02**: Implement window state persistence (position, size, maximized)
+- [ ] **T-WINDOW-03**: Create enhanced tray context menu (Show/Hide, Settings, Quit)
+- [ ] **T-WINDOW-04**: Implement "close to tray" vs "quit app" behavior toggle
+- [ ] **T-WINDOW-05**: Add notification click handling to focus window and navigate
+- [ ] **T-WINDOW-06**: Implement unread badge count for Windows taskbar/macOS dock
+- [ ] **T-WINDOW-07**: Build window settings UI panel (close behavior, notifications)
+- [ ] **T-WINDOW-08**: Test multi-monitor window restoration and edge cases
 
 ---
 
@@ -48,6 +67,19 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 - [ ] **T-THREAD-09**: Thread unread badge indicators
 - [ ] **T-THREAD-10**: Integration test with real Hearth API thread endpoints
 
+### Thread: Audio Processing Pipeline (#08_audio_processing_pipeline.md)
+
+- [ ] **T-AUDIO-01**: Implement audio device enumeration via `navigator.mediaDevices.enumerateDevices()`
+- [ ] **T-AUDIO-02**: Build audio device selection UI with preview and testing capabilities
+- [ ] **T-AUDIO-03**: Create audio processing worklet infrastructure (AudioWorkletProcessor)
+- [ ] **T-AUDIO-04**: Implement noise suppression pipeline (high-pass filter + spectral gating)
+- [ ] **T-AUDIO-05**: Integrate browser native echo cancellation (`echoCancellation: true`)
+- [ ] **T-AUDIO-06**: Implement automatic gain control for consistent volume levels
+- [ ] **T-AUDIO-07**: Build voice activity detection using energy + frequency analysis
+- [ ] **T-AUDIO-08**: Create comprehensive audio settings UI with real-time feedback
+- [ ] **T-AUDIO-09**: Integrate audio processing with existing WebRTC pipeline
+- [ ] **T-AUDIO-10**: Performance optimization and cross-platform testing
+
 ---
 
 ## P2 — Medium (Future)
@@ -64,6 +96,19 @@ Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## Notes
 
-- All P1 tasks depend on PRD #1 (text messaging) being stable
-- Screen share and video call both extend the WebRTC pipeline from PR #17 — coordinate to avoid conflicts
-- Thread UI (T-THREAD-03, T-THREAD-05) needs design spec from Hearth design team
+### Dependencies
+- **P0 Global Hotkeys** depend on stable WebRTC voice system (PR #17) for mute/unmute integration
+- **P0 Window Management** depends on notification system and settings UI framework
+- **P1 Audio Processing** depends on stable WebRTC implementation and device management APIs
+- All existing P1 tasks depend on PRD #1 (text messaging) being stable
+- Screen share and video call both extend the WebRTC pipeline — coordinate to avoid conflicts
+
+### Implementation Priority
+1. **Complete P0 tasks first** - Global hotkeys and window management are critical for feature parity
+2. **Audio processing can be developed in parallel** with existing P1 video/screen sharing work
+3. **Thread UI** (T-THREAD-03, T-THREAD-05) needs design spec from Hearth design team
+
+### Cross-Platform Testing Requirements
+- **Global hotkeys**: Test key combinations on Windows (Ctrl+Shift), macOS (Cmd+Shift), Linux (Ctrl+Shift)
+- **Window management**: Multi-monitor scenarios, different desktop environments (GNOME, KDE, Windows 11)
+- **Audio processing**: Test with popular headsets, different audio drivers (WASAPI, PulseAudio, Core Audio)
