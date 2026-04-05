@@ -1,4 +1,5 @@
 use tauri_plugin_notification::NotificationExt;
+use tauri::Manager;
 
 /// Get the application version
 #[tauri::command]
@@ -35,6 +36,18 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
                 window.set_badge_count(None).map_err(|e| e.to_string())?;
             }
         }
+    }
+    Ok(())
+}
+
+/// Set the window to always be on top (or not)
+#[tauri::command]
+pub async fn set_always_on_top(
+    app: tauri::AppHandle,
+    always_on_top: bool,
+) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("main") {
+        window.set_always_on_top(always_on_top).map_err(|e| e.to_string())?;
     }
     Ok(())
 }
