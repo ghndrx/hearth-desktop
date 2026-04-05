@@ -109,6 +109,30 @@ Pipeline: Hearth Desktop Competitive Analysis vs Discord
 - [ ] **T-DESKTOP-08**: Implement single instance lock
 - [ ] **T-DESKTOP-09**: Define and register `.hearth` file association
 
+### Thread: Stream Integration & Activity Feed (#17_stream_integration_activity_feed.md)
+
+- [ ] **T-STREAM-01**: Implement Twitch OAuth integration and stream detection API
+- [ ] **T-STREAM-02**: Build embedded stream viewer with Video.js/HLS support  
+- [ ] **T-STREAM-03**: Create activity feed backend with real-time WebSocket updates
+- [ ] **T-STREAM-04**: Build ActivityFeed.svelte component with friend activity timeline
+- [ ] **T-STREAM-05**: Add "friend went live" notifications with one-click join
+- [ ] **T-STREAM-06**: Implement watch party system with synchronized stream viewing
+- [ ] **T-STREAM-07**: Add YouTube Gaming API integration for stream embedding
+- [ ] **T-STREAM-08**: Create stream discovery UI with friend recommendations
+- [ ] **T-STREAM-09**: Test cross-platform stream embedding and performance
+
+### Thread: Accessibility Support (#18_accessibility_comprehensive_support.md)
+
+- [ ] **T-A11Y-01**: Implement semantic HTML/ARIA structure across all components
+- [ ] **T-A11Y-02**: Add screen reader live regions for chat messages and voice activity
+- [ ] **T-A11Y-03**: Build comprehensive keyboard navigation system with logical tab order
+- [ ] **T-A11Y-04**: Create high contrast theme variants (light/dark)
+- [ ] **T-A11Y-05**: Implement font scaling (50%-200%) without layout breaking
+- [ ] **T-A11Y-06**: Add reduced motion controls and animation disable toggle
+- [ ] **T-A11Y-07**: Implement Windows NVDA/JAWS screen reader integration
+- [ ] **T-A11Y-08**: Add visual focus indicators and skip navigation links
+- [ ] **T-A11Y-09**: Create accessibility settings panel with all user controls
+
 ### Thread: Advanced Window Management (#11_advanced_window_management.md)
 
 - [ ] **T-WINDOW-04**: Create VoicePopout.svelte component (mini voice control window)
@@ -117,6 +141,18 @@ Pipeline: Hearth Desktop Competitive Analysis vs Discord
 - [ ] **T-WINDOW-07**: Implement monitor detection and multi-screen position mapping
 - [ ] **T-WINDOW-08**: Build window positioning preferences UI
 - [ ] **T-WINDOW-09**: Test always-on-top behavior across Windows/macOS/Linux
+
+### Thread: Plugin & Bot Integration Platform (#19_plugin_bot_integration_platform.md)
+
+- [ ] **T-PLUGIN-01**: Design and implement bot REST API with OAuth2 authentication
+- [ ] **T-PLUGIN-02**: Build WebSocket gateway for real-time bot event delivery
+- [ ] **T-PLUGIN-03**: Create plugin runtime with WASM sandboxing for security isolation
+- [ ] **T-PLUGIN-04**: Implement granular permission system for bot actions and data access
+- [ ] **T-PLUGIN-05**: Build bot directory/marketplace UI for discovery and installation
+- [ ] **T-PLUGIN-06**: Create JavaScript SDK for bot developers with comprehensive examples
+- [ ] **T-PLUGIN-07**: Implement rate limiting and resource management for bot API calls
+- [ ] **T-PLUGIN-08**: Build bot management interface for server admins
+- [ ] **T-PLUGIN-09**: Create security scanning and bot verification system
 
 ---
 
