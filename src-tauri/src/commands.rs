@@ -1,9 +1,25 @@
+use tauri::Manager;
 use tauri_plugin_notification::NotificationExt;
 
 /// Get the application version
 #[tauri::command]
 pub fn get_app_version() -> String {
     env!("CARGO_PKG_VERSION").to_string()
+}
+
+/// Set a window's always-on-top (pin) state
+#[tauri::command]
+pub async fn set_always_on_top(
+    app: tauri::AppHandle,
+    window_label: String,
+    always_on_top: bool,
+) -> Result<(), String> {
+    let window = app
+        .get_webview_window(&window_label)
+        .ok_or_else(|| format!("Window '{}' not found", window_label))?;
+    window
+        .set_always_on_top(always_on_top)
+        .map_err(|e| e.to_string())
 }
 
 /// Show a system notification
