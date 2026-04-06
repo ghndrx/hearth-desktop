@@ -1,9 +1,8 @@
 use tauri_plugin_notification::NotificationExt;
 
 // T-SCREEN-01: Cross-platform screen capture using nokhwa crate
-// NOTE: nokhwa dependency currently commented in Cargo.toml due to Rust toolchain limitations
-// When uncommented, use: use nokhwa::{Camera, CallbackCamera};
-// Current implementation provides mock screen capture with cross-platform detection
+// use nokhwa::{Camera, query::query_devices, CaptureAPIBackend};
+// Commented until Cargo 1.80+ available for edition2024 feature
 
 /// Get the application version
 #[tauri::command]
@@ -48,10 +47,31 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
 /// T-SCREEN-01: Implementation using nokhwa crate for cross-platform compatibility
 #[tauri::command]
 pub async fn get_screens() -> Result<Vec<String>, String> {
-    // TODO: Replace with nokhwa::enumerate_devices() when dependency is available
-    // Current: Mock implementation with platform detection
+    // TODO: Uncomment when nokhwa dependency is available (requires Cargo 1.80+)
+    /*
+    // Use nokhwa to query available capture devices
+    match query_devices(CaptureAPIBackend::Auto) {
+        Ok(devices) => {
+            let screen_names: Vec<String> = devices
+                .into_iter()
+                .map(|device| device.human_name().to_string())
+                .collect();
 
-    // Get basic display information
+            // If no devices found, return a fallback list
+            if screen_names.is_empty() {
+                Ok(vec!["Default Screen".to_string()])
+            } else {
+                Ok(screen_names)
+            }
+        },
+        Err(e) => {
+            println!("Failed to query devices with nokhwa: {}", e);
+            // Fallback continues below
+        }
+    }
+    */
+
+    // Current implementation: Platform-specific mock data
     let screens = match std::env::consts::OS {
         "windows" => vec![
             "Primary Display (Windows)".to_string(),
@@ -71,18 +91,48 @@ pub async fn get_screens() -> Result<Vec<String>, String> {
     Ok(screens)
 }
 
-/// Capture a screenshot from the specified screen
-/// T-SCREEN-01: Cross-platform screen capture via nokhwa crate
+/// Capture from the specified camera device
+/// T-SCREEN-01: Cross-platform camera capture via nokhwa crate
+/// Note: nokhwa is designed for camera capture. Screen capture would require platform-specific APIs.
 #[tauri::command]
 pub async fn capture_screen(screen_index: usize) -> Result<Vec<u8>, String> {
     if screen_index > 1 {
         return Err("Invalid screen index".to_string());
     }
 
-    // TODO: Replace with nokhwa screen capture API when dependency is available
-    // Current: Mock implementation for testing and development
+    // TODO: Uncomment when nokhwa dependency is available (requires Cargo 1.80+)
+    /*
+    // Get available devices
+    let devices = query_devices(CaptureAPIBackend::Auto)
+        .map_err(|e| format!("Failed to query devices: {}", e))?;
 
-    // Create a mock screen capture based on the screen index
+    if screen_index >= devices.len() {
+        return Err("Invalid device index".to_string());
+    }
+
+    // Create camera from the selected device
+    let device_info = &devices[screen_index];
+    let mut camera = Camera::new(
+        device_info.index().clone(),
+        None, // Use default resolution
+    ).map_err(|e| format!("Failed to create camera: {}", e))?;
+
+    // Start streaming
+    camera.open_stream().map_err(|e| format!("Failed to open stream: {}", e))?;
+
+    // Capture a frame
+    let frame = camera.frame().map_err(|e| format!("Failed to capture frame: {}", e))?;
+
+    // Convert frame to RGB bytes
+    let rgb_data = frame.decode_image::<nokhwa::pixel_format::RgbFormat>()
+        .map_err(|e| format!("Failed to decode image: {}", e))?
+        .into_raw();
+
+    println!("Captured from device {} - {} bytes", device_info.human_name(), rgb_data.len());
+    Ok(rgb_data)
+    */
+
+    // Current implementation: Mock screen capture for testing and development
     let (width, height) = match screen_index {
         0 => (1920, 1080), // Primary display
         1 => (1920, 1080), // Secondary display
