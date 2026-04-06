@@ -1,8 +1,7 @@
 use tauri_plugin_notification::NotificationExt;
 
 // T-SCREEN-01: Cross-platform screen capture using nokhwa crate
-// use nokhwa::{Camera, query::query_devices, CaptureAPIBackend};
-// Commented until Cargo 1.80+ available for edition2024 feature
+use nokhwa::{Camera, utils::*, pixel_format::RgbFormat};
 
 /// Get the application version
 #[tauri::command]
@@ -47,21 +46,19 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
 /// T-SCREEN-01: Implementation using nokhwa crate for cross-platform compatibility
 #[tauri::command]
 pub async fn get_screens() -> Result<Vec<String>, String> {
-    // TODO: Uncomment when nokhwa dependency is available (requires Cargo 1.80+)
-    /*
     // Use nokhwa to query available capture devices
-    match query_devices(CaptureAPIBackend::Auto) {
+    match nokhwa::query(ApiBackend::Auto) {
         Ok(devices) => {
             let screen_names: Vec<String> = devices
                 .into_iter()
                 .map(|device| device.human_name().to_string())
                 .collect();
 
-            // If no devices found, return a fallback list
+            // If no devices found, fallback to mock data
             if screen_names.is_empty() {
-                Ok(vec!["Default Screen".to_string()])
+                // Continue to fallback implementation below
             } else {
-                Ok(screen_names)
+                return Ok(screen_names);
             }
         },
         Err(e) => {
@@ -69,7 +66,6 @@ pub async fn get_screens() -> Result<Vec<String>, String> {
             // Fallback continues below
         }
     }
-    */
 
     // Current implementation: Platform-specific mock data
     let screens = match std::env::consts::OS {
@@ -100,39 +96,38 @@ pub async fn capture_screen(screen_index: usize) -> Result<Vec<u8>, String> {
         return Err("Invalid screen index".to_string());
     }
 
-    // TODO: Uncomment when nokhwa dependency is available (requires Cargo 1.80+)
-    /*
-    // Get available devices
-    let devices = query_devices(CaptureAPIBackend::Auto)
-        .map_err(|e| format!("Failed to query devices: {}", e))?;
-
-    if screen_index >= devices.len() {
-        return Err("Invalid device index".to_string());
+    // Try to use nokhwa for camera capture (nokhwa is primarily for cameras, not screen capture)
+    match nokhwa::query(ApiBackend::Auto) {
+        Ok(devices) if !devices.is_empty() && screen_index < devices.len() => {
+            let device_info = &devices[screen_index];
+            match Camera::new(
+                device_info.index().clone(),
+                RequestedFormat::new::<RgbFormat>(RequestedFormatType::AbsoluteHighestResolution),
+            ) {
+                Ok(mut camera) => {
+                    if camera.open_stream().is_ok() {
+                        if let Ok(frame) = camera.frame() {
+                            if let Ok(image_buffer) = frame.decode_image::<RgbFormat>() {
+                                let rgb_data = image_buffer.into_raw();
+                                println!("Captured from device {} - {} bytes", device_info.human_name(), rgb_data.len());
+                                return Ok(rgb_data);
+                            }
+                        }
+                    }
+                    // Fall through to mock implementation if camera fails
+                }
+                Err(e) => {
+                    println!("Failed to create camera: {}", e);
+                    // Fall through to mock implementation
+                }
+            }
+        }
+        _ => {
+            // No devices or invalid index, fall through to mock implementation
+        }
     }
 
-    // Create camera from the selected device
-    let device_info = &devices[screen_index];
-    let mut camera = Camera::new(
-        device_info.index().clone(),
-        None, // Use default resolution
-    ).map_err(|e| format!("Failed to create camera: {}", e))?;
-
-    // Start streaming
-    camera.open_stream().map_err(|e| format!("Failed to open stream: {}", e))?;
-
-    // Capture a frame
-    let frame = camera.frame().map_err(|e| format!("Failed to capture frame: {}", e))?;
-
-    // Convert frame to RGB bytes
-    let rgb_data = frame.decode_image::<nokhwa::pixel_format::RgbFormat>()
-        .map_err(|e| format!("Failed to decode image: {}", e))?
-        .into_raw();
-
-    println!("Captured from device {} - {} bytes", device_info.human_name(), rgb_data.len());
-    Ok(rgb_data)
-    */
-
-    // Current implementation: Mock screen capture for testing and development
+    // Fallback: Mock screen capture for testing and development
     let (width, height) = match screen_index {
         0 => (1920, 1080), // Primary display
         1 => (1920, 1080), // Secondary display

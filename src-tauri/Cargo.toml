@@ -20,9 +20,7 @@ serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 tokio = { version = "1", features = ["full"] }
 # T-SCREEN-01: Cross-platform screen capture with nokhwa crate
-# nokhwa = "0.10"  # Cross-platform camera/screen capture library
-# Requires Cargo 1.80+ for edition2024 feature. Current toolchain: 1.75.0
-# Implementation ready in commands.rs, uncomment when toolchain updated
+nokhwa = "0.10"  # Cross-platform camera/screen capture library
 
 [profile.release]
 panic = "abort"
