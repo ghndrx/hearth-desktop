@@ -32,6 +32,16 @@ fn main() {
             commands::get_app_version,
             commands::show_notification,
             commands::set_badge_count,
+            commands::create_pip_window,
+            commands::close_pip_window,
+            commands::update_pip_position,
+            commands::update_pip_size,
+            commands::set_pip_transparency,
+            commands::toggle_pip_always_on_top,
+            commands::get_screen_size,
+            commands::show_pip_window,
+            commands::hide_pip_window,
+            commands::get_work_area,
         ])
         .run(tauri::generate_context!())
         .expect("error while running Hearth desktop application");
