@@ -51,8 +51,15 @@ zip = { version = "2", features = ["deflate"] }
 libc = "0.2"
 nnnoiseless = "0.5"
 
+[target.'cfg(target_os = "linux")'.dependencies]
+nokhwa = { version = "0.10", default-features = false, features = ["input-native", "output-threaded", "input-v4l"] }
+
+[target.'cfg(target_os = "macos")'.dependencies]
+nokhwa = { version = "0.10", default-features = false, features = ["input-native", "output-threaded", "input-avfoundation"] }
+
 [target.'cfg(target_os = "windows")'.dependencies]
 windows-sys = { version = "0.52", features = ["Win32_System_Power", "Win32_Graphics_Gdi", "Win32_UI_WindowsAndMessaging"] }
+nokhwa = { version = "0.10", default-features = false, features = ["input-native", "output-threaded", "input-msmf"] }
 
 [profile.release]
 panic = "abort"
