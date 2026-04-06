@@ -38,3 +38,39 @@ pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), St
     }
     Ok(())
 }
+
+/// Get available displays for screen capture
+#[tauri::command]
+pub async fn get_screens() -> Result<Vec<String>, String> {
+    // Return mock display information for now
+    // TODO: Implement actual screen enumeration when compatible screen capture crate is available
+    Ok(vec![
+        "Primary Display (1920x1080)".to_string(),
+        "Secondary Display (1920x1080)".to_string(),
+    ])
+}
+
+/// Capture a screenshot from the specified screen
+#[tauri::command]
+pub async fn capture_screen(screen_index: usize) -> Result<Vec<u8>, String> {
+    if screen_index > 1 {
+        return Err("Invalid screen index".to_string());
+    }
+
+    // Return mock RGB data for a 100x100 red square
+    // TODO: Implement actual screen capture when compatible screen capture crate is available
+    let width = 100;
+    let height = 100;
+    let mut rgb_data = Vec::with_capacity(width * height * 3);
+
+    // Create a red square
+    for _y in 0..height {
+        for _x in 0..width {
+            rgb_data.push(255); // R
+            rgb_data.push(0);   // G
+            rgb_data.push(0);   // B
+        }
+    }
+
+    Ok(rgb_data)
+}
