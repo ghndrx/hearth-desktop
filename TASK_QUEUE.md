@@ -1,11 +1,36 @@
 # Task Queue — Hearth Desktop
 
-Last updated: 2026-03-26
+Last updated: 2026-04-06
 Pipeline: Hearth Desktop PRD Competitive Analysis
 
 ## P0 — Critical (Ship Now)
 
-*(No P0 items — text messaging PRDs are already in progress)*
+### Thread: System Integration & Notifications (PRD #07)
+
+- [ ] **T-SYS-01**: Implement notification manager with smart batching and priority queuing
+- [ ] **T-SYS-02**: Build action handler for inline notification responses (quick reply, mark as read)
+- [ ] **T-SYS-03**: Create Windows Jump Lists with recent servers and quick actions
+- [ ] **T-SYS-04**: Build macOS Menu Bar integration with status and server switching
+- [ ] **T-SYS-05**: Implement hearth:// protocol registration and deep link handling
+- [ ] **T-SYS-06**: Add badge count system for taskbar/dock unread indicators
+
+### Thread: Security & Authentication System (PRD #08)
+
+- [ ] **T-SEC-01**: Implement TOTP generation and validation system for MFA
+- [ ] **T-SEC-02**: Build Windows Hello biometric authentication integration
+- [ ] **T-SEC-03**: Add Touch ID support for macOS devices
+- [ ] **T-SEC-04**: Create device fingerprinting and session tracking system
+- [ ] **T-SEC-05**: Implement local data encryption using AES-256 with hardware keys
+- [ ] **T-SEC-06**: Build session management dashboard with device monitoring
+
+### Thread: Accessibility & Inclusive Design (PRD #09)
+
+- [ ] **T-A11Y-01**: Implement accessibility tree manager with proper ARIA markup
+- [ ] **T-A11Y-02**: Build screen reader support (NVDA, JAWS, VoiceOver compatibility)
+- [ ] **T-A11Y-03**: Create keyboard navigation system with focus management
+- [ ] **T-A11Y-04**: Implement high contrast mode with customizable color schemes
+- [ ] **T-A11Y-05**: Build text scaling engine (100%-300%) with responsive layouts
+- [ ] **T-A11Y-06**: Integrate text-to-speech engine using platform TTS APIs
 
 ---
 
