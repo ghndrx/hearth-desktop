@@ -22,6 +22,12 @@ pub async fn show_notification(
     Ok(())
 }
 
+/// Get the current badge count (placeholder – returns 0)
+#[tauri::command]
+pub fn get_badge_count() -> u32 {
+    0
+}
+
 /// Set the dock/taskbar badge count (unread messages)
 #[tauri::command]
 pub async fn set_badge_count(app: tauri::AppHandle, count: u32) -> Result<(), String> {
