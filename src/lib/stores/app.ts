@@ -1,5 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import { browser } from '$app/environment';
+import { notificationStore } from '$lib/notifications';
 
 export interface User {
 	id: string;
@@ -62,6 +63,9 @@ function createAppStore() {
 			if (savedTheme) {
 				document.documentElement.setAttribute('data-theme', savedTheme);
 			}
+
+			// Initialize notification system
+			await notificationStore.init();
 
 			// Load auth token
 			const token = localStorage.getItem('hearth_token');
