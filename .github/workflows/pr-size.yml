@@ -1,0 +1,84 @@
+name: PR Size Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-size:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Count changed lines
+        id: count
+        run: |
+          CHANGED=$(git diff --numstat origin/${{ github.base_ref }}...HEAD -- \
+            ':!*.lock' ':!*.sum' ':!*generated*' ':!*_generated*' ':!*.gen.*' \
+            | awk '{ added += $1; removed += $2 } END { print added + removed }')
+          CHANGED=${CHANGED:-0}
+          echo "lines=$CHANGED" >> "$GITHUB_OUTPUT"
+
+      - name: Determine size label
+        id: label
+        run: |
+          LINES=${{ steps.count.outputs.lines }}
+          if [ "$LINES" -le 50 ]; then
+            echo "size=size/S" >> "$GITHUB_OUTPUT"
+          elif [ "$LINES" -le 200 ]; then
+            echo "size=size/M" >> "$GITHUB_OUTPUT"
+          elif [ "$LINES" -le 400 ]; then
+            echo "size=size/L" >> "$GITHUB_OUTPUT"
+          else
+            echo "size=size/XL" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Apply size label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const newLabel = '${{ steps.label.outputs.size }}';
+            const sizeLabels = ['size/S', 'size/M', 'size/L', 'size/XL'];
+            const currentLabels = context.payload.pull_request.labels.map(l => l.name);
+            const toRemove = currentLabels.filter(l => sizeLabels.includes(l) && l !== newLabel);
+            for (const label of toRemove) {
+              await github.rest.issues.removeLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                name: label,
+              }).catch(() => {});
+            }
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: [newLabel],
+            });
+
+      - name: Check agent PR size limit
+        if: startsWith(github.head_ref, 'agent/')
+        run: |
+          LINES=${{ steps.count.outputs.lines }}
+          if [ "$LINES" -gt 400 ]; then
+            echo "::error::Agent PR exceeds 400-line limit ($LINES lines changed). Break this into smaller PRs."
+            exit 1
+          fi
+
+      - name: Warn large human PR
+        if: ${{ !startsWith(github.head_ref, 'agent/') && steps.count.outputs.lines > 400 }}
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const lines = ${{ steps.count.outputs.lines }};
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: `**Warning:** This PR changes ${lines} lines (excluding lock/generated files). Consider breaking it into smaller PRs for easier review.`,
+            });
