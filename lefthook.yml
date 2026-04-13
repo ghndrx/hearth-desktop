@@ -1,0 +1,21 @@
+pre-commit:
+  parallel: true
+  commands:
+    cargo-fmt:
+      glob: "*.rs"
+      run: cargo fmt --check
+    prettier:
+      glob: "*.{ts,svelte}"
+      run: prettier --write {staged_files}
+
+commit-msg:
+  commands:
+    conventional-commit:
+      run: |
+        message=$(head -1 "$1")
+        if ! echo "$message" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?(!)?: .+$'; then
+          echo "ERROR: Commit message must follow Conventional Commits format."
+          echo "  e.g., feat(ui): add settings panel"
+          echo "  Types: feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert"
+          exit 1
+        fi
